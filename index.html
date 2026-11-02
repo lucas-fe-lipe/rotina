@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Biblioteca leve para transformar a grade em PNG -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f0f2f5; color: #333; }
+    .header { padding: 15px; background: #fff; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+    h2 { margin: 0; font-size: 18px; }
+    button { background: #1a73e8; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+    
+    .calendario-container { display: flex; padding: 10px; overflow-x: auto; position: relative; padding-bottom: 80px; }
+    .eixo-horas { width: 50px; flex-shrink: 0; position: relative; margin-top: 30px; }
+    .hora-label { position: absolute; right: 10px; font-size: 12px; color: #666; transform: translateY(-50%); }
+    
+    .dias-container { display: flex; flex-grow: 1; min-width: 700px; border-left: 1px solid #ddd; border-top: 1px solid #ddd; }
+    .coluna-dia { flex: 1; border-right: 1px solid #ddd; position: relative; background: #fff; background-image: linear-gradient(#f0f0f0 1px, transparent 1px); background-size: 100% 60px; }
+    .cabecalho-dia { text-align: center; font-weight: bold; padding: 8px 0; background: #000; color: white; border-bottom: 1px solid #ddd; position: absolute; top: 0; width: 100%; height: 30px; box-sizing: border-box;}
+    
+    /* BLOCOS DE ATIVIDADE: fontes maiores e quebra controlada para caber "Pedalar e Saltos" */
+    .evento { position: absolute; left: 2px; right: 2px; border-radius: 4px; padding: 5px; color: white; overflow: hidden; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 2px 4px rgba(0,0,0,0.2); display: flex; flex-direction: column; justify-content: flex-start; }
+    .evento-titulo { font-weight: bold; font-size: 13px; line-height: 1.15; word-break: break-word; white-space: normal; }
+    .evento-info { font-size: 11px; opacity: 0.9; margin-top: 2px; }
+    .evento-detalhes { font-size: 10px; opacity: 0.8; margin-top: 2px; font-style: italic; word-break: break-word; }
+    
+    .cat-estudos { background-color: #0b5394; }
+    .cat-treinos { background-color: #212121; }
+    .cat-outro { background-color: #757575; }
+
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: center; }
+    .modal-box { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .form-group { margin-bottom: 12px; display: flex; flex-direction: column; }
+    .form-group label { font-size: 12px; margin-bottom: 4px; font-weight: bold; }
+    .form-group input, .form-group select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    .modal-botoes { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+    .btn-cancelar { background: #ccc; color: black; }
+    .btn-perigo { background: #dc3545; color: white; }
+
+    /* REGRAS DE IMPRESSÃO (PDF) */
+    @media print {
+      @page { margin: 5mm; }
+      body { zoom: 75%; background: white; margin: 0; padding: 0; } 
+      .header, button, .modal-overlay { display: none !important; } 
+      
+      .calendario-container { padding: 0 !important; overflow: visible !important; width: 100% !important; display: flex !important; padding-bottom: 0 !important; margin-bottom: 0 !important; }
+      .dias-container { min-width: 0 !important; width: 100% !important; border: 1px solid #000 !important; }
+      
+      .hora-label { font-size: 16px !important; color: #000 !important; right: 5px !important; font-weight: bold !important; }
+      .cabecalho-dia { font-size: 16px !important; padding: 4px 0 !important; height: 30px !important; line-height: 22px !important; overflow: hidden !important; }
+      
+      .evento-titulo { font-size: 15px !important; }
+      .evento-info { font-size: 13px !important; }
+      .evento-detalhes { font-size: 12px !important; }
+      .evento { border: 1px solid #000 !important; }
+
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h2>Rotina Semanal</h2>
+    <div>
+      <button onclick="baixarPNG()" style="background: #e67e22; margin-right: 10px;">Baixar PNG</button>
+      <button onclick="baixarPDF()" style="background: #34a853; margin-right: 10px;">Baixar PDF</button>
+      <button onclick="abrirModal()">+ Novo</button>
+    </div>
+  </div>
+
+  <!-- ID adicionado para o gerador de PNG capturar apenas a grade -->
+  <div class="calendario-container" id="area-impressao">
+    <div class="eixo-horas" id="eixo-horas"></div>
+    <div class="dias-container">
+      <div class="coluna-dia" id="col-dom"><div class="cabecalho-dia">dom</div></div>
+      <div class="coluna-dia" id="col-seg"><div class="cabecalho-dia">seg</div></div>
+      <div class="coluna-dia" id="col-ter"><div class="cabecalho-dia">ter</div></div>
+      <div class="coluna-dia" id="col-qua"><div class="cabecalho-dia">qua</div></div>
+      <div class="coluna-dia" id="col-qui"><div class="cabecalho-dia">qui</div></div>
+      <div class="coluna-dia" id="col-sex"><div class="cabecalho-dia">sex</div></div>
+      <div class="coluna-dia" id="col-sab"><div class="cabecalho-dia">sáb</div></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal">
+    <div class="modal-box">
+      <h3 id="modal-titulo">Nova Atividade</h3>
+      <input type="hidden" id="form-linha">
+      
+      <div class="form-group">
+        <label>Atividade</label>
+        <input type="text" id="form-atividade">
+      </div>
+      <div class="form-group">
+        <label>Dia da Semana</label>
+        <select id="form-dia">
+          <option value="domingo">Domingo</option>
+          <option value="segunda">Segunda</option>
+          <option value="terça">Terça</option>
+          <option value="quarta">Quarta</option>
+          <option value="quinta">Quinta</option>
+          <option value="sexta">Sexta</option>
+          <option value="sábado">Sábado</option>
+        </select>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <div class="form-group" style="flex: 1;">
+          <label>Início</label>
+          <input type="time" id="form-inicio">
+        </div>
+        <div class="form-group" style="flex: 1;">
+          <label>Fim</label>
+          <input type="time" id="form-fim">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Categoria</label>
+        <select id="form-categoria">
+          <option value="Estudos">Estudos (Azul)</option>
+          <option value="Treinos">Treinos Pesados (Preto)</option>
+          <option value="Outro">Outro (Cinza)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Detalhes Adicionais</label>
+        <input type="text" id="form-detalhes">
+      </div>
+
+      <div class="modal-botoes">
+        <button id="btn-excluir" class="btn-perigo" style="display: none; margin-right: auto;" onclick="excluirAtividade()">Excluir</button>
+        <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
+        <button onclick="salvarFormulario()" id="btn-salvar">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let HORA_INICIO = 6; 
+    let HORA_FIM = 22;   
+    const PIXELS_POR_HORA = 60; 
+    const OFFSET_TOPO = 30; 
+
+    const mapaDias = {
+      'domingo': 'col-dom', 'dom': 'col-dom',
+      'segunda': 'col-seg', 'seg': 'col-seg',
+      'terça': 'col-ter', 'ter': 'col-ter', 'terca': 'col-ter',
+      'quarta': 'col-qua', 'qua': 'col-qua',
+      'quinta': 'col-qui', 'qui': 'col-qui',
+      'sexta': 'col-sex', 'sex': 'col-sex',
+      'sábado': 'col-sab', 'sab': 'col-sab', 'sabado': 'col-sab'
+    };
+
+    window.onload = function() {
+      google.script.run.withSuccessHandler(processarDadosDinamicos).getDadosRotina();
+    };
+
+    function processarDadosDinamicos(dados) {
+      document.querySelectorAll('.evento').forEach(e => e.remove());
+      
+      if (dados && dados.length > 0) {
+        let menorHora = 24;
+        let maiorHora = 0;
+
+        dados.forEach(item => {
+          if (item.inicio && item.inicio.includes(':')) {
+            let hInicio = parseInt(item.inicio.split(':')[0], 10);
+            if (hInicio < menorHora) menorHora = hInicio;
+          }
+          if (item.fim && item.fim.includes(':')) {
+            let hFim = parseInt(item.fim.split(':')[0], 10);
+            if (hFim > maiorHora) maiorHora = hFim;
+          }
+        });
+
+        HORA_INICIO = (menorHora > 0) ? menorHora - 1 : 0;
+        HORA_FIM = (maiorHora < 23) ? maiorHora + 1 : 24;
+      }
+      
+      desenharGrade();
+      
+      dados.forEach(item => {
+        const idColuna = mapaDias[item.dia];
+        if(!idColuna) return; 
+
+        const coluna = document.getElementById(idColuna);
+        const topPixels = calcularMinutos(item.inicio) + OFFSET_TOPO;
+        const heightPixels = calcularMinutos(item.fim) - calcularMinutos(item.inicio);
+
+        let classeCor = 'cat-outro';
+        if(item.categoria.toLowerCase().includes('estudo')) classeCor = 'cat-estudos';
+        if(item.categoria.toLowerCase().includes('treino')) classeCor = 'cat-treinos';
+
+        const bloco = document.createElement('div');
+        bloco.className = `evento ${classeCor}`;
+        bloco.style.top = topPixels + 'px';
+        bloco.style.height = Math.max(heightPixels, 15) + 'px'; 
+        
+        // Inserção do Título, Horário e Detalhes dentro da caixa
+        bloco.innerHTML = `
+          <div class="evento-titulo">${item.atividade}</div>
+          ${heightPixels > 40 ? `<div class="evento-info">${item.inicio}-${item.fim}</div>` : ''}
+          ${heightPixels > 65 && item.detalhes ? `<div class="evento-detalhes">${item.detalhes}</div>` : ''}
+        `;
+
+        bloco.onclick = () => abrirModal(item);
+        coluna.appendChild(bloco);
+      });
+    }
+
+    function desenharGrade() {
+      const alturaTotal = ((HORA_FIM - HORA_INICIO + 1) * PIXELS_POR_HORA) + OFFSET_TOPO;
+      document.querySelectorAll('.coluna-dia').forEach(col => col.style.height = alturaTotal + 'px');
+
+      const eixo = document.getElementById('eixo-horas');
+      eixo.innerHTML = ''; 
+      for(let i = HORA_INICIO; i <= HORA_FIM; i++) {
+        let label = document.createElement('div');
+        label.className = 'hora-label';
+        label.style.top = (OFFSET_TOPO + ((i - HORA_INICIO) * PIXELS_POR_HORA)) + 'px';
+        label.innerText = (i < 10 ? '0'+i : i) + ':00';
+        eixo.appendChild(label);
+      }
+    }
+
+    function calcularMinutos(horaString) {
+      if(!horaString || !horaString.includes(':')) return 0;
+      const partes = horaString.split(':');
+      const horas = parseInt(partes[0], 10);
+      const minutos = parseInt(partes[1], 10);
+      return ((horas - HORA_INICIO) * PIXELS_POR_HORA) + minutos;
+    }
+
+    function abrirModal(itemExistente = null) {
+      document.getElementById('modal').style.display = 'flex';
+      const btnExcluir = document.getElementById('btn-excluir');
+
+      if(itemExistente) {
+        document.getElementById('modal-titulo').innerText = 'Editar Atividade';
+        document.getElementById('form-linha').value = itemExistente.linhaPlanilha;
+        document.getElementById('form-atividade').value = itemExistente.atividade;
+        
+        let selectDia = document.getElementById('form-dia');
+        for(let option of selectDia.options) {
+          if(option.value.includes(itemExistente.dia) || itemExistente.dia.includes(option.value)) {
+            selectDia.value = option.value; break;
+          }
+        }
+        document.getElementById('form-inicio').value = itemExistente.inicio;
+        document.getElementById('form-fim').value = itemExistente.fim;
+        document.getElementById('form-categoria').value = itemExistente.categoria;
+        document.getElementById('form-detalhes').value = itemExistente.detalhes;
+        
+        btnExcluir.style.display = 'block';
+      } else {
+        document.getElementById('modal-titulo').innerText = 'Nova Atividade';
+        document.getElementById('form-linha').value = '';
+        document.getElementById('form-atividade').value = '';
+        document.getElementById('form-inicio').value = '';
+        document.getElementById('form-fim').value = '';
+        document.getElementById('form-detalhes').value = '';
+        
+        btnExcluir.style.display = 'none';
+      }
+    }
+
+    function fecharModal() {
+      document.getElementById('modal').style.display = 'none';
+    }
+
+    function salvarFormulario() {
+      const inicio = document.getElementById('form-inicio').value;
+      const fim = document.getElementById('form-fim').value;
+      const atividade = document.getElementById('form-atividade').value;
+
+      if (!atividade || !inicio || !fim) {
+        alert("Preencha a atividade e os horários.");
+        return;
+      }
+      if (inicio >= fim) {
+        alert("Erro: O término (" + fim + ") não pode ser antes ou igual ao início (" + inicio + ").");
+        return;
+      }
+
+      const btn = document.getElementById('btn-salvar');
+      btn.innerText = "Salvando...";
+      btn.disabled = true;
+
+      const dadosForm = {
+        atividade: atividade,
+        dia: document.getElementById('form-dia').value,
+        inicio: inicio,
+        fim: fim,
+        categoria: document.getElementById('form-categoria').value,
+        detalhes: document.getElementById('form-detalhes').value
+      };
+      const linha = document.getElementById('form-linha').value;
+
+      google.script.run.withSuccessHandler(() => {
+        fecharModal();
+        google.script.run.withSuccessHandler(processarDadosDinamicos).getDadosRotina();
+        btn.innerText = "Salvar";
+        btn.disabled = false;
+      }).salvarAtividade(dadosForm, linha);
+    }
+
+    function excluirAtividade() {
+      const linha = document.getElementById('form-linha').value;
+      if (!linha) return;
+      
+      if (confirm("Tem certeza que deseja excluir esta atividade?")) {
+        const btn = document.getElementById('btn-excluir');
+        btn.innerText = "Excluindo...";
+        btn.disabled = true;
+
+        google.script.run.withSuccessHandler(() => {
+          fecharModal();
+          google.script.run.withSuccessHandler(processarDadosDinamicos).getDadosRotina();
+          btn.innerText = "Excluir";
+          btn.disabled = false;
+        }).excluirLinha(linha);
+      }
+    }
+
+    function baixarPDF() {
+      const tituloOriginal = document.title;
+      document.title = "Rotina"; 
+      window.print();
+      setTimeout(() => { document.title = tituloOriginal; }, 1000);
+    }
+
+    // NOVA FUNÇÃO: Transforma a grade direto em PNG e baixa no celular/PC
+    function baixarPNG() {
+      const elemento = document.getElementById("area-impressao");
+      html2canvas(elemento, { scale: 2 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'Rotina.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+  </script>
+</body>
+</html>
