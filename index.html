@@ -10,13 +10,14 @@
     h2 { margin: 0; font-size: 16px; }
     button { background: #1a73e8; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
     
-    /* Grade otimizada para caber em qualquer tela sem rolagem lateral */
     .calendario-container { display: flex; padding: 5px; position: relative; width: 100%; box-sizing: border-box; }
-    .eixo-horas { width: 35px; flex-shrink: 0; position: relative; margin-top: 25px; }
-    .hora-label { position: absolute; right: 5px; font-size: 10px; color: #666; transform: translateY(-50%); }
+    
+    /* EIXO DE HORAS EXPANDIDO PARA NÃO CORTAR NO PDF */
+    .eixo-horas { width: 55px; flex-shrink: 0; position: relative; margin-top: 25px; }
+    .hora-label { position: absolute; right: 8px; font-size: 11px; color: #666; transform: translateY(-50%); font-weight: bold; }
     
     .dias-container { display: flex; flex-grow: 1; width: 100%; border-left: 1px solid #ddd; border-top: 1px solid #ddd; }
-    .coluna-dia { flex: 1; border-right: 1px solid #ddd; position: relative; background: #fff; background-image: linear-gradient(#f0f0f0 1px, transparent 1px); background-size: 100% 40px; } /* Altura achatada para 40px por hora */
+    .coluna-dia { flex: 1; border-right: 1px solid #ddd; position: relative; background: #fff; background-image: linear-gradient(#f0f0f0 1px, transparent 1px); background-size: 100% 40px; } 
     .cabecalho-dia { text-align: center; font-weight: bold; padding: 5px 0; background: #000; color: white; border-bottom: 1px solid #ddd; position: absolute; top: 0; width: 100%; height: 25px; box-sizing: border-box; font-size: 11px; overflow: hidden; }
     
     .evento { position: absolute; left: 1px; right: 1px; border-radius: 3px; padding: 2px 4px; color: white; overflow: hidden; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 1px 2px rgba(0,0,0,0.2); display: flex; flex-direction: column; justify-content: flex-start; }
@@ -37,17 +38,19 @@
     .btn-cancelar { background: #ccc; color: black; }
     .btn-perigo { background: #dc3545; color: white; }
 
+    /* CORREÇÃO DO PDF: Força margens adequadas para os horários aparecerem inteiros */
     @media print {
-      @page { size: landscape; margin: 5mm; }
-      body { zoom: 85%; background: white; margin: 0; padding: 0; } 
+      @page { size: landscape; margin: 10mm 5mm 5mm 5mm; }
+      body { zoom: 80%; background: white; margin: 0; padding: 0; } 
       .header, button, .modal-overlay { display: none !important; } 
       .calendario-container { padding: 0 !important; width: 100% !important; display: flex !important; }
+      .eixo-horas { width: 70px !important; }
+      .hora-label { font-size: 14px !important; color: #000 !important; right: 10px !important; }
       .dias-container { width: 100% !important; border: 1px solid #000 !important; }
-      .hora-label { font-size: 14px !important; color: #000 !important; font-weight: bold !important; }
       .cabecalho-dia { font-size: 16px !important; height: 30px !important; line-height: 20px !important; }
-      .evento-titulo { font-size: 14px !important; }
-      .evento-info { font-size: 12px !important; }
-      .evento-detalhes { font-size: 11px !important; }
+      .evento-titulo { font-size: 13px !important; }
+      .evento-info { font-size: 11px !important; }
+      .evento-detalhes { font-size: 10px !important; }
       .evento { border: 1px solid #000 !important; }
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     }
@@ -134,7 +137,7 @@
 
     let HORA_INICIO = 6; 
     let HORA_FIM = 22;   
-    const PIXELS_POR_HORA = 40; // Ajustado para 40px para achatar a grade verticalmente
+    const PIXELS_POR_HORA = 40; 
     const OFFSET_TOPO = 25; 
 
     const mapaDias = {
@@ -349,13 +352,15 @@
       setTimeout(() => { document.title = tituloOriginal; }, 1000);
     }
 
-    // CORREÇÃO DO PNG: Força a captura da tabela inteira sem cortes verticais/horizontais
+    // CORREÇÃO DO PNG: Força proporção horizontal (paisagem) simulada de alta resolução
     function baixarPNG() {
       const elemento = document.getElementById("area-impressao");
+      
+      // Criamos dimensões fixas no formato horizontal (paisagem) para o print sair perfeito
       html2canvas(elemento, { 
         scale: 2,
-        windowWidth: elemento.scrollWidth,
-        windowHeight: elemento.scrollHeight 
+        windowWidth: 1200,   // Força largura de tela grande de PC para garantir formato paisagem
+        windowHeight: 700
       }).then(canvas => {
         const link = document.createElement('a');
         link.download = 'Rotina.png';
