@@ -3,27 +3,26 @@
 <head>
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Biblioteca leve para transformar a grade em PNG -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f0f2f5; color: #333; }
-    .header { padding: 15px; background: #fff; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
-    h2 { margin: 0; font-size: 18px; }
-    button { background: #1a73e8; color: white; border: none; padding: 8px 16px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f0f2f5; color: #333; overflow-x: hidden; }
+    .header { padding: 10px 15px; background: #fff; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+    h2 { margin: 0; font-size: 16px; }
+    button { background: #1a73e8; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
     
-    .calendario-container { display: flex; padding: 10px; overflow-x: auto; position: relative; padding-bottom: 80px; }
-    .eixo-horas { width: 50px; flex-shrink: 0; position: relative; margin-top: 30px; }
-    .hora-label { position: absolute; right: 10px; font-size: 12px; color: #666; transform: translateY(-50%); }
+    /* Grade otimizada para caber em qualquer tela sem rolagem lateral */
+    .calendario-container { display: flex; padding: 5px; position: relative; width: 100%; box-sizing: border-box; }
+    .eixo-horas { width: 35px; flex-shrink: 0; position: relative; margin-top: 25px; }
+    .hora-label { position: absolute; right: 5px; font-size: 10px; color: #666; transform: translateY(-50%); }
     
-    .dias-container { display: flex; flex-grow: 1; min-width: 700px; border-left: 1px solid #ddd; border-top: 1px solid #ddd; }
-    .coluna-dia { flex: 1; border-right: 1px solid #ddd; position: relative; background: #fff; background-image: linear-gradient(#f0f0f0 1px, transparent 1px); background-size: 100% 60px; }
-    .cabecalho-dia { text-align: center; font-weight: bold; padding: 8px 0; background: #000; color: white; border-bottom: 1px solid #ddd; position: absolute; top: 0; width: 100%; height: 30px; box-sizing: border-box;}
+    .dias-container { display: flex; flex-grow: 1; width: 100%; border-left: 1px solid #ddd; border-top: 1px solid #ddd; }
+    .coluna-dia { flex: 1; border-right: 1px solid #ddd; position: relative; background: #fff; background-image: linear-gradient(#f0f0f0 1px, transparent 1px); background-size: 100% 40px; } /* Altura achatada para 40px por hora */
+    .cabecalho-dia { text-align: center; font-weight: bold; padding: 5px 0; background: #000; color: white; border-bottom: 1px solid #ddd; position: absolute; top: 0; width: 100%; height: 25px; box-sizing: border-box; font-size: 11px; overflow: hidden; }
     
-    /* BLOCOS DE ATIVIDADE */
-    .evento { position: absolute; left: 2px; right: 2px; border-radius: 4px; padding: 5px; color: white; overflow: hidden; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 2px 4px rgba(0,0,0,0.2); display: flex; flex-direction: column; justify-content: flex-start; }
-    .evento-titulo { font-weight: bold; font-size: 13px; line-height: 1.15; word-break: break-word; white-space: normal; }
-    .evento-info { font-size: 11px; opacity: 0.9; margin-top: 2px; }
-    .evento-detalhes { font-size: 10px; opacity: 0.8; margin-top: 2px; font-style: italic; word-break: break-word; }
+    .evento { position: absolute; left: 1px; right: 1px; border-radius: 3px; padding: 2px 4px; color: white; overflow: hidden; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 1px 2px rgba(0,0,0,0.2); display: flex; flex-direction: column; justify-content: flex-start; }
+    .evento-titulo { font-weight: bold; font-size: 11px; line-height: 1.1; word-break: break-word; white-space: normal; }
+    .evento-info { font-size: 9px; opacity: 0.9; }
+    .evento-detalhes { font-size: 9px; opacity: 0.8; font-style: italic; word-break: break-word; }
     
     .cat-estudos { background-color: #0b5394; }
     .cat-treinos { background-color: #212121; }
@@ -38,23 +37,18 @@
     .btn-cancelar { background: #ccc; color: black; }
     .btn-perigo { background: #dc3545; color: white; }
 
-    /* REGRAS DE IMPRESSÃO (PDF) */
     @media print {
-      @page { margin: 5mm; }
-      body { zoom: 75%; background: white; margin: 0; padding: 0; } 
+      @page { size: landscape; margin: 5mm; }
+      body { zoom: 85%; background: white; margin: 0; padding: 0; } 
       .header, button, .modal-overlay { display: none !important; } 
-      
-      .calendario-container { padding: 0 !important; overflow: visible !important; width: 100% !important; display: flex !important; padding-bottom: 0 !important; margin-bottom: 0 !important; }
-      .dias-container { min-width: 0 !important; width: 100% !important; border: 1px solid #000 !important; }
-      
-      .hora-label { font-size: 16px !important; color: #000 !important; right: 5px !important; font-weight: bold !important; }
-      .cabecalho-dia { font-size: 16px !important; padding: 4px 0 !important; height: 30px !important; line-height: 22px !important; overflow: hidden !important; }
-      
-      .evento-titulo { font-size: 15px !important; }
-      .evento-info { font-size: 13px !important; }
-      .evento-detalhes { font-size: 12px !important; }
+      .calendario-container { padding: 0 !important; width: 100% !important; display: flex !important; }
+      .dias-container { width: 100% !important; border: 1px solid #000 !important; }
+      .hora-label { font-size: 14px !important; color: #000 !important; font-weight: bold !important; }
+      .cabecalho-dia { font-size: 16px !important; height: 30px !important; line-height: 20px !important; }
+      .evento-titulo { font-size: 14px !important; }
+      .evento-info { font-size: 12px !important; }
+      .evento-detalhes { font-size: 11px !important; }
       .evento { border: 1px solid #000 !important; }
-
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     }
   </style>
@@ -62,10 +56,10 @@
 <body>
 
   <div class="header">
-    <h2>Rotina Semanal</h2>
+    <h2>Rotina</h2>
     <div>
-      <button onclick="baixarPNG()" style="background: #e67e22; margin-right: 10px;">Baixar PNG</button>
-      <button onclick="baixarPDF()" style="background: #34a853; margin-right: 10px;">Baixar PDF</button>
+      <button onclick="baixarPNG()" style="background: #e67e22; margin-right: 5px;">PNG</button>
+      <button onclick="baixarPDF()" style="background: #34a853; margin-right: 5px;">PDF</button>
       <button onclick="abrirModal()">+ Novo</button>
     </div>
   </div>
@@ -140,8 +134,8 @@
 
     let HORA_INICIO = 6; 
     let HORA_FIM = 22;   
-    const PIXELS_POR_HORA = 60; 
-    const OFFSET_TOPO = 30; 
+    const PIXELS_POR_HORA = 40; // Ajustado para 40px para achatar a grade verticalmente
+    const OFFSET_TOPO = 25; 
 
     const mapaDias = {
       'domingo': 'col-dom', 'dom': 'col-dom',
@@ -207,8 +201,8 @@
         
         bloco.innerHTML = `
           <div class="evento-titulo">${item.atividade}</div>
-          ${heightPixels > 40 ? `<div class="evento-info">${item.inicio}-${item.fim}</div>` : ''}
-          ${heightPixels > 65 && item.detalhes ? `<div class="evento-detalhes">${item.detalhes}</div>` : ''}
+          ${heightPixels > 30 ? `<div class="evento-info">${item.inicio}-${item.fim}</div>` : ''}
+          ${heightPixels > 50 && item.detalhes ? `<div class="evento-detalhes">${item.detalhes}</div>` : ''}
         `;
 
         bloco.onclick = () => abrirModal(item);
@@ -236,7 +230,7 @@
       const partes = horaString.split(':');
       const horas = parseInt(partes[0], 10);
       const minutos = parseInt(partes[1], 10);
-      return ((horas - HORA_INICIO) * PIXELS_POR_HORA) + minutos;
+      return ((horas - HORA_INICIO) * PIXELS_POR_HORA) + (minutos * (PIXELS_POR_HORA / 60));
     }
 
     function abrirModal(itemExistente = null) {
@@ -294,7 +288,7 @@
       btn.innerText = "Salvando...";
       btn.disabled = true;
 
-      const payload = {
+      const dadosForm = {
         acao: "salvar",
         linha: document.getElementById('form-linha').value,
         atividade: atividade,
@@ -307,7 +301,7 @@
 
       fetch(URL_API, {
         method: 'POST',
-        body: JSON.stringify(payload)
+        body: JSON.stringify(dadosForm)
       })
       .then(res => res.json())
       .then(res => {
@@ -332,10 +326,7 @@
         btn.innerText = "Excluindo...";
         btn.disabled = true;
 
-        const payload = {
-          acao: "excluir",
-          linha: linha
-        };
+        const payload = { acao: "excluir", linha: linha };
 
         fetch(URL_API, {
           method: 'POST',
@@ -358,9 +349,14 @@
       setTimeout(() => { document.title = tituloOriginal; }, 1000);
     }
 
+    // CORREÇÃO DO PNG: Força a captura da tabela inteira sem cortes verticais/horizontais
     function baixarPNG() {
       const elemento = document.getElementById("area-impressao");
-      html2canvas(elemento, { scale: 2 }).then(canvas => {
+      html2canvas(elemento, { 
+        scale: 2,
+        windowWidth: elemento.scrollWidth,
+        windowHeight: elemento.scrollHeight 
+      }).then(canvas => {
         const link = document.createElement('a');
         link.download = 'Rotina.png';
         link.href = canvas.toDataURL('image/png');
