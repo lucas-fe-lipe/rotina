@@ -1,15 +1,17 @@
 {
-  "name": "Rotina",
+  "name": "Minha Rotina",
   "short_name": "Rotina",
-  "start_url": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f0f2f5",
   "theme_color": "#1a73e8",
   "icons": [
     {
-      "src": "icone.png",
+      "src": "./icone.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
