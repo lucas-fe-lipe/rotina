@@ -19,7 +19,7 @@
     .coluna-dia { flex: 1; border-right: 1px solid #ddd; position: relative; background: #fff; background-image: linear-gradient(#f0f0f0 1px, transparent 1px); background-size: 100% 60px; }
     .cabecalho-dia { text-align: center; font-weight: bold; padding: 8px 0; background: #000; color: white; border-bottom: 1px solid #ddd; position: absolute; top: 0; width: 100%; height: 30px; box-sizing: border-box;}
     
-    /* BLOCOS DE ATIVIDADE: fontes maiores e quebra controlada para caber "Pedalar e Saltos" */
+    /* BLOCOS DE ATIVIDADE */
     .evento { position: absolute; left: 2px; right: 2px; border-radius: 4px; padding: 5px; color: white; overflow: hidden; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 2px 4px rgba(0,0,0,0.2); display: flex; flex-direction: column; justify-content: flex-start; }
     .evento-titulo { font-weight: bold; font-size: 13px; line-height: 1.15; word-break: break-word; white-space: normal; }
     .evento-info { font-size: 11px; opacity: 0.9; margin-top: 2px; }
@@ -70,7 +70,6 @@
     </div>
   </div>
 
-  <!-- ID adicionado para o gerador de PNG capturar apenas a grade -->
   <div class="calendario-container" id="area-impressao">
     <div class="eixo-horas" id="eixo-horas"></div>
     <div class="dias-container">
@@ -137,6 +136,8 @@
   </div>
 
   <script>
+    const URL_API = 'https://script.google.com/macros/s/AKfycbyvIt4FjYInGZi1vnxW5B56MuwlEC3gMyGnnkSRDMznNbrobq-Ji4uwRvb3qUYT8iDx/exec';
+
     let HORA_INICIO = 6; 
     let HORA_FIM = 22;   
     const PIXELS_POR_HORA = 60; 
@@ -153,8 +154,15 @@
     };
 
     window.onload = function() {
-      google.script.run.withSuccessHandler(processarDadosDinamicos).getDadosRotina();
+      carregarDadosDoApp();
     };
+
+    function carregarDadosDoApp() {
+      fetch(URL_API)
+        .then(response => response.json())
+        .then(dados => processarDadosDinamicos(dados))
+        .catch(err => console.log("Erro ao carregar:", err));
+    }
 
     function processarDadosDinamicos(dados) {
       document.querySelectorAll('.evento').forEach(e => e.remove());
@@ -197,7 +205,6 @@
         bloco.style.top = topPixels + 'px';
         bloco.style.height = Math.max(heightPixels, 15) + 'px'; 
         
-        // Inserção do Título, Horário e Detalhes dentro da caixa
         bloco.innerHTML = `
           <div class="evento-titulo">${item.atividade}</div>
           ${heightPixels > 40 ? `<div class="evento-info">${item.inicio}-${item.fim}</div>` : ''}
@@ -287,7 +294,9 @@
       btn.innerText = "Salvando...";
       btn.disabled = true;
 
-      const dadosForm = {
+      const payload = {
+        acao: "salvar",
+        linha: document.getElementById('form-linha').value,
         atividade: atividade,
         dia: document.getElementById('form-dia').value,
         inicio: inicio,
@@ -295,14 +304,23 @@
         categoria: document.getElementById('form-categoria').value,
         detalhes: document.getElementById('form-detalhes').value
       };
-      const linha = document.getElementById('form-linha').value;
 
-      google.script.run.withSuccessHandler(() => {
+      fetch(URL_API, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.json())
+      .then(res => {
         fecharModal();
-        google.script.run.withSuccessHandler(processarDadosDinamicos).getDadosRotina();
+        carregarDadosDoApp(); 
         btn.innerText = "Salvar";
         btn.disabled = false;
-      }).salvarAtividade(dadosForm, linha);
+      })
+      .catch(err => {
+        alert("Erro ao salvar.");
+        btn.innerText = "Salvar";
+        btn.disabled = false;
+      });
     }
 
     function excluirAtividade() {
@@ -314,12 +332,22 @@
         btn.innerText = "Excluindo...";
         btn.disabled = true;
 
-        google.script.run.withSuccessHandler(() => {
+        const payload = {
+          acao: "excluir",
+          linha: linha
+        };
+
+        fetch(URL_API, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(res => {
           fecharModal();
-          google.script.run.withSuccessHandler(processarDadosDinamicos).getDadosRotina();
+          carregarDadosDoApp();
           btn.innerText = "Excluir";
           btn.disabled = false;
-        }).excluirLinha(linha);
+        });
       }
     }
 
@@ -330,7 +358,6 @@
       setTimeout(() => { document.title = tituloOriginal; }, 1000);
     }
 
-    // NOVA FUNÇÃO: Transforma a grade direto em PNG e baixa no celular/PC
     function baixarPNG() {
       const elemento = document.getElementById("area-impressao");
       html2canvas(elemento, { scale: 2 }).then(canvas => {
