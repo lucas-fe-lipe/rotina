@@ -23,11 +23,11 @@
     .evento-info { font-size: 9px; opacity: 0.9; }
     .evento-detalhes { font-size: 9px; opacity: 0.8; font-style: italic; word-break: break-word; }
     
-    /* PALETA DE CORES RÁPIDAS NO MODAL */
-    .paleta-cores { display: flex; gap: 8px; margin-top: 5px; align-items: center; }
-    .bola-cor { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s; }
+    /* PALETA DE CORES PERSONALIZADA EM GRADE DE DUAS LINHAS */
+    .paleta-cores { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; align-items: center; max-width: 250px; }
+    .bola-cor { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s; }
     .bola-cor:hover { transform: scale(1.1); }
-    .bola-cor.selecionada { border-color: #000; transform: scale(1.15); }
+    .bola-cor.selecionada { border-color: #ff9800; transform: scale(1.15); box-shadow: 0 0 4px rgba(0,0,0,0.4); }
 
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: center; }
     .modal-box { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
@@ -111,20 +111,26 @@
         </div>
       </div>
 
-      <!-- SELETOR DE CORES: Cores da sua tabela + Seletor livre -->
+      <!-- SUAS 12 OPÇÕES DE CORES EXATAS + SELETOR LIVRE -->
       <div class="form-group">
         <label>Cor do Bloco</label>
         <div class="paleta-cores">
-          <div class="bola-cor" style="background-color: #212121;" onclick="escolherCor('#212121')" title="Preto (Treinos)"></div>
-          <div class="bola-cor" style="background-color: #0b5394;" onclick="escolherCor('#0b5394')" title="Azul Escuro (Estudos)"></div>
-          <div class="bola-cor" style="background-color: #1a73e8;" onclick="escolherCor('#1a73e8')" title="Azul Clássico"></div>
-          <div class="bola-cor" style="background-color: #355c7d;" onclick="escolherCor('#355c7d')" title="Cinza Escuro / Azulado"></div>
-          <div class="bola-cor" style="background-color: #512da8;" onclick="escolherCor('#512da8')" title="Roxo / Índigo"></div>
-          <div class="bola-cor" style="background-color: #757575;" onclick="escolherCor('#757575')" title="Cinza Neutro"></div>
-          <!-- Seletor nativo de cores completas -->
-          <input type="color" id="form-cor-picker" value="#1a73e8" style="width: 32px; height: 32px; border: none; cursor: pointer; padding: 0; background: none;" onchange="escolherCor(this.value)" title="Escolher cor personalizada">
+          <div class="bola-cor" style="background-color: #073763;" onclick="escolherCor('#073763')"></div>
+          <div class="bola-cor" style="background-color: #3d85c6;" onclick="escolherCor('#3d85c6')"></div>
+          <div class="bola-cor" style="background-color: #1155cc;" onclick="escolherCor('#1155cc')"></div>
+          <div class="bola-cor" style="background-color: #45818e;" onclick="escolherCor('#45818e')"></div>
+          <div class="bola-cor" style="background-color: #0c343d;" onclick="escolherCor('#0c343d')"></div>
+          <div class="bola-cor" style="background-color: #351c75;" onclick="escolherCor('#351c75')"></div>
+          <div class="bola-cor" style="background-color: #0b5394;" onclick="escolherCor('#0b5394')"></div>
+          <div class="bola-cor" style="background-color: #1c4587;" onclick="escolherCor('#1c4587')"></div>
+          <div class="bola-cor" style="background-color: #666666;" onclick="escolherCor('#666666')"></div>
+          <div class="bola-cor" style="background-color: #000000;" onclick="escolherCor('#000000')"></div>
+          <div class="bola-cor" style="background-color: #b7b7b7;" onclick="escolherCor('#b7b7b7')"></div>
+          <div class="bola-cor" style="background-color: #efefef; border: 1px solid #ccc;" onclick="escolherCor('#efefef')"></div>
+          <!-- Seletor livre ao lado das opções -->
+          <input type="color" id="form-cor-picker" value="#1a73e8" style="width: 28px; height: 28px; border: none; cursor: pointer; padding: 0; background: none; border-radius: 50%;" onchange="escolherCor(this.value)" title="Outra cor">
         </div>
-        <input type="hidden" id="form-cor" value="#1a73e8">
+        <input type="hidden" id="form-cor" value="#073763">
       </div>
 
       <div class="form-group">
@@ -165,9 +171,9 @@
     function escolherCor(hex) {
       document.getElementById('form-cor').value = hex;
       document.getElementById('form-cor-picker').value = hex;
-      // Atualiza visualmente qual bolinha está selecionada
       document.querySelectorAll('.bola-cor').forEach(b => {
-        if(b.style.backgroundColor === hex || rgbParaHex(b.style.backgroundColor) === hex) {
+        let corBola = rgbParaHex(b.style.backgroundColor);
+        if(corBola.toLowerCase() === hex.toLowerCase()) {
           b.classList.add('selecionada');
         } else {
           b.classList.remove('selecionada');
@@ -175,7 +181,6 @@
       });
     }
 
-    // Função auxiliar para converter RGB do estilo para Hex
     function rgbParaHex(rgb) {
       if(!rgb.startsWith('rgb')) return rgb;
       let valores = rgb.match(/\d+/g);
@@ -223,8 +228,14 @@
 
         const bloco = document.createElement('div');
         bloco.className = `evento`;
-        // Aplica diretamente a cor escolhida salva na planilha
-        bloco.style.backgroundColor = item.cor || '#1a73e8';
+        bloco.style.backgroundColor = item.cor || '#073763';
+        // Se a cor de fundo for muito clara (ex: #efefef), ajusta o texto para preto para dar contraste
+        if(item.cor === '#efefef' || item.cor === '#b7b7b7') {
+          bloco.style.color = '#000';
+        } else {
+          bloco.style.color = '#fff';
+        }
+
         bloco.style.top = topPixels + 'px';
         bloco.style.height = Math.max(heightPixels, 15) + 'px'; 
         
@@ -280,7 +291,7 @@
         document.getElementById('form-inicio').value = itemExistente.inicio;
         document.getElementById('form-fim').value = itemExistente.fim;
         document.getElementById('form-detalhes').value = itemExistente.detalhes;
-        escolherCor(itemExistente.cor || '#1a73e8');
+        escolherCor(itemExistente.cor || '#073763');
         
         btnExcluir.style.display = 'block';
       } else {
@@ -290,7 +301,7 @@
         document.getElementById('form-inicio').value = '';
         document.getElementById('form-fim').value = '';
         document.getElementById('form-detalhes').value = '';
-        escolherCor('#1a73e8'); // Cor padrão inicial
+        escolherCor('#073763');
         
         btnExcluir.style.display = 'none';
       }
@@ -325,7 +336,7 @@
         dia: document.getElementById('form-dia').value,
         inicio: inicio,
         fim: fim,
-        cor: document.getElementById('form-cor').value, // Salva o código da cor escolhida
+        cor: document.getElementById('form-cor').value,
         detalhes: document.getElementById('form-detalhes').value
       };
 
