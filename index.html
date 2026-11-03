@@ -164,7 +164,7 @@
     <div id="bloco-tarefas" style="margin: 15px 10px; padding: 15px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px;">
       <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="alternarMinimizarBlocoTarefas()">
         <div style="font-size: 15px; font-weight: bold; color: #fff; display: flex; align-items: center; gap: 6px;">
-          <span id="seta-bloco-tarefas">▼</span> ✅ Tarefas
+          <span id="seta-bloco-tarefas">▼</span> Tarefas
         </div>
         <button class="btn-primary" style="padding: 4px 10px; font-size: 12px;" onclick="event.stopPropagation(); abrirModalTarefa();">+ Nova Tarefa</button>
       </div>
@@ -198,11 +198,8 @@
     <div class="modal-box">
       <h3>Opções</h3>
       <button class="menu-opcoes-btn" onclick="abrirModal()">✏️ Nova Atividade (Rotina)</button>
-      <button class="menu-opcoes-btn" onclick="abrirModalPlanilha()">☁️ Backup & Sincronização Google Sheets</button>
       <button class="menu-opcoes-btn" onclick="abrirModalGCal()">📅 Exportar para o Google Agenda</button>
-      <button class="menu-opcoes-btn" onclick="baixarBackup()">💾 Salvar Backup (.json)</button>
-      <label for="importar-arquivo" class="menu-opcoes-btn">📂 Importar Progresso</label>
-      <input type="file" id="importar-arquivo" accept=".json" style="display: none;" onchange="importarBackup(event)">
+      <button class="menu-opcoes-btn" onclick="abrirModalBackup()">💾 Backup</button>
       
       <div style="margin-top: 15px; margin-bottom: 10px; background: #2c2c2c; border: 1px solid #444; padding: 12px; border-radius: 8px;">
         <label style="font-size: 12px; font-weight: bold; color: #fff; margin-bottom: 5px; display:block;">🔔 Notificações (Web Push)</label>
@@ -220,24 +217,42 @@
     </div>
   </div>
 
+  <!-- MODAL DE SUB-MENU DE BACKUP -->
+  <div class="modal-overlay" id="modal-backup">
+    <div class="modal-box">
+      <h3>💾 Backup & Restauração</h3>
+      <button class="menu-opcoes-btn" onclick="abrirModalPlanilha()">☁️ Sincronização Google Sheets</button>
+      <button class="menu-opcoes-btn" onclick="baixarBackup()">💾 Salvar Backup (.json)</button>
+      <label for="importar-arquivo" class="menu-opcoes-btn">📂 Importar Progresso</label>
+      <input type="file" id="importar-arquivo" accept=".json" style="display: none;" onchange="importarBackup(event)">
+      
+      <div class="modal-botoes">
+        <button class="btn-cancelar" onclick="fecharModalBackup()">Voltar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL EXPORTAR GOOGLE AGENDA -->
   <div class="modal-overlay" id="modal-gcal">
     <div class="modal-box">
       <h3>Exportar para o Google Agenda</h3>
       <p style="font-size: 12px; color: #aaa; line-height: 1.4; margin-top: 0;">
-        Escolha até quando você deseja que a sua grade horária semanal se repita no seu Google Agenda:
+        Escolha o intervalo de datas (início e fim) para o qual sua rotina semanal se repetirá no seu Google Agenda:
       </p>
       
-      <div class="form-group">
-        <label>Período de Repetição da Rotina</label>
-        <select id="gcal-limite">
-          <option value="junho">Até o final de Junho deste ano</option>
-          <option value="dezembro" selected>Até o final de Dezembro deste ano</option>
-        </select>
+      <div style="display: flex; gap: 10px;">
+        <div class="form-group" style="flex: 1;">
+          <label>Data de Início</label>
+          <input type="date" id="gcal-inicio">
+        </div>
+        <div class="form-group" style="flex: 1;">
+          <label>Data de Fim</label>
+          <input type="date" id="gcal-fim">
+        </div>
       </div>
 
       <div style="font-size: 11px; color: #888; background: #121212; padding: 8px; border-radius: 6px; border: 1px solid #333; margin-bottom: 12px;">
-        💡 <strong>Nota:</strong> As suas <strong>Tarefas</strong> com data e hora definidas também serão exportadas automaticamente para o Google Agenda.
+        💡 <strong>Nota:</strong> As <strong>Tarefas</strong> que estiverem dentro desse intervalo de datas também serão exportadas.
       </div>
 
       <div class="modal-botoes">
@@ -263,7 +278,7 @@
           <button type="button" class="btn-icon" style="font-size: 11px; padding: 3px 8px;" onclick="copiarCodigoAppsScript()">📋 Copiar Código</button>
         </div>
 
-        <textarea id="codigo-apps-script" readonly style="width:100%; height:110px; background:#000; color:#0f0; font-family:monospace; font-size:10px; border:1px solid #444; border-radius:4px; padding:6px; box-sizing: border-box; margin-bottom:10px; white-space: pre; word-wrap: normal;
+        <textarea id="codigo-apps-script" readonly style="width:100%; height:110px; background:#000; color:#fff; font-family:monospace; font-size:10px; border:1px solid #444; border-radius:4px; padding:6px; box-sizing: border-box; margin-bottom:10px; white-space: pre; word-wrap: normal;
           ">function doPost(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();sheet.getRange(1, 1).setValue(e.postData.contents);return ContentService.createTextOutput("Sucesso");}
           
 function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();var val = sheet.getRange(1, 1).getValue();return ContentService.createTextOutput(val || "").setMimeType(ContentService.MimeType.JSON);}</textarea>
@@ -402,7 +417,13 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
     const mapaDiasStr = { 'domingo': 'col-dom', 'segunda': 'col-seg', 'terça': 'col-ter', 'quarta': 'col-qua', 'quinta': 'col-qui', 'sexta': 'col-sex', 'sábado': 'col-sab' };
     const diasSemanaNomes = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 
-    window.onload = function() { carregarDados(); checarResetTrackers(); renderizarTrackers(); if ("Notification" in window && Notification.permission === "granted") iniciarNotificacoes(); };
+    window.onload = function() { 
+      carregarDados(); 
+      checarResetTrackers(); 
+      renderizarTrackers(); 
+      if (urlPlanilhaGoogle) { baixarDaPlanilhaSilencioso(); }
+      if ("Notification" in window && Notification.permission === "granted") iniciarNotificacoes(); 
+    };
 
     function mudarAba(aba) {
       document.getElementById('tab-rotina').classList.toggle('ativa', aba === 'rotina');
@@ -446,6 +467,10 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
         sincronizarComPlanilhaOculto(); 
     }
 
+    /* --- MENU DE BACKUP --- */
+    function abrirModalBackup() { fecharOpcoes(); document.getElementById('modal-backup').style.display = 'flex'; }
+    function fecharModalBackup() { document.getElementById('modal-backup').style.display = 'none'; }
+
     /* --- COPIAR CÓDIGO DO APPS SCRIPT --- */
     function copiarCodigoAppsScript() {
       const textarea = document.getElementById('codigo-apps-script');
@@ -459,22 +484,39 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
     }
 
     /* --- EXPORTAÇÃO COMPATÍVEL DE ARQUIVO ICS (GOOGLE AGENDA) --- */
-    function abrirModalGCal() { fecharOpcoes(); document.getElementById('modal-gcal').style.display = 'flex'; }
+    function abrirModalGCal() { 
+      fecharOpcoes(); 
+      const hoje = new Date();
+      const anoAtual = hoje.getFullYear();
+      const hojeIso = hoje.toISOString().split('T')[0];
+      document.getElementById('gcal-inicio').value = hojeIso;
+      document.getElementById('gcal-fim').value = `${anoAtual}-12-31`;
+      document.getElementById('modal-gcal').style.display = 'flex'; 
+    }
+
     function fecharModalGCal() { document.getElementById('modal-gcal').style.display = 'none'; }
 
     function gerarExportacaoGoogleAgenda() {
-      const limiteOpcao = document.getElementById('gcal-limite').value;
-      const anoAtual = new Date().getFullYear();
-      const dataLimiteLocalStr = limiteOpcao === 'junho' ? `${anoAtual}0630T235959` : `${anoAtual}1231T235959`;
+      const dataInicioInput = document.getElementById('gcal-inicio').value;
+      const dataFimInput = document.getElementById('gcal-fim').value;
+
+      if (!dataInicioInput || !dataFimInput) return alert("Por favor, selecione as datas de início e fim.");
+      if (dataInicioInput > dataFimInput) return alert("A data de início não pode ser posterior à data de fim.");
+
+      const partesFim = dataFimInput.split('-').map(Number);
+      const dataLimiteLocalStr = `${partesFim[0]}${String(partesFim[1]).padStart(2, '0')}${String(partesFim[2]).padStart(2, '0')}T235959`;
       const dtStamp = formatarDataICSUTC(new Date());
 
       let icsContent = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//MeuAppRotina//PT\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\n";
+
+      const partesIni = dataInicioInput.split('-').map(Number);
+      const dataInicioObj = new Date(partesIni[0], partesIni[1] - 1, partesIni[2]);
 
       dadosRotina.forEach((item, idx) => {
         let diaSemanaNum = mapaDias[item.dia];
         if (diaSemanaNum === undefined) return;
 
-        let d = new Date();
+        let d = new Date(dataInicioObj);
         let diaAtual = d.getDay();
         let diff = diaSemanaNum - diaAtual;
         if (diff < 0) diff += 7;
@@ -505,6 +547,7 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
 
       dadosTarefas.forEach((t, idx) => {
         if (!t.data) return;
+        if (t.data < dataInicioInput || t.data > dataFimInput) return;
         let dataHoraStr = t.data + 'T' + (t.hora ? t.hora : '00:00');
         let dInicio = new Date(dataHoraStr);
         if (isNaN(dInicio.getTime())) return;
@@ -763,7 +806,7 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
     }
 
     /* --- GOOGLE SHEETS SYNC & RESTORE LOGIC --- */
-    function abrirModalPlanilha() { fecharOpcoes(); document.getElementById('status-sincronizacao').innerText = ''; document.getElementById('modal-planilha').style.display = 'flex'; }
+    function abrirModalPlanilha() { fecharModalBackup(); fecharOpcoes(); document.getElementById('status-sincronizacao').innerText = ''; document.getElementById('modal-planilha').style.display = 'flex'; }
     function fecharModalPlanilha() { document.getElementById('modal-planilha').style.display = 'none'; }
     function salvarUrlPlanilha() { urlPlanilhaGoogle = document.getElementById('url-google-sheets').value.trim(); localStorage.setItem('appRotinaUrlPlanilha', urlPlanilhaGoogle); }
     
@@ -796,19 +839,31 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
                 }
                 const importado = JSON.parse(text);
                 if (importado.rotina) {
-                    dadosRotina = importado.rotina;
+                    dadosRotina = importado.rotina || [];
                     if(importado.curso) dadosCurso = importado.curso;
                     if(importado.trackers) dadosTrackers = { ...dadosTrackers, ...importado.trackers };
-                    if(importado.tarefas) dadosTarefas = importado.tarefas;
-                    if(importado.checks) checksRotina = importado.checks;
+                    if(importado.tarefas) dadosTarefas = importado.tarefas || [];
+                    if(importado.checks) checksRotina = importado.checks || {};
                     
                     if (dadosCurso.metasMinimizado === undefined) dadosCurso.metasMinimizado = true;
-                    salvarDadosLocalmente();
+                    
+                    localStorage.setItem('appRotinaDados', JSON.stringify(dadosRotina)); 
+                    localStorage.setItem('appCursoDados', JSON.stringify(dadosCurso)); 
+                    localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers)); 
+                    localStorage.setItem('appTarefasDados', JSON.stringify(dadosTarefas)); 
+                    localStorage.setItem('appRotinaChecks', JSON.stringify(checksRotina));
+
                     document.getElementById('nome-curso').value = dadosCurso.nome || "";
                     document.getElementById('meta-obrigatorias').value = dadosCurso.metaObrigatorias || 2400;
                     document.getElementById('meta-optativas').value = dadosCurso.metaOptativas || 300;
                     document.getElementById('meta-complementares').value = dadosCurso.metaComplementares || 200;
+                    
                     atualizarVisualMetasMinimizadas();
+                    processarGrade();
+                    renderizarCurso();
+                    renderizarBlocoTarefas();
+                    renderizarTrackers();
+
                     statusEl.innerText = '✅ Dados restaurados com sucesso!';
                     statusEl.style.color = '#4caf50';
                 } else {
@@ -821,6 +876,47 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
                 statusEl.style.color = '#f44336';
                 console.error(err);
             });
+    }
+
+    function baixarDaPlanilhaSilencioso() {
+        if (!urlPlanilhaGoogle) return;
+        fetch(urlPlanilhaGoogle)
+            .then(res => res.text())
+            .then(text => {
+                if (!text || text.trim() === "") return;
+                try {
+                    const importado = JSON.parse(text);
+                    if (importado.rotina) {
+                        dadosRotina = importado.rotina || [];
+                        if (importado.curso) dadosCurso = importado.curso;
+                        if (importado.trackers) dadosTrackers = { ...dadosTrackers, ...importado.trackers };
+                        if (importado.tarefas) dadosTarefas = importado.tarefas || [];
+                        if (importado.checks) checksRotina = importado.checks || {};
+                        
+                        if (dadosCurso.metasMinimizado === undefined) dadosCurso.metasMinimizado = true;
+
+                        localStorage.setItem('appRotinaDados', JSON.stringify(dadosRotina)); 
+                        localStorage.setItem('appCursoDados', JSON.stringify(dadosCurso)); 
+                        localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers)); 
+                        localStorage.setItem('appTarefasDados', JSON.stringify(dadosTarefas)); 
+                        localStorage.setItem('appRotinaChecks', JSON.stringify(checksRotina));
+
+                        document.getElementById('nome-curso').value = dadosCurso.nome || "";
+                        document.getElementById('meta-obrigatorias').value = dadosCurso.metaObrigatorias || 2400;
+                        document.getElementById('meta-optativas').value = dadosCurso.metaOptativas || 300;
+                        document.getElementById('meta-complementares').value = dadosCurso.metaComplementares || 200;
+
+                        atualizarVisualMetasMinimizadas();
+                        processarGrade();
+                        renderizarCurso();
+                        renderizarBlocoTarefas();
+                        renderizarTrackers();
+                    }
+                } catch(e) {
+                    console.error("Erro na busca automática:", e);
+                }
+            })
+            .catch(() => {});
     }
 
     function sincronizarComPlanilhaOculto() {
@@ -893,6 +989,7 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
       const hojeDiaNome = diasSemanaNomes[hoje.getDay()]; 
       const hojeDataStr = hoje.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'2-digit'}); 
       const chaveHojeId = hoje.toISOString().split('T')[0]; 
+      const horaMinutoAtual = hoje.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
       document.getElementById('titulo-hoje').innerText = `Hoje - ${diasSemanaNomes[hoje.getDay()]} ${hojeDataStr}`;
       
@@ -922,15 +1019,20 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
         });
       });
 
-      // 2. Tarefas específicas agendadas para Hoje
+      // 2. Tarefas específicas agendadas para Hoje (com verificação de atraso)
       dadosTarefas.filter(t => t.data === chaveHojeId).forEach(t => {
         const isChecked = t.concluida ? true : false;
+        let isAtrasado = false;
+        if (!isChecked && t.hora && t.hora < horaMinutoAtual) {
+          isAtrasado = true;
+        }
+        const badgeAtrasado = isAtrasado ? `<span style="background: #dc3545; color: #ffffff; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 4px; margin-left: 6px; display: inline-block; vertical-align: middle;">Atrasado</span>` : '';
         const textoHorario = t.hora ? `${t.hora} - ` : '';
         itensHoje.push({
           id: t.id,
           tipo: 'tarefa',
           horario: t.hora || '00:00',
-          texto: `${textoHorario}${escapeHTML(t.titulo)}`,
+          texto: `${textoHorario}${escapeHTML(t.titulo)}${badgeAtrasado}`,
           cor: t.cor || '#073763',
           isChecked: isChecked
         });
@@ -1036,8 +1138,8 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
     function salvarFormulario() { const atividade = document.getElementById('form-atividade').value, dia = document.getElementById('form-dia').value, inicio = document.getElementById('form-inicio').value, fim = document.getElementById('form-fim').value, cor = document.getElementById('form-cor').value, detalhes = document.getElementById('form-detalhes').value, idStr = document.getElementById('form-id').value; if (!atividade || !inicio || !fim) return alert("Preencha a atividade e os horários."); if (inicio >= fim) return alert("Erro: O término não pode ser antes ou igual ao início."); if (idStr) { const index = dadosRotina.findIndex(i => i.id === idStr); if (index !== -1) dadosRotina[index] = { id: idStr, atividade, dia, inicio, fim, cor, detalhes }; } else { dadosRotina.push({ id: Date.now().toString(), atividade, dia, inicio, fim, cor, detalhes }); } salvarDadosLocalmente(); fecharModal(); }
     function duplicarAtividade() { document.getElementById('form-id').value = ''; document.getElementById('modal-titulo').innerText = 'Nova Atividade (Cópia)'; document.getElementById('btn-excluir').style.display = 'none'; document.getElementById('btn-duplicar').style.display = 'none'; document.getElementById('form-inicio').focus(); }
     function excluirAtividade() { const idStr = document.getElementById('form-id').value; if (confirm("Tem certeza que deseja excluir?")) { dadosRotina = dadosRotina.filter(i => i.id !== idStr); salvarDadosLocalmente(); fecharModal(); } }
-    function baixarBackup() { fecharOpcoes(); const backupGeral = { rotina: dadosRotina, curso: dadosCurso, trackers: dadosTrackers, tarefas: dadosTarefas, checks: checksRotina, ultimaAtualizacao: new Date().toLocaleString() }; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupGeral)); const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", "rotina_e_curso_backup.json"); document.body.appendChild(a); a.click(); a.remove(); }
-    function importarBackup(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const importado = JSON.parse(e.target.result); if (importado.rotina) { dadosRotina = importado.rotina; if(importado.curso) dadosCurso = importado.curso; if(importado.trackers) dadosTrackers = { ...dadosTrackers, ...importado.trackers }; if(importado.tarefas) dadosTarefas = importado.tarefas; if(importado.checks) checksRotina = importado.checks; } else if (Array.isArray(importado)) { dadosRotina = importado; } if (dadosCurso.metasMinimizado === undefined) dadosCurso.metasMinimizado = true; salvarDadosLocalmente(); document.getElementById('nome-curso').value = dadosCurso.nome || ""; document.getElementById('meta-obrigatorias').value = dadosCurso.metaObrigatorias || 2400; document.getElementById('meta-optativas').value = dadosCurso.metaOptativas || 300; document.getElementById('meta-complementares').value = dadosCurso.metaComplementares || 200; atualizarVisualMetasMinimizadas(); alert("Progresso importado com sucesso!"); fecharOpcoes(); } catch (err) { alert("Erro ao ler o arquivo."); } }; reader.readAsText(file); }
+    function baixarBackup() { fecharModalBackup(); fecharOpcoes(); const backupGeral = { rotina: dadosRotina, curso: dadosCurso, trackers: dadosTrackers, tarefas: dadosTarefas, checks: checksRotina, ultimaAtualizacao: new Date().toLocaleString() }; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupGeral)); const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", "rotina_e_curso_backup.json"); document.body.appendChild(a); a.click(); a.remove(); }
+    function importarBackup(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const importado = JSON.parse(e.target.result); if (importado.rotina) { dadosRotina = importado.rotina; if(importado.curso) dadosCurso = importado.curso; if(importado.trackers) dadosTrackers = { ...dadosTrackers, ...importado.trackers }; if(importado.tarefas) dadosTarefas = importado.tarefas; if(importado.checks) checksRotina = importado.checks; } else if (Array.isArray(importado)) { dadosRotina = importado; } if (dadosCurso.metasMinimizado === undefined) dadosCurso.metasMinimizado = true; salvarDadosLocalmente(); document.getElementById('nome-curso').value = dadosCurso.nome || ""; document.getElementById('meta-obrigatorias').value = dadosCurso.metaObrigatorias || 2400; document.getElementById('meta-optativas').value = dadosCurso.metaOptativas || 300; document.getElementById('meta-complementares').value = dadosCurso.metaComplementares || 200; atualizarVisualMetasMinimizadas(); alert("Progresso importado com sucesso!"); fecharModalBackup(); fecharOpcoes(); } catch (err) { alert("Erro ao ler o arquivo."); } }; reader.readAsText(file); }
   </script>
 </body>
 </html>
