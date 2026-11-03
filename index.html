@@ -43,8 +43,8 @@
     
     .form-group { margin-bottom: 12px; display: flex; flex-direction: column; }
     .form-group label { font-size: 12px; margin-bottom: 5px; font-weight: bold; color: #aaa; }
-    .form-group input, .form-group select { padding: 10px; border: 1px solid #444; border-radius: 6px; background: #121212; color: #fff; font-family: inherit; box-sizing: border-box; }
-    .form-group input:focus, .form-group select:focus { outline: none; border-color: #888; }
+    .form-group input, .form-group select, .form-group textarea { padding: 10px; border: 1px solid #444; border-radius: 6px; background: #121212; color: #fff; font-family: inherit; box-sizing: border-box; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #888; }
     
     .paleta-cores { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; align-items: center; max-width: 250px; }
     .bola-cor { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s; }
@@ -101,7 +101,7 @@
     .btn-tracker { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; font-weight: bold; backdrop-filter: blur(2px); transition: 0.2s; }
     .btn-tracker:hover { background: rgba(0,0,0,0.6); }
 
-    /* ESTILOS DA LISTA DE TAREFAS DIÁRIAS (MAIS COMPACTA AINDA) */
+    /* ESTILOS DA LISTA DE TAREFAS DIÁRIAS */
     .tarefa-linha { display: flex; align-items: center; justify-content: space-between; padding: 4px 10px; border-radius: 6px; transition: opacity 0.2s; min-height: 24px; }
     .tarefa-linha.concluida { opacity: 0.6; }
     .tarefa-linha.concluida .tarefa-texto { text-decoration: line-through; }
@@ -113,11 +113,25 @@
 
     .secao-concluidas-titulo { cursor: pointer; font-size: 12px; color: #888; font-weight: bold; margin-top: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
 
+    /* ESTILOS DA ABA DE TAREFAS (KEEP) */
+    .tarefas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+    .tarefa-card { background: #1a1a1a; border: 1px solid #444; border-radius: 8px; padding: 12px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; gap: 8px; }
+    .tarefa-card:hover { border-color: #666; }
+    .tarefa-titulo { font-weight: bold; font-size: 14px; color: #fff; }
+    .tarefa-desc { font-size: 12px; color: #aaa; white-space: pre-wrap; word-break: break-word; }
+    .tarefa-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tarefa-tag { padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+    .tarefa-tag.atrasado { background: #dc3545; color: white; }
+    .tarefa-tag.data { background: #333; color: #ccc; border: 1px solid #555; }
+
     @media print {
-      @page { margin: 10mm 5mm 5mm 5mm; }
-      body { zoom: 80%; background: white !important; margin: 0; padding: 0; } 
-      .header, .modal-overlay, #aba-curso, #bloco-hoje, .trackers-container { display: none !important; } 
-      .calendario-container { padding: 0 !important; width: 100% !important; display: flex !important; background: white !important; }
+      @page { size: landscape; margin: 5mm; }
+      body { zoom: 100%; background: white !important; margin: 0; padding: 0; } 
+      .header, .modal-overlay, #aba-curso, #aba-tarefas, #bloco-hoje, .trackers-container { display: none !important; } 
+      
+      /* Forçar a área de impressão a ter a proporção exata de 1800x1080 (5:3) */
+      #area-impressao { display: flex !important; width: 100% !important; aspect-ratio: 1800 / 1080 !important; background: white !important; padding: 0 !important; }
+      
       .eixo-horas { width: 50px !important; margin-top: 0 !important; }
       .hora-label { font-size: 12px !important; color: #000 !important; right: 6px !important; }
       .dias-container { width: 100% !important; border: 1px solid #000 !important; }
@@ -135,6 +149,7 @@
     <div class="abas">
       <button class="aba-btn ativa" id="tab-rotina" onclick="mudarAba('rotina')">📅 Rotina</button>
       <button class="aba-btn" id="tab-curso" onclick="mudarAba('curso')">🎓 Meu Curso</button>
+      <button class="aba-btn" id="tab-tarefas" onclick="mudarAba('tarefas')">✅ Tarefas</button>
     </div>
     
     <div class="header-botoes" id="botoes-rotina">
@@ -142,7 +157,11 @@
     </div>
     
     <div class="header-botoes" id="botoes-curso" style="display: none;">
-      <button class="btn-primary" onclick="abrirModalPeriodo()">+ Período</button>
+      <button class="btn-primary" onclick="abrirModalPeriodo()">   +   </button>
+    </div>
+
+    <div class="header-botoes" id="botoes-tarefas" style="display: none;">
+      <button class="btn-primary" onclick="abrirModalTarefa()">   +   </button>
     </div>
   </div>
 
@@ -162,80 +181,59 @@
     </div>
     
     <!-- TRACKERS -->
-    <div class="trackers-container" id="trackers-container">
-       <!-- Preenchido via JS -->
-    </div>
+    <div class="trackers-container" id="trackers-container"></div>
 
     <!-- BLOCO ATIVIDADES DO DIA -->
     <div id="bloco-hoje" style="margin: 15px 10px; padding: 15px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px;">
       <h4 id="titulo-hoje" style="margin-top: 0; margin-bottom: 12px; color: #fff; font-size: 15px; text-align: center;">Hoje - ...</h4>
-      
-      <!-- Lista de Pendentes -->
       <div id="lista-hoje-pendentes" style="display: flex; flex-direction: column; gap: 4px;"></div>
-      
-      <!-- Lista de Concluídas (Minimizável) -->
       <div id="container-concluidas" style="display: none;">
         <div class="secao-concluidas-titulo" onclick="alternarMinimizarConcluidas()">
           <span id="seta-concluidas">▶</span> Concluídas (<span id="contagem-concluidas">0</span>)
         </div>
         <div id="lista-hoje-concluidas" style="display: none; flex-direction: column; gap: 4px;"></div>
       </div>
-      
     </div>
   </div>
 
   <div id="aba-curso" class="container-curso">
     <div class="curso-header">
-      <input type="text" id="nome-curso" placeholder="Nome do Curso (Ex: Engenharia Elétrica)" oninput="salvarCursoDados()">
-      
+      <input type="text" id="nome-curso" placeholder="Nome do Curso" oninput="salvarCursoDados()">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; color: #aaa; font-size: 13px; flex-wrap: wrap; gap: 10px;">
         <div><strong>CRA Geral:</strong> <span id="cra-geral" style="color:#fff;">0.00</span></div>
         <div><span id="resumo-horas-totais" style="color:#fff; font-weight:bold;">0h / 0h (0,00%)</span></div>
       </div>
-
       <div style="margin-top: 12px; border-top: 1px solid #333; padding-top: 8px;">
         <div onclick="alternarMinimizarMetas()" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #aaa; font-size: 11px; font-weight: bold;">
           <span><span id="meta-seta">▶</span> Detalhes de Horas por Tipo</span>
         </div>
         <div id="metas-detalhes-container" class="metas-grid" style="display: none;">
-          <div class="meta-card">
-            <label>Obrigatórias (Concluídas / Meta)</label>
-            <div class="meta-conteudo">
-              <span id="horas-obrigatorias-atual">0</span> / 
-              <input type="number" id="meta-obrigatorias" value="2400" onchange="salvarCursoDados()"> h
-            </div>
-            <div class="barra-progresso-container"><div class="barra-progresso" id="barra-obrigatorias"></div></div>
-          </div>
-          <div class="meta-card">
-            <label>Optativas (Concluídas / Meta)</label>
-            <div class="meta-conteudo">
-              <span id="horas-optativas-atual">0</span> / 
-              <input type="number" id="meta-optativas" value="300" onchange="salvarCursoDados()"> h
-            </div>
-            <div class="barra-progresso-container"><div class="barra-progresso" id="barra-optativas"></div></div>
-          </div>
-          <div class="meta-card">
-            <label>Complementares (Concluídas / Meta)</label>
-            <div class="meta-conteudo">
-              <span id="horas-complementares-atual">0</span> / 
-              <input type="number" id="meta-complementares" value="200" onchange="salvarCursoDados()"> h
-            </div>
-            <div class="barra-progresso-container"><div class="barra-progresso" id="barra-complementares"></div></div>
-          </div>
+          <div class="meta-card"><label>Obrigatórias (Concluídas / Meta)</label><div class="meta-conteudo"><span id="horas-obrigatorias-atual">0</span> / <input type="number" id="meta-obrigatorias" value="2400" onchange="salvarCursoDados()"> h</div><div class="barra-progresso-container"><div class="barra-progresso" id="barra-obrigatorias"></div></div></div>
+          <div class="meta-card"><label>Optativas (Concluídas / Meta)</label><div class="meta-conteudo"><span id="horas-optativas-atual">0</span> / <input type="number" id="meta-optativas" value="300" onchange="salvarCursoDados()"> h</div><div class="barra-progresso-container"><div class="barra-progresso" id="barra-optativas"></div></div></div>
+          <div class="meta-card"><label>Complementares (Concluídas / Meta)</label><div class="meta-conteudo"><span id="horas-complementares-atual">0</span> / <input type="number" id="meta-complementares" value="200" onchange="salvarCursoDados()"> h</div><div class="barra-progresso-container"><div class="barra-progresso" id="barra-complementares"></div></div></div>
         </div>
       </div>
-
     </div>
-    
     <div id="lista-periodos"></div>
+  </div>
+
+  <!-- ABA TAREFAS -->
+  <div id="aba-tarefas" style="display:none; padding:15px; max-width:900px; margin:0 auto; box-sizing:border-box;">
+     <div id="lista-tarefas" class="tarefas-grid"></div>
   </div>
 
   <div class="modal-overlay" id="modal-opcoes">
     <div class="modal-box">
       <h3>Opções</h3>
-      <button class="menu-opcoes-btn" onclick="abrirModal()">✏️ Nova Atividade</button>
+      <button class="menu-opcoes-btn" onclick="abrirModal()">✏️ Nova Atividade (Rotina)</button>
+      <button class="menu-opcoes-btn" onclick="baixarPDF()">📄 Exportar PDF</button>
+      <button class="menu-opcoes-btn" onclick="baixarPNG()">🖼️ Exportar PNG (1800x1080)</button>
+      <button class="menu-opcoes-btn" onclick="baixarBackup()">💾 Salvar Backup (.json)</button>
+      <label for="importar-arquivo" class="menu-opcoes-btn">📂 Importar Progresso</label>
+      <input type="file" id="importar-arquivo" accept=".json" style="display: none;" onchange="importarBackup(event)">
       
-      <div style="margin-bottom: 10px; background: #2c2c2c; border: 1px solid #444; padding: 12px; border-radius: 8px;">
+      <!-- Bloco de notificações movido para o final -->
+      <div style="margin-top: 15px; margin-bottom: 10px; background: #2c2c2c; border: 1px solid #444; padding: 12px; border-radius: 8px;">
         <label style="font-size: 12px; font-weight: bold; color: #fff; margin-bottom: 5px; display:block;">🔔 Notificações (Web Push)</label>
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
           <span style="font-size: 11px; color:#aaa;">Avisar-me</span>
@@ -244,13 +242,6 @@
         </div>
         <button class="btn-secundario" style="width: 100%; font-size: 12px; padding: 8px;" onclick="solicitarPermissaoNotificacao()">Ativar Notificações</button>
       </div>
-
-      <button class="menu-opcoes-btn" onclick="baixarPDF()">📄 Exportar PDF</button>
-      <button class="menu-opcoes-btn" onclick="baixarPNG()">🖼️ Exportar PNG</button>
-      <button class="menu-opcoes-btn" onclick="baixarBackup()">💾 Salvar Backup (.json)</button>
-      
-      <label for="importar-arquivo" class="menu-opcoes-btn">📂 Importar Progresso</label>
-      <input type="file" id="importar-arquivo" accept=".json" style="display: none;" onchange="importarBackup(event)">
       
       <div class="modal-botoes">
         <button class="btn-cancelar" onclick="fecharOpcoes()">Fechar</button>
@@ -258,41 +249,14 @@
     </div>
   </div>
 
-  <!-- MODAL DO TRACKER -->
   <div class="modal-overlay" id="modal-tracker">
     <div class="modal-box">
       <h3>Editar Controle</h3>
       <input type="hidden" id="tracker-id">
-      
-      <div class="form-group">
-        <label>Título (Ex: 💧 Água)</label>
-        <input type="text" id="tracker-titulo">
-      </div>
-      <div style="display: flex; gap: 10px;">
-        <div class="form-group" style="flex: 1;">
-          <label>Meta Diária</label>
-          <input type="number" step="0.1" id="tracker-meta">
-        </div>
-        <div class="form-group" style="flex: 1;">
-          <label>Unidade (Ex: L)</label>
-          <input type="text" id="tracker-unidade">
-        </div>
-      </div>
-      <div style="display: flex; gap: 10px;">
-        <div class="form-group" style="flex: 1;">
-          <label>Soma do botão (+)</label>
-          <input type="number" step="0.1" id="tracker-incremento">
-        </div>
-        <div class="form-group" style="flex: 1;">
-          <label>Horário de Reset</label>
-          <input type="time" id="tracker-reset">
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Cor do Progresso</label>
-        <input type="color" id="tracker-cor" style="width: 100%; height: 35px; padding: 0;">
-      </div>
-
+      <div class="form-group"><label>Título</label><input type="text" id="tracker-titulo"></div>
+      <div style="display: flex; gap: 10px;"><div class="form-group" style="flex: 1;"><label>Meta Diária</label><input type="number" step="0.1" id="tracker-meta"></div><div class="form-group" style="flex: 1;"><label>Unidade</label><input type="text" id="tracker-unidade"></div></div>
+      <div style="display: flex; gap: 10px;"><div class="form-group" style="flex: 1;"><label>Soma do botão (+)</label><input type="number" step="0.1" id="tracker-incremento"></div><div class="form-group" style="flex: 1;"><label>Horário Reset</label><input type="time" id="tracker-reset"></div></div>
+      <div class="form-group"><label>Cor do Progresso</label><input type="color" id="tracker-cor" style="width: 100%; height: 35px; padding: 0;"></div>
       <div class="modal-botoes">
         <button class="btn-perigo" style="margin-right: auto;" onclick="zerarProgressoTracker()">Zerar Progresso</button>
         <button class="btn-cancelar" onclick="fecharModalTracker()">Cancelar</button>
@@ -302,82 +266,49 @@
   </div>
 
   <div class="modal-overlay" id="modal-detalhes">
-    <!-- Modal de Visualização da Rotina -->
     <div class="modal-box">
-      <h3 id="detalhes-titulo" style="margin-bottom: 10px; color: #fff;">Detalhes da Atividade</h3>
+      <h3 id="detalhes-titulo" style="margin-bottom: 10px; color: #fff;">Detalhes</h3>
       <div style="font-size: 13px; color: #ccc; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
-        <div><strong>Dia:</strong> <span id="detalhes-dia" style="text-transform: capitalize;">-</span></div>
-        <div><strong>Horário:</strong> <span id="detalhes-horario">-</span></div>
-        <div><strong>Detalhes:</strong> <span id="detalhes-texto">-</span></div>
+        <div><strong>Dia:</strong> <span id="detalhes-dia" style="text-transform: capitalize;">-</span></div><div><strong>Horário:</strong> <span id="detalhes-horario">-</span></div><div><strong>Detalhes:</strong> <span id="detalhes-texto">-</span></div>
       </div>
-      <div class="modal-botoes">
-        <button class="btn-cancelar" onclick="fecharDetalhes()">Fechar</button>
-        <button class="btn-salvar" onclick="irParaEdicaoDoDetalhe()">Editar Atividade</button>
-      </div>
+      <div class="modal-botoes"><button class="btn-cancelar" onclick="fecharDetalhes()">Fechar</button><button class="btn-salvar" onclick="irParaEdicaoDoDetalhe()">Editar Atividade</button></div>
     </div>
   </div>
   
   <div class="modal-overlay" id="modal-periodo">
-    <!-- Formulário do período mantido -->
     <div class="modal-box">
       <h3 id="periodo-modal-titulo">Novo Período</h3>
       <input type="hidden" id="periodo-id">
-      <div class="form-group">
-        <label>Nome do Período</label>
-        <input type="text" id="periodo-nome" placeholder="Ex: 1° Período">
-      </div>
-      <div style="display: flex; gap: 10px;">
-        <div class="form-group" style="flex: 1;">
-          <label>Data Início</label>
-          <input type="date" id="periodo-inicio">
-        </div>
-        <div class="form-group" style="flex: 1;">
-          <label>Data Fim</label>
-          <input type="date" id="periodo-fim">
-        </div>
-      </div>
-      <div class="modal-botoes">
-        <button id="btn-excluir-periodo" class="btn-perigo" style="display:none; margin-right:auto;" onclick="excluirPeriodo()">Excluir</button>
-        <button class="btn-cancelar" onclick="fecharModalPeriodo()">Cancelar</button>
-        <button class="btn-salvar" onclick="salvarPeriodo()">Salvar</button>
-      </div>
+      <div class="form-group"><label>Nome</label><input type="text" id="periodo-nome"></div>
+      <div style="display: flex; gap: 10px;"><div class="form-group" style="flex: 1;"><label>Data Início</label><input type="date" id="periodo-inicio"></div><div class="form-group" style="flex: 1;"><label>Data Fim</label><input type="date" id="periodo-fim"></div></div>
+      <div class="modal-botoes"><button id="btn-excluir-periodo" class="btn-perigo" style="display:none; margin-right:auto;" onclick="excluirPeriodo()">Excluir</button><button class="btn-cancelar" onclick="fecharModalPeriodo()">Cancelar</button><button class="btn-salvar" onclick="salvarPeriodo()">Salvar</button></div>
     </div>
   </div>
 
   <div class="modal-overlay" id="modal-disciplina">
-    <!-- Formulário da disciplina mantido -->
     <div class="modal-box">
       <h3 id="disciplina-modal-titulo">Nova Disciplina</h3>
       <input type="hidden" id="disc-id"><input type="hidden" id="disc-periodo-id">
-      <div class="form-group"><label>Nome da Disciplina</label><input type="text" id="disc-nome"></div>
-      <div class="form-group"><label>Nome do Professor</label><input type="text" id="disc-professor"></div>
-      <div style="display: flex; gap: 10px;">
-        <div class="form-group" style="flex: 2;"><label>Carga (H)</label><input type="number" id="disc-horas" value="60"></div>
-        <div class="form-group" style="flex: 3;"><label>Tipo</label><select id="disc-tipo"><option value="obrigratoria">Obrigatória</option><option value="optativa">Optativa</option><option value="complementar">Complementar</option></select></div>
-      </div>
+      <div class="form-group"><label>Nome</label><input type="text" id="disc-nome"></div><div class="form-group"><label>Professor</label><input type="text" id="disc-professor"></div>
+      <div style="display: flex; gap: 10px;"><div class="form-group" style="flex: 2;"><label>Carga (H)</label><input type="number" id="disc-horas" value="60"></div><div class="form-group" style="flex: 3;"><label>Tipo</label><select id="disc-tipo"><option value="obrigratoria">Obrigatória</option><option value="optativa">Optativa</option><option value="complementar">Complementar</option></select></div></div>
       <div class="form-group"><label>Status</label><select id="disc-status"><option value="acursar">A Cursar</option><option value="cursando">Cursando</option><option value="concluida">Concluída</option><option value="reprovado">Reprovado</option></select></div>
       <div id="secao-avaliacoes" style="margin-top: 15px; border-top: 1px solid #333; padding-top: 15px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <strong style="font-size:13px; color:#aaa;">Avaliações</strong><button class="btn-primary" style="padding:4px 10px; font-size:12px;" onclick="adicionarAvaliacaoLinha()">+ Prova</button>
-        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;"><strong style="font-size:13px; color:#aaa;">Avaliações</strong><button class="btn-primary" style="padding:4px 10px; font-size:12px;" onclick="adicionarAvaliacaoLinha()">+ Prova</button></div>
         <div id="lista-avaliacoes-container" style="display:flex; flex-direction:column; gap:8px; max-height:180px; overflow-y:auto;"></div>
-        <div style="margin-top:12px; font-size:12px; color:#aaa; display:flex; justify-content:space-between; align-items:center;">
-          <span>Nota Final: <strong id="disc-nota-final" style="color:#fff;">0 / 0 - 0.00%</strong></span>
-        </div>
+        <div style="margin-top:12px; font-size:12px; color:#aaa; display:flex; justify-content:space-between; align-items:center;"><span>Nota Final: <strong id="disc-nota-final" style="color:#fff;">0 / 0 - 0.00%</strong></span></div>
       </div>
       <div class="modal-botoes"><button id="btn-excluir-disc" class="btn-perigo" style="display:none; margin-right:auto;" onclick="excluirDisciplina()">Excluir</button><button class="btn-cancelar" onclick="fecharModalDisciplina()">Cancelar</button><button class="btn-salvar" onclick="salvarDisciplina()">Salvar</button></div>
     </div>
   </div>
 
   <div class="modal-overlay" id="modal">
-    <!-- Formulário da atividade mantido -->
     <div class="modal-box">
       <h3 id="modal-titulo">Nova Atividade</h3><input type="hidden" id="form-id">
       <div class="form-group"><label>Atividade</label><input type="text" id="form-atividade"></div>
-      <div class="form-group"><label>Dia da Semana</label><select id="form-dia"><option value="domingo">Domingo</option><option value="segunda">Segunda</option><option value="terça">Terça</option><option value="quarta">Quarta</option><option value="quinta">Quinta</option><option value="sexta">Sexta</option><option value="sábado">Sábado</option></select></div>
+      <div class="form-group"><label>Dia</label><select id="form-dia"><option value="domingo">Domingo</option><option value="segunda">Segunda</option><option value="terça">Terça</option><option value="quarta">Quarta</option><option value="quinta">Quinta</option><option value="sexta">Sexta</option><option value="sábado">Sábado</option></select></div>
       <div style="display: flex; gap: 10px;"><div class="form-group" style="flex: 1;"><label>Início</label><input type="time" id="form-inicio"></div><div class="form-group" style="flex: 1;"><label>Fim</label><input type="time" id="form-fim"></div></div>
       <div class="form-group">
-        <label>Cor do Bloco</label>
+        <label>Cor</label>
         <div class="paleta-cores">
           <div class="bola-cor" style="background-color: #073763;" onclick="escolherCor('#073763')"></div><div class="bola-cor" style="background-color: #3d85c6;" onclick="escolherCor('#3d85c6')"></div><div class="bola-cor" style="background-color: #1155cc;" onclick="escolherCor('#1155cc')"></div><div class="bola-cor" style="background-color: #45818e;" onclick="escolherCor('#45818e')"></div><div class="bola-cor" style="background-color: #134f5c;" onclick="escolherCor('#134f5c')"></div><div class="bola-cor" style="background-color: #0c343d;" onclick="escolherCor('#0c343d')"></div><div class="bola-cor" style="background-color: #351c75;" onclick="escolherCor('#351c75')"></div><div class="bola-cor" style="background-color: #0b5394;" onclick="escolherCor('#0b5394')"></div><div class="bola-cor" style="background-color: #1c4587;" onclick="escolherCor('#1c4587')"></div><div class="bola-cor" style="background-color: #666666;" onclick="escolherCor('#666666')"></div><div class="bola-cor" style="background-color: #000000;" onclick="escolherCor('#000000')"></div><div class="bola-cor" style="background-color: #b7b7b7;" onclick="escolherCor('#b7b7b7')"></div><div class="bola-cor" style="background-color: #efefef; border: 1px solid #444;" onclick="escolherCor('#efefef')"></div>
           <input type="color" id="form-cor-picker" value="#333333" style="width: 28px; height: 28px; border: none; cursor: pointer; padding: 0; background: none; border-radius: 50%;" onchange="escolherCor(this.value)">
@@ -388,394 +319,259 @@
     </div>
   </div>
 
+  <!-- MODAL TAREFAS -->
+  <div class="modal-overlay" id="modal-tarefa">
+    <div class="modal-box">
+      <h3 id="tarefa-modal-titulo">Nova Tarefa</h3>
+      <input type="hidden" id="tarefa-id">
+      <div class="form-group"><label>Título</label><input type="text" id="tarefa-titulo"></div>
+      <div class="form-group"><label>Data / Hora (Opcional)</label><input type="datetime-local" id="tarefa-datahora"></div>
+      <div class="form-group"><label>Vincular à Atividade da Rotina</label><select id="tarefa-vinculo"></select></div>
+      <div class="form-group"><label>Descrição / Anotações</label><textarea id="tarefa-descricao" rows="3"></textarea></div>
+      <div class="modal-botoes">
+        <button id="btn-excluir-tarefa" class="btn-perigo" style="display:none; margin-right:auto;" onclick="excluirTarefa()">Excluir</button>
+        <button class="btn-cancelar" onclick="fecharModalTarefa()">Cancelar</button>
+        <button class="btn-salvar" onclick="salvarTarefa()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); }); }
+    if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
 
-    let dadosRotina = [];
-    let checksRotina = {};
+    let dadosRotina = []; let checksRotina = {};
     let dadosCurso = { nome: "", metaObrigatorias: 2400, metaOptativas: 300, metaComplementares: 200, periodos: [], metasMinimizado: true };
+    let dadosTrackers = { agua: { titulo: '💧 Água', atual: 0, meta: 3.0, incremento: 0.2, resetHora: '00:00', lastReset: '', corFill: '#1155cc', unidade: 'L' }, custom: { titulo: '🎯 Custom', atual: 0, meta: 100, incremento: 10, resetHora: '00:00', lastReset: '', corFill: '#134f5c', unidade: 'un' } };
+    let dadosTarefas = [];
     
-    // Configurações Padrão dos Trackers
-    let dadosTrackers = {
-      agua: { titulo: '💧 Água', atual: 0, meta: 3.0, incremento: 0.2, resetHora: '00:00', lastReset: '', corFill: '#1155cc', unidade: 'L' },
-      custom: { titulo: '🎯 Custom', atual: 0, meta: 100, incremento: 10, resetHora: '00:00', lastReset: '', corFill: '#134f5c', unidade: 'un' }
-    };
-    
-    let HORA_INICIO = 6, HORA_FIM = 22;   
-    const PIXELS_POR_HORA = 20, OFFSET_TOPO = 25; 
-    let atividadeAtualSelecionada = null;
-    let notifInterval = null;
-    let tarefasNotificadasHoje = {};
-    let concluidasMinimizadas = true;
-
+    let HORA_INICIO = 6, HORA_FIM = 22; const PIXELS_POR_HORA = 20, OFFSET_TOPO = 25; 
+    let atividadeAtualSelecionada = null; let notifInterval = null; let tarefasNotificadasHoje = {}; let concluidasMinimizadas = true;
     const mapaDias = { 'domingo': 'col-dom', 'segunda': 'col-seg', 'terça': 'col-ter', 'quarta': 'col-qua', 'quinta': 'col-qui', 'sexta': 'col-sex', 'sábado': 'col-sab' };
     const diasSemanaNomes = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
-    const diasAbrev = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 
-    window.onload = function() {
-      carregarDados();
-      checarResetTrackers();
-      renderizarTrackers();
-      if ("Notification" in window && Notification.permission === "granted") iniciarNotificacoes();
-    };
+    window.onload = function() { carregarDados(); checarResetTrackers(); renderizarTrackers(); renderizarTarefas(); if ("Notification" in window && Notification.permission === "granted") iniciarNotificacoes(); };
 
     function mudarAba(aba) {
       document.getElementById('tab-rotina').classList.toggle('ativa', aba === 'rotina');
       document.getElementById('tab-curso').classList.toggle('ativa', aba === 'curso');
+      document.getElementById('tab-tarefas').classList.toggle('ativa', aba === 'tarefas');
       document.getElementById('aba-rotina').style.display = aba === 'rotina' ? 'block' : 'none';
       document.getElementById('aba-curso').style.display = aba === 'curso' ? 'block' : 'none';
+      document.getElementById('aba-tarefas').style.display = aba === 'tarefas' ? 'block' : 'none';
       document.getElementById('botoes-rotina').style.display = aba === 'rotina' ? 'flex' : 'none';
       document.getElementById('botoes-curso').style.display = aba === 'curso' ? 'flex' : 'none';
+      document.getElementById('botoes-tarefas').style.display = aba === 'tarefas' ? 'flex' : 'none';
     }
 
     function carregarDados() {
-      const salvosRotina = localStorage.getItem('appRotinaDados');
-      const salvosCurso = localStorage.getItem('appCursoDados');
-      const salvosChecks = localStorage.getItem('appRotinaChecks');
-      const salvosTrackers = localStorage.getItem('appTrackersDados');
-      const salvosMinNotif = localStorage.getItem('appRotinaNotifMin');
-      
-      if (salvosRotina) dadosRotina = JSON.parse(salvosRotina);
-      if (salvosCurso) dadosCurso = JSON.parse(salvosCurso);
-      if (salvosChecks) checksRotina = JSON.parse(salvosChecks);
-      if (salvosTrackers) dadosTrackers = { ...dadosTrackers, ...JSON.parse(salvosTrackers) };
-      if (salvosMinNotif) document.getElementById('notif-minutos').value = salvosMinNotif;
-      
+      const salvosRotina = localStorage.getItem('appRotinaDados'); const salvosCurso = localStorage.getItem('appCursoDados'); const salvosChecks = localStorage.getItem('appRotinaChecks'); const salvosTrackers = localStorage.getItem('appTrackersDados'); const salvosMinNotif = localStorage.getItem('appRotinaNotifMin'); const salvosTarefas = localStorage.getItem('appTarefasDados');
+      if (salvosRotina) dadosRotina = JSON.parse(salvosRotina); if (salvosCurso) dadosCurso = JSON.parse(salvosCurso); if (salvosChecks) checksRotina = JSON.parse(salvosChecks); if (salvosTrackers) dadosTrackers = { ...dadosTrackers, ...JSON.parse(salvosTrackers) }; if (salvosTarefas) dadosTarefas = JSON.parse(salvosTarefas); if (salvosMinNotif) document.getElementById('notif-minutos').value = salvosMinNotif;
       if (dadosCurso.metasMinimizado === undefined) dadosCurso.metasMinimizado = true;
-
-      document.getElementById('nome-curso').value = dadosCurso.nome || "";
-      document.getElementById('meta-obrigatorias').value = dadosCurso.metaObrigatorias || 2400;
-      document.getElementById('meta-optativas').value = dadosCurso.metaOptativas || 300;
-      document.getElementById('meta-complementares').value = dadosCurso.metaComplementares || 200;
-
-      atualizarVisualMetasMinimizadas();
-      processarGrade();
-      renderizarCurso();
+      document.getElementById('nome-curso').value = dadosCurso.nome || ""; document.getElementById('meta-obrigatorias').value = dadosCurso.metaObrigatorias || 2400; document.getElementById('meta-optativas').value = dadosCurso.metaOptativas || 300; document.getElementById('meta-complementares').value = dadosCurso.metaComplementares || 200;
+      atualizarVisualMetasMinimizadas(); processarGrade(); renderizarCurso();
     }
+    function salvarDadosLocalmente() { localStorage.setItem('appRotinaDados', JSON.stringify(dadosRotina)); localStorage.setItem('appCursoDados', JSON.stringify(dadosCurso)); localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers)); localStorage.setItem('appTarefasDados', JSON.stringify(dadosTarefas)); processarGrade(); renderizarCurso(); }
 
-    function salvarDadosLocalmente() {
-      localStorage.setItem('appRotinaDados', JSON.stringify(dadosRotina));
-      localStorage.setItem('appCursoDados', JSON.stringify(dadosCurso));
-      localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers));
-      processarGrade();
-      renderizarCurso();
+    /* LÓGICA DE EXPORTAÇÃO CORRIGIDA 1800x1080 */
+    function baixarPNG() { 
+      fecharOpcoes(); 
+      setTimeout(() => { 
+        const elemento = document.getElementById("area-impressao"); 
+        html2canvas(elemento, { scale: 2, backgroundColor: '#121212' }).then(canvasOriginal => { 
+          const canvasFinal = document.createElement('canvas');
+          canvasFinal.width = 1800; canvasFinal.height = 1080;
+          const ctx = canvasFinal.getContext('2d');
+          ctx.fillStyle = '#121212'; ctx.fillRect(0,0, 1800, 1080);
+          
+          const scale = Math.min(1800 / canvasOriginal.width, 1080 / canvasOriginal.height);
+          const w = canvasOriginal.width * scale;
+          const h = canvasOriginal.height * scale;
+          const dx = (1800 - w) / 2; const dy = (1080 - h) / 2;
+          
+          ctx.drawImage(canvasOriginal, dx, dy, w, h);
+          const link = document.createElement('a'); 
+          link.download = 'Rotina.png'; 
+          link.href = canvasFinal.toDataURL('image/png'); 
+          link.click(); 
+        }); 
+      }, 300); 
     }
+    function baixarPDF() { fecharOpcoes(); const tituloOriginal = document.title; document.title = "Rotina"; window.print(); setTimeout(() => { document.title = tituloOriginal; }, 1000); }
 
-    /* --- LÓGICA DOS TRACKERS --- */
-    function getResetTimestamp(dateObj, timeStr) {
-      let [h, m] = timeStr.split(':').map(Number);
-      let d = new Date(dateObj);
-      d.setHours(h, m, 0, 0);
-      return d;
-    }
-
-    function checarResetTrackers() {
-      const agora = new Date();
-      let mudou = false;
-      
-      Object.keys(dadosTrackers).forEach(id => {
-        let t = dadosTrackers[id];
-        if(!t.lastReset) { t.lastReset = agora.toISOString(); mudou = true; return; }
-        
-        let last = new Date(t.lastReset);
-        let resetHoje = getResetTimestamp(agora, t.resetHora);
-        
-        let ultimoResetPassado = new Date(resetHoje);
-        if (agora < ultimoResetPassado) ultimoResetPassado.setDate(ultimoResetPassado.getDate() - 1);
-
-        if (last < ultimoResetPassado) {
-          t.atual = 0;
-          t.lastReset = agora.toISOString();
-          mudou = true;
-        }
-      });
-      if(mudou) localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers));
-    }
-
-    function renderizarTrackers() {
-      const container = document.getElementById('trackers-container');
-      container.innerHTML = '';
-      
-      Object.keys(dadosTrackers).forEach(id => {
-        let t = dadosTrackers[id];
-        let percent = Math.min(100, (t.atual / t.meta) * 100);
-        
-        container.innerHTML += `
-          <div class="tracker-card">
-            <div class="tracker-bg" style="background-color: ${t.corFill}; width: ${percent}%;"></div>
-            <div class="tracker-content">
-              <div class="tracker-info">
-                <span class="tracker-title">${t.titulo}</span>
-                <span class="tracker-text">${Number(t.atual).toFixed(1).replace(/\.0$/, '')} / ${t.meta} ${t.unidade}</span>
-              </div>
-              <div class="tracker-actions">
-                <button class="btn-tracker" onclick="addTracker('${id}')">+</button>
-                <button class="btn-tracker" onclick="abrirConfigTracker('${id}')">...</button>
-              </div>
-            </div>
-          </div>
-        `;
-      });
-    }
-
-    function addTracker(id) {
-      dadosTrackers[id].atual += parseFloat(dadosTrackers[id].incremento);
-      dadosTrackers[id].lastReset = new Date().toISOString(); 
-      localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers));
-      renderizarTrackers();
-    }
-
-    function abrirConfigTracker(id) {
-      let t = dadosTrackers[id];
-      document.getElementById('tracker-id').value = id;
-      document.getElementById('tracker-titulo').value = t.titulo;
-      document.getElementById('tracker-meta').value = t.meta;
-      document.getElementById('tracker-unidade').value = t.unidade;
-      document.getElementById('tracker-incremento').value = t.incremento;
-      document.getElementById('tracker-reset').value = t.resetHora;
-      document.getElementById('tracker-cor').value = t.corFill;
-      document.getElementById('modal-tracker').style.display = 'flex';
-    }
-
-    function fecharModalTracker() { document.getElementById('modal-tracker').style.display = 'none'; }
-
-    function salvarConfigTracker() {
-      let id = document.getElementById('tracker-id').value;
-      dadosTrackers[id].titulo = document.getElementById('tracker-titulo').value;
-      dadosTrackers[id].meta = parseFloat(document.getElementById('tracker-meta').value) || 1;
-      dadosTrackers[id].unidade = document.getElementById('tracker-unidade').value;
-      dadosTrackers[id].incremento = parseFloat(document.getElementById('tracker-incremento').value) || 1;
-      dadosTrackers[id].resetHora = document.getElementById('tracker-reset').value || '00:00';
-      dadosTrackers[id].corFill = document.getElementById('tracker-cor').value;
-      
-      localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers));
-      fecharModalTracker();
-      renderizarTrackers();
-    }
-
-    function zerarProgressoTracker() {
-      let id = document.getElementById('tracker-id').value;
-      if (confirm(`Tem certeza que deseja zerar o progresso de "${dadosTrackers[id].titulo}"?`)) {
-        dadosTrackers[id].atual = 0;
-        dadosTrackers[id].lastReset = new Date().toISOString();
-        localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers));
-        fecharModalTracker();
-        renderizarTrackers();
-      }
-    }
-
-    /* --- CORES DE CONTRASTE --- */
-    function getContrastColor(hex) {
-      if (hex.indexOf('#') === 0) hex = hex.slice(1);
-      if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
-      let r = parseInt(hex.slice(0,2), 16), g = parseInt(hex.slice(2,4), 16), b = parseInt(hex.slice(4,6), 16);
-      let yiq = ((r*299)+(g*587)+(b*114))/1000;
-      return (yiq >= 128) ? '#000000' : '#ffffff';
-    }
-
-    /* --- ATIVIDADES DE HOJE --- */
-    function alternarMinimizarConcluidas() {
-      concluidasMinimizadas = !concluidasMinimizadas;
-      atualizarVisualConcluidas();
-    }
-    
-    function atualizarVisualConcluidas() {
-      const lista = document.getElementById('lista-hoje-concluidas');
-      const seta = document.getElementById('seta-concluidas');
-      if(concluidasMinimizadas) {
-        lista.style.display = 'none';
-        seta.innerText = '▶';
-      } else {
-        lista.style.display = 'flex';
-        seta.innerText = '▼';
-      }
-    }
-
-    function renderizarTarefasHoje() {
-      const hoje = new Date();
-      const hojeDiaNome = diasSemanaNomes[hoje.getDay()];
-      const hojeDataStr = hoje.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'2-digit'});
-      const chaveHojeId = hoje.toISOString().split('T')[0]; 
-
-      document.getElementById('titulo-hoje').innerText = `Hoje - ${diasSemanaNomes[hoje.getDay()]} ${hojeDataStr}`;
-      
-      const contPendentes = document.getElementById('lista-hoje-pendentes');
-      const contConcluidas = document.getElementById('lista-hoje-concluidas');
-      const boxConcluidas = document.getElementById('container-concluidas');
-      const numConcluidas = document.getElementById('contagem-concluidas');
-      
-      contPendentes.innerHTML = '';
-      contConcluidas.innerHTML = '';
-
-      let tarefasHoje = dadosRotina.filter(t => t.dia === hojeDiaNome).sort((a,b) => a.inicio.localeCompare(b.inicio));
-      
-      if(tarefasHoje.length === 0) {
-        contPendentes.innerHTML = '<div style="color:#888; font-size:12px; font-style:italic; text-align:center;">Nenhuma atividade cadastrada para hoje.</div>';
-        boxConcluidas.style.display = 'none';
-        return;
-      }
-
-      if(!checksRotina[chaveHojeId]) checksRotina[chaveHojeId] = {};
-      let qtdConcluidas = 0;
-
-      tarefasHoje.forEach(t => {
-        const isChecked = checksRotina[chaveHojeId][t.id] ? true : false;
-        const detalhesText = t.detalhes ? `<span style="font-weight:normal; opacity:0.8;">(${t.detalhes})</span>` : '';
-        const corFundo = t.cor || '#222222';
-        const corTexto = getContrastColor(corFundo);
-        const corBordaCheck = corTexto === '#000000' ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)';
-        
-        const htmlLinha = `
-          <div class="tarefa-linha ${isChecked ? 'concluida' : ''}" style="background-color: ${corFundo}; color: ${corTexto}; border: 1px solid rgba(0,0,0,0.3);">
-            <div class="tarefa-texto" style="font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 12px; font-weight: bold; color: inherit;">
-              ${t.inicio} - ${t.atividade} ${detalhesText}
-            </div>
-            <input type="checkbox" class="checkbox-dia" style="border-color: ${corBordaCheck};" onchange="alternarCheckTarefa('${chaveHojeId}', '${t.id}', this.checked)" ${isChecked ? 'checked' : ''}>
-          </div>
-        `;
-        
-        if(isChecked) {
-          contConcluidas.innerHTML += htmlLinha;
-          qtdConcluidas++;
-        } else {
-          contPendentes.innerHTML += htmlLinha;
-        }
-      });
-      
-      if (qtdConcluidas > 0) {
-        boxConcluidas.style.display = 'block';
-        numConcluidas.innerText = qtdConcluidas;
-      } else {
-        boxConcluidas.style.display = 'none';
-      }
-      
-      atualizarVisualConcluidas();
-    }
-
-    function alternarCheckTarefa(dataChave, id, status) {
-      if(!checksRotina[dataChave]) checksRotina[dataChave] = {};
-      checksRotina[dataChave][id] = status;
-      localStorage.setItem('appRotinaChecks', JSON.stringify(checksRotina));
-      setTimeout(() => renderizarTarefasHoje(), 200);
-    }
-
-    // O Restante das funções de Curso, Rotina e Modal seguem preservadas...
-    function salvarCursoDados() {
-      dadosCurso.nome = document.getElementById('nome-curso').value;
-      dadosCurso.metaObrigatorias = parseFloat(document.getElementById('meta-obrigatorias').value) || 0;
-      dadosCurso.metaOptativas = parseFloat(document.getElementById('meta-optativas').value) || 0;
-      dadosCurso.metaComplementares = parseFloat(document.getElementById('meta-complementares').value) || 0;
-      salvarDadosLocalmente();
-    }
-
-    function alternarMinimizarMetas() {
-      dadosCurso.metasMinimizado = !dadosCurso.metasMinimizado;
-      atualizarVisualMetasMinimizadas();
-      salvarDadosLocalmente();
-    }
-
-    function atualizarVisualMetasMinimizadas() {
-      const container = document.getElementById('metas-detalhes-container');
-      const seta = document.getElementById('meta-seta');
-      if (dadosCurso.metasMinimizado) { container.style.display = 'none'; seta.innerText = '▶'; } else { container.style.display = 'grid'; seta.innerText = '▼'; }
-    }
-
+    /* NOTIFICAÇÕES (COM SUPORTE A SERVICE WORKER E CORREÇÃO DE LÓGICA) */
     function salvarMinutosNotif() { localStorage.setItem('appRotinaNotifMin', document.getElementById('notif-minutos').value); }
-
     function solicitarPermissaoNotificacao() {
       if (!("Notification" in window)) return alert("Este navegador não suporta notificações.");
       Notification.requestPermission().then(permission => {
         if (permission === "granted") { alert("Notificações ativadas com sucesso!"); salvarMinutosNotif(); iniciarNotificacoes(); } else alert("Permissão negada.");
       });
     }
-
-    function iniciarNotificacoes() {
-      if (notifInterval) clearInterval(notifInterval);
-      verificarNotificacoes(); notifInterval = setInterval(verificarNotificacoes, 30000); 
+    function enviarNotificacao(titulo, opcoes) {
+        if (navigator.serviceWorker) { navigator.serviceWorker.ready.then(function(registration) { registration.showNotification(titulo, opcoes); }).catch(function() { new Notification(titulo, opcoes); }); } else { new Notification(titulo, opcoes); }
     }
-
+    function iniciarNotificacoes() { if (notifInterval) clearInterval(notifInterval); verificarNotificacoes(); notifInterval = setInterval(verificarNotificacoes, 30000); }
     function verificarNotificacoes() {
       if (Notification.permission !== 'granted') return;
-      const agora = new Date();
-      const hojeDataString = agora.toLocaleDateString();
+      const agora = new Date(); const hojeDataString = agora.toLocaleDateString();
       if (tarefasNotificadasHoje.data !== hojeDataString) tarefasNotificadasHoje = { data: hojeDataString };
-
       const diaAtualStr = diasSemanaNomes[agora.getDay()];
       const minutosAtuais = (agora.getHours() * 60) + agora.getMinutes();
       const minsAntecedencia = parseInt(document.getElementById('notif-minutos').value) || 15;
       const alvoNotificacao = minutosAtuais + minsAntecedencia;
-
       const tarefasDeHoje = dadosRotina.filter(t => t.dia === diaAtualStr);
       tarefasDeHoje.forEach(t => {
         const partes = t.inicio.split(':');
         const minTarefa = (parseInt(partes[0], 10) * 60) + parseInt(partes[1], 10);
         const uniqueKey = t.id + '_' + t.inicio;
         if (alvoNotificacao === minTarefa && !tarefasNotificadasHoje[uniqueKey]) {
-          new Notification('Em ' + minsAntecedencia + ' min: ' + t.atividade, { body: `Início às ${t.inicio}${t.detalhes ? ' - ' + t.detalhes : ''}` });
+          enviarNotificacao('Atenção: ' + t.atividade, { body: `Começa em ${minsAntecedencia} min (às ${t.inicio})` });
           tarefasNotificadasHoje[uniqueKey] = true;
         }
       });
     }
 
-    function renderizarCurso() {
-      let totalObrigatorias = 0, totalOptativas = 0, totalComplementares = 0;
-      let somaPonderadaGeral = 0, somaHorasCRA = 0;
-      const container = document.getElementById('lista-periodos');
-      if (!dadosCurso.periodos || dadosCurso.periodos.length === 0) {
-        container.innerHTML = `<div style="color: #666; text-align: center; margin-top: 40px;">Nenhum período cadastrado ainda.</div>`;
-      } else {
-        container.innerHTML = '';
-        const hojeStr = new Date().toISOString().split('T')[0];
-        let periodosOrdenados = [...dadosCurso.periodos].sort((a, b) => {
-          let tipoA = classificarPeriodo(a, hojeStr), tipoB = classificarPeriodo(b, hojeStr);
-          if (tipoA !== tipoB) return tipoA - tipoB;
-          if (tipoA === 1 || tipoA === 2) return (b.fim || '').localeCompare(a.fim || '');
-          return (a.inicio || '').localeCompare(b.inicio || '');
-        });
+    /* ABA DE TAREFAS (NOVO) */
+    function renderizarTarefas() {
+      const container = document.getElementById('lista-tarefas');
+      container.innerHTML = '';
+      
+      const tarefasOrdenadas = [...dadosTarefas].sort((a,b) => {
+        if(!a.dataHora && !b.dataHora) return 0;
+        if(!a.dataHora) return 1;
+        if(!b.dataHora) return -1;
+        return new Date(a.dataHora) - new Date(b.dataHora);
+      });
 
+      if(tarefasOrdenadas.length === 0) {
+          container.innerHTML = `<div style="color: #666; font-size: 13px;">Nenhuma tarefa pendente... Clique no + para criar.</div>`;
+          return;
+      }
+
+      tarefasOrdenadas.forEach(t => {
+        let isAtrasado = false; let strData = '';
+        if(t.dataHora) {
+            const d = new Date(t.dataHora);
+            if(d < new Date()) isAtrasado = true;
+            strData = d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+        }
+
+        let htmlTags = '';
+        if (isAtrasado) htmlTags += `<span class="tarefa-tag atrasado">Atrasado</span>`;
+        if (strData) htmlTags += `<span class="tarefa-tag data">${strData}</span>`;
+        if (t.vinculo) {
+            const r = dadosRotina.find(x => x.id === t.vinculo);
+            if(r) htmlTags += `<span class="tarefa-tag" style="background:${r.cor}; color:${getContrastColor(r.cor)}">${r.atividade}</span>`;
+        }
+
+        container.innerHTML += `
+          <div class="tarefa-card" onclick="abrirModalTarefa('${t.id}')">
+            <div class="tarefa-titulo">${t.titulo}</div>
+            ${htmlTags ? `<div class="tarefa-tags">${htmlTags}</div>` : ''}
+            ${t.descricao ? `<div class="tarefa-desc">${t.descricao}</div>` : ''}
+          </div>
+        `;
+      });
+    }
+    function popularSelectVinculo() {
+        const s = document.getElementById('tarefa-vinculo');
+        s.innerHTML = '<option value="">Nenhum / Outro</option>';
+        const rotinaOrdenada = [...dadosRotina].sort((a,b) => a.atividade.localeCompare(b.atividade));
+        rotinaOrdenada.forEach(r => { s.innerHTML += `<option value="${r.id}">${r.atividade} (${r.dia})</option>`; });
+    }
+    function abrirModalTarefa(id = null) {
+      popularSelectVinculo();
+      document.getElementById('modal-tarefa').style.display = 'flex';
+      if(id) {
+          document.getElementById('tarefa-modal-titulo').innerText = 'Editar Tarefa';
+          const t = dadosTarefas.find(x => x.id === id);
+          document.getElementById('tarefa-id').value = t.id;
+          document.getElementById('tarefa-titulo').value = t.titulo;
+          document.getElementById('tarefa-datahora').value = t.dataHora || '';
+          document.getElementById('tarefa-vinculo').value = t.vinculo || '';
+          document.getElementById('tarefa-descricao').value = t.descricao || '';
+          document.getElementById('btn-excluir-tarefa').style.display = 'block';
+      } else {
+          document.getElementById('tarefa-modal-titulo').innerText = 'Nova Tarefa';
+          document.getElementById('tarefa-id').value = '';
+          document.getElementById('tarefa-titulo').value = '';
+          document.getElementById('tarefa-datahora').value = '';
+          document.getElementById('tarefa-vinculo').value = '';
+          document.getElementById('tarefa-descricao').value = '';
+          document.getElementById('btn-excluir-tarefa').style.display = 'none';
+      }
+    }
+    function fecharModalTarefa() { document.getElementById('modal-tarefa').style.display = 'none'; }
+    function salvarTarefa() {
+      const id = document.getElementById('tarefa-id').value;
+      const titulo = document.getElementById('tarefa-titulo').value;
+      const dataHora = document.getElementById('tarefa-datahora').value;
+      const vinculo = document.getElementById('tarefa-vinculo').value;
+      const descricao = document.getElementById('tarefa-descricao').value;
+      if(!titulo) return alert('Dê um título à tarefa.');
+      if(id) {
+          const t = dadosTarefas.find(x => x.id === id);
+          t.titulo = titulo; t.dataHora = dataHora; t.vinculo = vinculo; t.descricao = descricao;
+      } else { dadosTarefas.push({ id: Date.now().toString(), titulo, dataHora, vinculo, descricao }); }
+      salvarDadosLocalmente(); renderizarTarefas(); fecharModalTarefa();
+    }
+    function excluirTarefa() {
+      const id = document.getElementById('tarefa-id').value;
+      if(confirm('Excluir esta tarefa?')) { dadosTarefas = dadosTarefas.filter(x => x.id !== id); salvarDadosLocalmente(); renderizarTarefas(); fecharModalTarefa(); }
+    }
+
+    /* O RESTANTE DAS FUNÇÕES (Rotina, Curso, Trackers) CONTINUA IGUAL */
+    function getResetTimestamp(dateObj, timeStr) { let [h, m] = timeStr.split(':').map(Number); let d = new Date(dateObj); d.setHours(h, m, 0, 0); return d; }
+    function checarResetTrackers() { const agora = new Date(); let mudou = false; Object.keys(dadosTrackers).forEach(id => { let t = dadosTrackers[id]; if(!t.lastReset) { t.lastReset = agora.toISOString(); mudou = true; return; } let last = new Date(t.lastReset); let resetHoje = getResetTimestamp(agora, t.resetHora); let ultimoResetPassado = new Date(resetHoje); if (agora < ultimoResetPassado) ultimoResetPassado.setDate(ultimoResetPassado.getDate() - 1); if (last < ultimoResetPassado) { t.atual = 0; t.lastReset = agora.toISOString(); mudou = true; } }); if(mudou) localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers)); }
+    function renderizarTrackers() { const container = document.getElementById('trackers-container'); container.innerHTML = ''; Object.keys(dadosTrackers).forEach(id => { let t = dadosTrackers[id]; let percent = Math.min(100, (t.atual / t.meta) * 100); container.innerHTML += `<div class="tracker-card"><div class="tracker-bg" style="background-color: ${t.corFill}; width: ${percent}%;"></div><div class="tracker-content"><div class="tracker-info"><span class="tracker-title">${t.titulo}</span><span class="tracker-text">${Number(t.atual).toFixed(1).replace(/\.0$/, '')} / ${t.meta} ${t.unidade}</span></div><div class="tracker-actions"><button class="btn-tracker" onclick="addTracker('${id}')">+</button><button class="btn-tracker" onclick="abrirConfigTracker('${id}')">...</button></div></div></div>`; }); }
+    function addTracker(id) { dadosTrackers[id].atual += parseFloat(dadosTrackers[id].incremento); dadosTrackers[id].lastReset = new Date().toISOString(); localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers)); renderizarTrackers(); }
+    function abrirConfigTracker(id) { let t = dadosTrackers[id]; document.getElementById('tracker-id').value = id; document.getElementById('tracker-titulo').value = t.titulo; document.getElementById('tracker-meta').value = t.meta; document.getElementById('tracker-unidade').value = t.unidade; document.getElementById('tracker-incremento').value = t.incremento; document.getElementById('tracker-reset').value = t.resetHora; document.getElementById('tracker-cor').value = t.corFill; document.getElementById('modal-tracker').style.display = 'flex'; }
+    function fecharModalTracker() { document.getElementById('modal-tracker').style.display = 'none'; }
+    function salvarConfigTracker() { let id = document.getElementById('tracker-id').value; dadosTrackers[id].titulo = document.getElementById('tracker-titulo').value; dadosTrackers[id].meta = parseFloat(document.getElementById('tracker-meta').value) || 1; dadosTrackers[id].unidade = document.getElementById('tracker-unidade').value; dadosTrackers[id].incremento = parseFloat(document.getElementById('tracker-incremento').value) || 1; dadosTrackers[id].resetHora = document.getElementById('tracker-reset').value || '00:00'; dadosTrackers[id].corFill = document.getElementById('tracker-cor').value; localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers)); fecharModalTracker(); renderizarTrackers(); }
+    function zerarProgressoTracker() { let id = document.getElementById('tracker-id').value; if (confirm(`Tem certeza que deseja zerar o progresso de "${dadosTrackers[id].titulo}"?`)) { dadosTrackers[id].atual = 0; dadosTrackers[id].lastReset = new Date().toISOString(); localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers)); fecharModalTracker(); renderizarTrackers(); } }
+    function getContrastColor(hex) { if (hex.indexOf('#') === 0) hex = hex.slice(1); if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2]; let r = parseInt(hex.slice(0,2), 16), g = parseInt(hex.slice(2,4), 16), b = parseInt(hex.slice(4,6), 16); let yiq = ((r*299)+(g*587)+(b*114))/1000; return (yiq >= 128) ? '#000000' : '#ffffff'; }
+    function alternarMinimizarConcluidas() { concluidasMinimizadas = !concluidasMinimizadas; atualizarVisualConcluidas(); }
+    function atualizarVisualConcluidas() { const lista = document.getElementById('lista-hoje-concluidas'); const seta = document.getElementById('seta-concluidas'); if(concluidasMinimizadas) { lista.style.display = 'none'; seta.innerText = '▶'; } else { lista.style.display = 'flex'; seta.innerText = '▼'; } }
+    function renderizarTarefasHoje() {
+      const hoje = new Date(); const hojeDiaNome = diasSemanaNomes[hoje.getDay()]; const hojeDataStr = hoje.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'2-digit'}); const chaveHojeId = hoje.toISOString().split('T')[0]; 
+      document.getElementById('titulo-hoje').innerText = `Hoje - ${diasSemanaNomes[hoje.getDay()]} ${hojeDataStr}`;
+      const contPendentes = document.getElementById('lista-hoje-pendentes'); const contConcluidas = document.getElementById('lista-hoje-concluidas'); const boxConcluidas = document.getElementById('container-concluidas'); const numConcluidas = document.getElementById('contagem-concluidas');
+      contPendentes.innerHTML = ''; contConcluidas.innerHTML = '';
+      let tarefasHoje = dadosRotina.filter(t => t.dia === hojeDiaNome).sort((a,b) => a.inicio.localeCompare(b.inicio));
+      if(tarefasHoje.length === 0) { contPendentes.innerHTML = '<div style="color:#888; font-size:12px; font-style:italic; text-align:center;">Nenhuma atividade cadastrada para hoje.</div>'; boxConcluidas.style.display = 'none'; return; }
+      if(!checksRotina[chaveHojeId]) checksRotina[chaveHojeId] = {}; let qtdConcluidas = 0;
+      tarefasHoje.forEach(t => {
+        const isChecked = checksRotina[chaveHojeId][t.id] ? true : false; const detalhesText = t.detalhes ? `<span style="font-weight:normal; opacity:0.8;">(${t.detalhes})</span>` : ''; const corFundo = t.cor || '#222222'; const corTexto = getContrastColor(corFundo); const corBordaCheck = corTexto === '#000000' ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)';
+        const htmlLinha = `<div class="tarefa-linha ${isChecked ? 'concluida' : ''}" style="background-color: ${corFundo}; color: ${corTexto}; border: 1px solid rgba(0,0,0,0.3);"><div class="tarefa-texto" style="font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 12px; font-weight: bold; color: inherit;">${t.inicio} - ${t.atividade} ${detalhesText}</div><input type="checkbox" class="checkbox-dia" style="border-color: ${corBordaCheck};" onchange="alternarCheckTarefa('${chaveHojeId}', '${t.id}', this.checked)" ${isChecked ? 'checked' : ''}></div>`;
+        if(isChecked) { contConcluidas.innerHTML += htmlLinha; qtdConcluidas++; } else { contPendentes.innerHTML += htmlLinha; }
+      });
+      if (qtdConcluidas > 0) { boxConcluidas.style.display = 'block'; numConcluidas.innerText = qtdConcluidas; } else { boxConcluidas.style.display = 'none'; }
+      atualizarVisualConcluidas();
+    }
+    function alternarCheckTarefa(dataChave, id, status) { if(!checksRotina[dataChave]) checksRotina[dataChave] = {}; checksRotina[dataChave][id] = status; localStorage.setItem('appRotinaChecks', JSON.stringify(checksRotina)); setTimeout(() => renderizarTarefasHoje(), 200); }
+    function salvarCursoDados() { dadosCurso.nome = document.getElementById('nome-curso').value; dadosCurso.metaObrigatorias = parseFloat(document.getElementById('meta-obrigatorias').value) || 0; dadosCurso.metaOptativas = parseFloat(document.getElementById('meta-optativas').value) || 0; dadosCurso.metaComplementares = parseFloat(document.getElementById('meta-complementares').value) || 0; salvarDadosLocalmente(); }
+    function alternarMinimizarMetas() { dadosCurso.metasMinimizado = !dadosCurso.metasMinimizado; atualizarVisualMetasMinimizadas(); salvarDadosLocalmente(); }
+    function atualizarVisualMetasMinimizadas() { const container = document.getElementById('metas-detalhes-container'); const seta = document.getElementById('meta-seta'); if (dadosCurso.metasMinimizado) { container.style.display = 'none'; seta.innerText = '▶'; } else { container.style.display = 'grid'; seta.innerText = '▼'; } }
+    function renderizarCurso() {
+      let totalObrigatorias = 0, totalOptativas = 0, totalComplementares = 0, somaPonderadaGeral = 0, somaHorasCRA = 0; const container = document.getElementById('lista-periodos');
+      if (!dadosCurso.periodos || dadosCurso.periodos.length === 0) { container.innerHTML = `<div style="color: #666; text-align: center; margin-top: 40px;">Nenhum período cadastrado ainda.</div>`; } else {
+        container.innerHTML = ''; const hojeStr = new Date().toISOString().split('T')[0];
+        let periodosOrdenados = [...dadosCurso.periodos].sort((a, b) => { let tipoA = classificarPeriodo(a, hojeStr), tipoB = classificarPeriodo(b, hojeStr); if (tipoA !== tipoB) return tipoA - tipoB; if (tipoA === 1 || tipoA === 2) return (b.fim || '').localeCompare(a.fim || ''); return (a.inicio || '').localeCompare(b.inicio || ''); });
         periodosOrdenados.forEach(periodo => {
-          let somaPonderadaPeriodo = 0, somaHorasPeriodoCRA = 0, totalHorasPeriodo = 0;
-          let disciplinasHTML = '';
+          let somaPonderadaPeriodo = 0, somaHorasPeriodoCRA = 0, totalHorasPeriodo = 0, disciplinasHTML = '';
           if (periodo.disciplinas && periodo.disciplinas.length > 0) {
             periodo.disciplinas.forEach(disc => {
               let notaFinalNumerica = calcularNotaFinalDisciplina(disc), h = Number(disc.horas) || 0;
-              if (disc.status === 'concluida') {
-                if (disc.tipo === 'obrigratoria') totalObrigatorias += h;
-                if (disc.tipo === 'optativa') totalOptativas += h;
-                if (disc.tipo === 'complementar') totalComplementares += h;
-                totalHorasPeriodo += h;
-                if (disc.tipo !== 'complementar') { somaPonderadaPeriodo += (notaFinalNumerica * h); somaHorasPeriodoCRA += h; }
-              }
-              let statusClass = `status-${disc.status}`;
-              let textoNotaFormatado = formatarTextoNotaFinal(disc);
-              let corNota = '#fff';
-              let dadosCalculadosNota = calcularPercNotaFinal(disc);
-              if (dadosCalculadosNota.temNota && dadosCalculadosNota.perc < 60) corNota = '#ff4d4d';
-              let profHTML = disc.professor ? `<div style="font-size:10px; color:#aaa; margin-top:2px;">Prof: ${disc.professor}</div>` : '';
+              if (disc.status === 'concluida') { if (disc.tipo === 'obrigratoria') totalObrigatorias += h; if (disc.tipo === 'optativa') totalOptativas += h; if (disc.tipo === 'complementar') totalComplementares += h; totalHorasPeriodo += h; if (disc.tipo !== 'complementar') { somaPonderadaPeriodo += (notaFinalNumerica * h); somaHorasPeriodoCRA += h; } }
+              let statusClass = `status-${disc.status}`; let textoNotaFormatado = formatarTextoNotaFinal(disc); let corNota = '#fff'; let dadosCalculadosNota = calcularPercNotaFinal(disc); if (dadosCalculadosNota.temNota && dadosCalculadosNota.perc < 60) corNota = '#ff4d4d'; let profHTML = disc.professor ? `<div style="font-size:10px; color:#aaa; margin-top:2px;">Prof: ${disc.professor}</div>` : '';
               disciplinasHTML += `<div class="disciplina-card" onclick="abrirModalDisciplina('${periodo.id}', '${disc.id}')"><div><strong>${disc.name}</strong>${profHTML}<div style="font-size:11px; color:#888; margin-top:3px;">${disc.horas}h • ${disc.tipo} • Nota: <span style="color:${corNota}; font-weight:bold;">${textoNotaFormatado}</span></div></div><span class="status-badge ${statusClass}">${disc.status}</span></div>`;
             });
           } else { disciplinasHTML = `<div style="color:#666; font-size:12px; text-align:center; padding:10px;">Nenhuma disciplina neste período.</div>`; }
-
-          let craPeriodo = somaHorasPeriodoCRA > 0 ? (somaPonderadaPeriodo / somaHorasPeriodoCRA) : 0;
-          if (somaHorasPeriodoCRA > 0) { somaPonderadaGeral += somaPonderadaPeriodo; somaHorasCRA += somaHorasPeriodoCRA; }
-          if (periodo.minimizado === undefined) periodo.minimizado = false;
-          let displayConteudo = periodo.minimizado ? 'none' : 'block';
-          let iconeSeta = periodo.minimizado ? '▶' : '▼';
-          
-          let classeData = 'color: #888;';
-          let badgeAtual = classificarPeriodo(periodo, hojeStr) === 1 ? `<span style="background-color: #1155cc; color: white; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-size: 10px; font-weight: bold; text-transform: uppercase;">Atual</span>` : '';
-
+          let craPeriodo = somaHorasPeriodoCRA > 0 ? (somaPonderadaPeriodo / somaHorasPeriodoCRA) : 0; if (somaHorasPeriodoCRA > 0) { somaPonderadaGeral += somaPonderadaPeriodo; somaHorasCRA += somaHorasPeriodoCRA; } if (periodo.minimizado === undefined) periodo.minimizado = false; let displayConteudo = periodo.minimizado ? 'none' : 'block'; let iconeSeta = periodo.minimizado ? '▶' : '▼'; let classeData = 'color: #888;'; let badgeAtual = classificarPeriodo(periodo, hojeStr) === 1 ? `<span style="background-color: #1155cc; color: white; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-size: 10px; font-weight: bold; text-transform: uppercase;">Atual</span>` : '';
           container.innerHTML += `<div class="periodo-box" id="p-box-${periodo.id}"><div class="periodo-titulo" onclick="alternarMinimizarPeriodo('${periodo.id}')"><div><span style="font-size:12px; color:#aaa; margin-right:6px;">${iconeSeta}</span><strong style="font-size:15px; color:#fff;">${periodo.nome}</strong><span style="font-size:11px; ${classeData} font-weight:bold; margin-left:8px;">(${periodo.inicio || ''} até ${periodo.fim || ''})</span>${badgeAtual}</div><div style="display:flex; gap:8px; align-items:center;" onclick="event.stopPropagation()"><span style="font-size:12px; color:#aaa;">CRA: <strong style="color:#fff;">${craPeriodo.toFixed(2)}</strong> | Horas: <strong style="color:#fff;">${totalHorasPeriodo}h</strong></span><button class="btn-icon" style="padding:3px 6px; font-size:10px;" onclick="abrirModalPeriodo('${periodo.id}')">Editar</button><button class="btn-primary" style="padding:3px 8px; font-size:11px;" onclick="abrirModalDisciplina('${periodo.id}')">+ Disciplina</button></div></div><div class="periodo-conteudo" id="p-conteudo-${periodo.id}" style="display: ${displayConteudo};">${disciplinasHTML}</div></div>`;
         });
       }
-      document.getElementById('horas-obrigatorias-atual').innerText = totalObrigatorias; document.getElementById('horas-optativas-atual').innerText = totalOptativas; document.getElementById('horas-complementares-atual').innerText = totalComplementares;
-      const metaObr = dadosCurso.metaObrigatorias || 2400, metaOpt = dadosCurso.metaOptativas || 300, metaComp = dadosCurso.metaComplementares || 200;
-      document.getElementById('barra-obrigatorias').style.width = Math.min(100, (totalObrigatorias / metaObr) * 100) + '%'; document.getElementById('barra-optativas').style.width = Math.min(100, (totalOptativas / metaOpt) * 100) + '%'; document.getElementById('barra-complementares').style.width = Math.min(100, (totalComplementares / metaComp) * 100) + '%';
-      let craGeral = somaHorasCRA > 0 ? (somaPonderadaGeral / somaHorasCRA) : 0; document.getElementById('cra-geral').innerText = craGeral.toFixed(2);
-      let totalConcluidasGeral = totalObrigatorias + totalOptativas + totalComplementares; let metaTotalGeral = metaObr + metaOpt + metaComp; let percTotalGeral = metaTotalGeral > 0 ? (totalConcluidasGeral / metaTotalGeral) * 100 : 0;
-      document.getElementById('resumo-horas-totais').innerText = `${totalConcluidasGeral}h / ${metaTotalGeral}h (${percTotalGeral.toFixed(2)}%)`;
+      document.getElementById('horas-obrigatorias-atual').innerText = totalObrigatorias; document.getElementById('horas-optativas-atual').innerText = totalOptativas; document.getElementById('horas-complementares-atual').innerText = totalComplementares; const metaObr = dadosCurso.metaObrigatorias || 2400, metaOpt = dadosCurso.metaOptativas || 300, metaComp = dadosCurso.metaComplementares || 200; document.getElementById('barra-obrigatorias').style.width = Math.min(100, (totalObrigatorias / metaObr) * 100) + '%'; document.getElementById('barra-optativas').style.width = Math.min(100, (totalOptativas / metaOpt) * 100) + '%'; document.getElementById('barra-complementares').style.width = Math.min(100, (totalComplementares / metaComp) * 100) + '%'; let craGeral = somaHorasCRA > 0 ? (somaPonderadaGeral / somaHorasCRA) : 0; document.getElementById('cra-geral').innerText = craGeral.toFixed(2); let totalConcluidasGeral = totalObrigatorias + totalOptativas + totalComplementares; let metaTotalGeral = metaObr + metaOpt + metaComp; let percTotalGeral = metaTotalGeral > 0 ? (totalConcluidasGeral / metaTotalGeral) * 100 : 0; document.getElementById('resumo-horas-totais').innerText = `${totalConcluidasGeral}h / ${metaTotalGeral}h (${percTotalGeral.toFixed(2)}%)`;
     }
-
     function classificarPeriodo(p, hoje) { if (!p.inicio || !p.fim) return 2; if (hoje >= p.inicio && hoje <= p.fim) return 1; if (hoje > p.fim) return 2; return 3; }
     function alternarMinimizarPeriodo(periodoId) { const p = dadosCurso.periodos.find(x => x.id === periodoId); if (p) { p.minimizado = !p.minimizado; salvarDadosLocalmente(); } }
     function calcularNotaFinalDisciplina(disc) { if (!disc.avaliacoes || disc.avaliacoes.length === 0) return 0; let soma = 0; disc.avaliacoes.forEach(a => { if (a.obtida !== undefined && a.obtida !== null && a.obtida !== '') soma += (parseFloat(a.obtida) || 0); }); return soma; }
@@ -806,10 +602,8 @@
     function salvarFormulario() { const atividade = document.getElementById('form-atividade').value, dia = document.getElementById('form-dia').value, inicio = document.getElementById('form-inicio').value, fim = document.getElementById('form-fim').value, cor = document.getElementById('form-cor').value, detalhes = document.getElementById('form-detalhes').value, idStr = document.getElementById('form-id').value; if (!atividade || !inicio || !fim) return alert("Preencha a atividade e os horários."); if (inicio >= fim) return alert("Erro: O término não pode ser antes ou igual ao início."); if (idStr) { const index = dadosRotina.findIndex(i => i.id === idStr); if (index !== -1) dadosRotina[index] = { id: idStr, atividade, dia, inicio, fim, cor, detalhes }; } else { dadosRotina.push({ id: Date.now().toString(), atividade, dia, inicio, fim, cor, detalhes }); } salvarDadosLocalmente(); fecharModal(); }
     function duplicarAtividade() { document.getElementById('form-id').value = ''; document.getElementById('modal-titulo').innerText = 'Nova Atividade (Cópia)'; document.getElementById('btn-excluir').style.display = 'none'; document.getElementById('btn-duplicar').style.display = 'none'; document.getElementById('form-inicio').focus(); }
     function excluirAtividade() { const idStr = document.getElementById('form-id').value; if (confirm("Tem certeza que deseja excluir?")) { dadosRotina = dadosRotina.filter(i => i.id !== idStr); salvarDadosLocalmente(); fecharModal(); } }
-    function baixarPDF() { fecharOpcoes(); const tituloOriginal = document.title; document.title = "Rotina"; window.print(); setTimeout(() => { document.title = tituloOriginal; }, 1000); }
-    function baixarPNG() { fecharOpcoes(); setTimeout(() => { const elemento = document.getElementById("area-impressao"); html2canvas(elemento, { scale: 2, windowWidth: 1200, windowHeight: 700 }).then(canvas => { const link = document.createElement('a'); link.download = 'Rotina.png'; link.href = canvas.toDataURL('image/png'); link.click(); }); }, 300); }
-    function baixarBackup() { fecharOpcoes(); const backupGeral = { rotina: dadosRotina, curso: dadosCurso, trackers: dadosTrackers }; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupGeral)); const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", "rotina_e_curso_backup.json"); document.body.appendChild(a); a.click(); a.remove(); }
-    function importarBackup(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const importado = JSON.parse(e.target.result); if (importado.rotina) { dadosRotina = importado.rotina; if(importado.curso) dadosCurso = importado.curso; if(importado.trackers) dadosTrackers = { ...dadosTrackers, ...importado.trackers }; } else if (Array.isArray(importado)) { dadosRotina = importado; } if (dadosCurso.metasMinimizado === undefined) dadosCurso.metasMinimizado = true; salvarDadosLocalmente(); document.getElementById('nome-curso').value = dadosCurso.nome || ""; document.getElementById('meta-obrigatorias').value = dadosCurso.metaObrigatorias || 2400; document.getElementById('meta-optativas').value = dadosCurso.metaOptativas || 300; document.getElementById('meta-complementares').value = dadosCurso.metaComplementares || 200; atualizarVisualMetasMinimizadas(); alert("Progresso importado com sucesso!"); fecharOpcoes(); } catch (err) { alert("Erro ao ler o arquivo."); } }; reader.readAsText(file); }
+    function baixarBackup() { fecharOpcoes(); const backupGeral = { rotina: dadosRotina, curso: dadosCurso, trackers: dadosTrackers, tarefas: dadosTarefas }; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupGeral)); const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", "rotina_e_curso_backup.json"); document.body.appendChild(a); a.click(); a.remove(); }
+    function importarBackup(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const importado = JSON.parse(e.target.result); if (importado.rotina) { dadosRotina = importado.rotina; if(importado.curso) dadosCurso = importado.curso; if(importado.trackers) dadosTrackers = { ...dadosTrackers, ...importado.trackers }; if(importado.tarefas) dadosTarefas = importado.tarefas; } else if (Array.isArray(importado)) { dadosRotina = importado; } if (dadosCurso.metasMinimizado === undefined) dadosCurso.metasMinimizado = true; salvarDadosLocalmente(); document.getElementById('nome-curso').value = dadosCurso.nome || ""; document.getElementById('meta-obrigatorias').value = dadosCurso.metaObrigatorias || 2400; document.getElementById('meta-optativas').value = dadosCurso.metaOptativas || 300; document.getElementById('meta-complementares').value = dadosCurso.metaComplementares || 200; atualizarVisualMetasMinimizadas(); alert("Progresso importado com sucesso!"); fecharOpcoes(); renderizarTarefas(); } catch (err) { alert("Erro ao ler o arquivo."); } }; reader.readAsText(file); }
   </script>
 </body>
 </html>
