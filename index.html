@@ -24,18 +24,17 @@
     .header-botoes { display: flex; gap: 6px; align-items: center; }
 
     /* GRADE DA ROTINA */
-    .calendario-container { display: flex; padding: 10px 5px; position: relative; width: 100%; box-sizing: border-box; background: #121212; }
-    .eixo-horas { width: 55px; flex-shrink: 0; position: relative; margin-top: 0; }
-    .hora-label { position: absolute; right: 8px; font-size: 11px; color: #888; transform: translateY(-50%); font-weight: bold; }
+    .calendario-container { display: flex; padding: 10px 2px; position: relative; width: 100%; box-sizing: border-box; background: #121212; }
+    .eixo-horas { width: 42px; flex-shrink: 0; position: relative; margin-top: 0; }
+    .hora-label { position: absolute; right: 4px; font-size: 10px; color: #888; transform: translateY(-50%); font-weight: bold; }
     
     .dias-container { display: flex; flex-grow: 1; width: 100%; border-left: 1px solid #ccc; border-top: 1px solid #ccc; border-radius: 4px; overflow: hidden; }
-    .coluna-dia { flex: 1; border-right: 1px solid #ccc; position: relative; background: #fff; background-image: linear-gradient(#f0f0f0 1px, transparent 1px); background-size: 100% 40px; background-position: 0 25px; } 
-    .cabecalho-dia { text-align: center; font-weight: bold; padding: 5px 0; background: #000; color: white; border-bottom: 1px solid #ccc; position: absolute; top: 0; width: 100%; height: 25px; box-sizing: border-box; font-size: 11px; overflow: hidden; }
+    .coluna-dia { flex: 1; border-right: 1px solid #ccc; position: relative; background: #fff; background-image: linear-gradient(#f0f0f0 1px, transparent 1px); background-size: 100% 20px; background-position: 0 25px; } 
+    .cabecalho-dia { text-align: center; font-weight: bold; padding: 5px 0; background: #000; color: white; border-bottom: 1px solid #ccc; position: absolute; top: 0; width: 100%; height: 25px; box-sizing: border-box; font-size: 10px; overflow: hidden; }
     
     .evento { position: absolute; left: 1px; right: 1px; border-radius: 3px; padding: 2px 4px; color: white; overflow: hidden; cursor: pointer; border: 1px solid rgba(0,0,0,0.2); box-shadow: 0 1px 3px rgba(0,0,0,0.3); display: flex; flex-direction: column; justify-content: flex-start; box-sizing: border-box; }
-    .evento-titulo { font-weight: bold; font-size: 11px; line-height: 1.1; word-break: break-word; white-space: normal; }
-    .evento-info { font-size: 9px; opacity: 0.9; }
-    .evento-detalhes { font-size: 9px; opacity: 0.8; font-style: italic; word-break: break-word; }
+    .evento-titulo { font-weight: bold; font-size: 10px; line-height: 1.1; word-break: break-word; white-space: normal; }
+    .evento-detalhes { font-size: 9px; opacity: 0.8; font-style: italic; word-break: break-word; margin-top: 2px; }
     
     /* MODAIS */
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: center; backdrop-filter: blur(3px); overflow-y: auto; padding: 20px 0; box-sizing: border-box; }
@@ -95,13 +94,12 @@
       body { zoom: 80%; background: white !important; margin: 0; padding: 0; } 
       .header, .modal-overlay, #aba-curso { display: none !important; } 
       .calendario-container { padding: 0 !important; width: 100% !important; display: flex !important; background: white !important; }
-      .eixo-horas { width: 70px !important; margin-top: 0 !important; }
-      .hora-label { font-size: 14px !important; color: #000 !important; right: 10px !important; }
+      .eixo-horas { width: 50px !important; margin-top: 0 !important; }
+      .hora-label { font-size: 12px !important; color: #000 !important; right: 6px !important; }
       .dias-container { width: 100% !important; border: 1px solid #000 !important; }
-      .cabecalho-dia { font-size: 16px !important; height: 30px !important; line-height: 20px !important; }
-      .evento-titulo { font-size: 13px !important; }
-      .evento-info { font-size: 11px !important; }
-      .evento-detalhes { font-size: 10px !important; }
+      .cabecalho-dia { font-size: 14px !important; height: 30px !important; line-height: 20px !important; }
+      .evento-titulo { font-size: 11px !important; }
+      .evento-detalhes { font-size: 9px !important; }
       .evento { border: none !important; }
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     }
@@ -143,13 +141,11 @@
     <div class="curso-header">
       <input type="text" id="nome-curso" placeholder="Nome do Curso (Ex: Engenharia Elétrica)" oninput="salvarCursoDados()">
       
-      <!-- CRA GERAL E RESUMO TOTAL NA MESMA LINHA -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; color: #aaa; font-size: 13px; flex-wrap: wrap; gap: 10px;">
         <div><strong>CRA Geral:</strong> <span id="cra-geral" style="color:#fff;">0.00</span></div>
         <div><span id="resumo-horas-totais" style="color:#fff; font-weight:bold;">0h / 0h (0,00%)</span></div>
       </div>
 
-      <!-- BLOCO DE HORAS DETALHADAS MINIMIZÁVEL -->
       <div style="margin-top: 12px; border-top: 1px solid #333; padding-top: 8px;">
         <div onclick="alternarMinimizarMetas()" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #aaa; font-size: 11px; font-weight: bold;">
           <span><span id="meta-seta">▶</span> Detalhes de Horas por Tipo</span>
@@ -202,6 +198,22 @@
       
       <div class="modal-botoes">
         <button class="btn-cancelar" onclick="fecharOpcoes()">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE VISUALIZAÇÃO (DETALHES) -->
+  <div class="modal-overlay" id="modal-detalhes">
+    <div class="modal-box">
+      <h3 id="detalhes-titulo" style="margin-bottom: 10px; color: #fff;">Detalhes da Atividade</h3>
+      <div style="font-size: 13px; color: #ccc; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
+        <div><strong>Dia:</strong> <span id="detalhes-dia" style="text-transform: capitalize;">-</span></div>
+        <div><strong>Horário:</strong> <span id="detalhes-horario">-</span></div>
+        <div><strong>Detalhes / Local:</strong> <span id="detalhes-texto">-</span></div>
+      </div>
+      <div class="modal-botoes">
+        <button class="btn-cancelar" onclick="fecharDetalhes()">Fechar</button>
+        <button class="btn-salvar" onclick="irParaEdicaoDoDetalhe()">Editar Atividade</button>
       </div>
     </div>
   </div>
@@ -371,6 +383,7 @@
     
     let HORA_INICIO = 6, HORA_FIM = 22;   
     const PIXELS_POR_HORA = 40, OFFSET_TOPO = 25; 
+    let atividadeAtualSelecionada = null;
 
     const mapaDias = {
       'domingo': 'col-dom', 'segunda': 'col-seg', 'terça': 'col-ter', 
@@ -848,14 +861,27 @@
     function processarGrade() {
       document.querySelectorAll('.evento').forEach(e => e.remove());
       if (dadosRotina.length > 0) {
-        let menorHora = 24, maiorHora = 0;
+        let menorMinutos = 24 * 60, maiorMinutos = 0;
         dadosRotina.forEach(item => {
-          if (item.inicio) { let h = parseInt(item.inicio.split(':')[0], 10); if (h < menorHora) menorHora = h; }
-          if (item.fim) { let h = parseInt(item.fim.split(':')[0], 10); if (h > maiorHora) maiorHora = h; }
+          if (item.inicio) {
+            let partes = item.inicio.split(':');
+            let m = parseInt(partes[0], 10) * 60 + parseInt(partes[1], 10);
+            if (m < menorMinutos) menorMinutos = m;
+          }
+          if (item.fim) {
+            let partes = item.fim.split(':');
+            let m = parseInt(partes[0], 10) * 60 + parseInt(partes[1], 10);
+            if (m > maiorMinutos) maiorMinutos = m;
+          }
         });
-        HORA_INICIO = (menorHora > 0) ? menorHora - 1 : 0;
-        HORA_FIM = (maiorHora < 23) ? maiorHora + 1 : 24;
+        HORA_INICIO = Math.floor(menorMinutos / 60);
+        HORA_FIM = Math.ceil(maiorMinutos / 60);
+        if (HORA_FIM <= HORA_INICIO) HORA_FIM = HORA_INICIO + 1;
+      } else {
+        HORA_INICIO = 6;
+        HORA_FIM = 22;
       }
+
       desenharGrade();
       dadosRotina.forEach(item => {
         const idColuna = mapaDias[item.dia];
@@ -871,23 +897,27 @@
         bloco.style.height = Math.max(heightPixels, 15) + 'px'; 
         bloco.innerHTML = `
           <div class="evento-titulo">${item.atividade}</div>
-          ${heightPixels > 30 ? `<div class="evento-info">${item.inicio}-${item.fim}</div>` : ''}
-          ${heightPixels > 50 && item.detalhes ? `<div class="evento-detalhes">${item.detalhes}</div>` : ''}
+          ${heightPixels > 40 && item.detalhes ? `<div class="evento-detalhes">${item.detalhes}</div>` : ''}
         `;
-        bloco.onclick = () => abrirModalRotina(item);
+        bloco.onclick = () => abrirDetalhesAtividade(item);
         coluna.appendChild(bloco);
       });
     }
 
     function desenharGrade() {
-      const alturaTotal = ((HORA_FIM - HORA_INICIO + 1) * PIXELS_POR_HORA) + OFFSET_TOPO;
+      // Como cada hora possui 2 blocos de 30min (20px cada), o total por hora é 40px
+      const totalHoras = HORA_FIM - HORA_INICIO;
+      const alturaTotal = (totalHoras * 40) + OFFSET_TOPO;
+      
       document.querySelectorAll('.coluna-dia').forEach(col => col.style.height = alturaTotal + 'px');
       const eixo = document.getElementById('eixo-horas');
       eixo.innerHTML = ''; 
+
+      // Desenha as marcações de hora em hora
       for(let i = HORA_INICIO; i <= HORA_FIM; i++) {
         let label = document.createElement('div');
         label.className = 'hora-label';
-        label.style.top = (OFFSET_TOPO + ((i - HORA_INICIO) * PIXELS_POR_HORA)) + 'px';
+        label.style.top = (OFFSET_TOPO + ((i - HORA_INICIO) * 40)) + 'px';
         label.innerText = (i < 10 ? '0'+i : i) + ':00';
         eixo.appendChild(label);
       }
@@ -896,7 +926,28 @@
     function calcularMinutos(horaString) {
       if(!horaString) return 0;
       const partes = horaString.split(':');
-      return ((parseInt(partes[0], 10) - HORA_INICIO) * PIXELS_POR_HORA) + (parseInt(partes[1], 10) * (PIXELS_POR_HORA / 60));
+      let horas = parseInt(partes[0], 10);
+      let minutos = parseInt(partes[1], 10);
+      // Como cada hora tem 40px, cada minuto equivale a 40/60 px (ou seja, cada intervalo de 30min tem 20px)
+      return ((horas - HORA_INICIO) * 40) + (minutos * (40 / 60));
+    }
+
+    function abrirDetalhesAtividade(item) {
+      atividadeAtualSelecionada = item;
+      document.getElementById('detalhes-titulo').innerText = item.atividade;
+      document.getElementById('detalhes-dia').innerText = item.dia;
+      document.getElementById('detalhes-horario').innerText = `${item.inicio} às ${item.fim}`;
+      document.getElementById('detalhes-texto').innerText = item.detalhes || 'Nenhum detalhe adicional';
+      document.getElementById('modal-detalhes').style.display = 'flex';
+    }
+
+    function fecharDetalhes() {
+      document.getElementById('modal-detalhes').style.display = 'none';
+    }
+
+    function irParaEdicaoDoDetalhe() {
+      fecharDetalhes();
+      abrirModalRotina(atividadeAtualSelecionada);
     }
 
     function abrirOpcoes() { document.getElementById('modal-opcoes').style.display = 'flex'; }
@@ -970,15 +1021,10 @@
     }
 
     function duplicarAtividade() {
-      // Limpa o ID para que, ao salvar, o sistema entenda que é uma NOVA atividade
       document.getElementById('form-id').value = '';
       document.getElementById('modal-titulo').innerText = 'Nova Atividade (Cópia)';
-      
-      // Esconde os botões de excluir e duplicar para focar no salvamento da nova cópia
       document.getElementById('btn-excluir').style.display = 'none';
       document.getElementById('btn-duplicar').style.display = 'none';
-      
-      // Dá um leve foco no horário de início ou fim para indicar que o usuário pode ajustar se quiser
       document.getElementById('form-inicio').focus();
     }
 
