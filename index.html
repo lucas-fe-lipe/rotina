@@ -970,20 +970,16 @@
     }
 
     function duplicarAtividade() {
-      const atividade = document.getElementById('form-atividade').value;
-      const dia = document.getElementById('form-dia').value;
-      const inicio = document.getElementById('form-inicio').value;
-      const fim = document.getElementById('form-fim').value;
-      const cor = document.getElementById('form-cor').value;
-      const detalhes = document.getElementById('form-detalhes').value;
-
-      if (!atividade || !inicio || !fim) return alert("Preencha a atividade e os horários.");
-
-      // Cria uma nova atividade com ID único baseado no timestamp atual
-      dadosRotina.push({ id: Date.now().toString(), atividade, dia, inicio, fim, cor, detalhes });
-
-      salvarDadosLocalmente();
-      fecharModal();
+      // Limpa o ID para que, ao salvar, o sistema entenda que é uma NOVA atividade
+      document.getElementById('form-id').value = '';
+      document.getElementById('modal-titulo').innerText = 'Nova Atividade (Cópia)';
+      
+      // Esconde os botões de excluir e duplicar para focar no salvamento da nova cópia
+      document.getElementById('btn-excluir').style.display = 'none';
+      document.getElementById('btn-duplicar').style.display = 'none';
+      
+      // Dá um leve foco no horário de início ou fim para indicar que o usuário pode ajustar se quiser
+      document.getElementById('form-inicio').focus();
     }
 
     function excluirAtividade() {
