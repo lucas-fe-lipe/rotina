@@ -10,7 +10,7 @@
   <style>
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #121212; color: #e0e0e0; overflow-x: hidden; }
     
-    /* HEADER COMPACTO EM UMA SÓ LINHA (Sem Azuis) */
+    /* HEADER COMPACTO EM UMA SÓ LINHA */
     .header { padding: 8px 12px; background: #1e1e1e; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 100; white-space: nowrap; }
     .abas { display: flex; gap: 8px; }
     .aba-btn { background: transparent; color: #888; border: none; font-size: 14px; font-weight: bold; cursor: pointer; padding: 4px 6px; transition: 0.2s; border-bottom: 2px solid transparent; }
@@ -60,8 +60,8 @@
     .btn-salvar:hover { background: #555; }
     .btn-perigo { background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
 
-    /* MENU DE OPÇÕES */
-    .menu-opcoes-btn { display: flex; align-items: center; gap: 8px; width: 100%; margin-bottom: 10px; background: #2c2c2c; color: white; border: 1px solid #444; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; justify-content: center; box-sizing: border-box; text-align: center; }
+    /* MENU DE OPÇÕES PERFEITAMENTE PADRONIZADO */
+    .menu-opcoes-btn { display: flex; align-items: center; gap: 8px; width: 100%; margin-bottom: 10px; background: #2c2c2c; color: white; border: 1px solid #444; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; justify-content: center; box-sizing: border-box; text-align: center; font-size: 13px; font-family: inherit; }
     .menu-opcoes-btn:hover { background: #3c3c3c; }
     
     /* ABA MEU CURSO */
@@ -181,11 +181,11 @@
     </div>
   </div>
 
-  <!-- MODAL OPÇÕES COM "+ ATIVIDADE" -->
+  <!-- MODAL OPÇÕES COM BOTÕES 100% PADRONIZADOS -->
   <div class="modal-overlay" id="modal-opcoes">
     <div class="modal-box">
       <h3>Opções</h3>
-      <button class="menu-opcoes-btn" onclick="abrirModal()">+ Atividade</button>
+      <button class="menu-opcoes-btn" onclick="abrirModal()">✏️ Nova Atividade</button>
       <button class="menu-opcoes-btn" onclick="baixarPDF()">📄 Exportar PDF</button>
       <button class="menu-opcoes-btn" onclick="baixarPNG()">🖼️ Exportar PNG</button>
       <button class="menu-opcoes-btn" onclick="baixarBackup()">💾 Salvar Backup (.json)</button>
@@ -226,7 +226,7 @@
     </div>
   </div>
 
-  <!-- MODAL DISCIPLINA COM LANÇAMENTO DE NOTAS SEMPRE ATIVO -->
+  <!-- MODAL DISCIPLINA (CAMPOS DE NOTAS REDUZIDOS + PERCENTUAL AO LADO + FORMATO SOLICITADO) -->
   <div class="modal-overlay" id="modal-disciplina">
     <div class="modal-box">
       <h3 id="disciplina-modal-titulo">Nova Disciplina</h3>
@@ -261,15 +261,14 @@
         </select>
       </div>
 
-      <!-- SEÇÃO DE AVALIAÇÕES SEMPRE VISÍVEL -->
       <div id="secao-avaliacoes" style="margin-top: 15px; border-top: 1px solid #333; padding-top: 15px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
           <strong style="font-size:13px; color:#aaa;">Avaliações e Notas</strong>
           <button class="btn-primary" style="padding:4px 10px; font-size:12px;" onclick="adicionarAvaliacaoLinha()">+ Prova</button>
         </div>
-        <div id="lista-avaliacoes-container" style="display:flex; flex-direction:column; gap:8px; max-height:150px; overflow-y:auto;"></div>
-        <div style="margin-top:10px; font-size:12px; color:#aaa; display:flex; justify-content:space-between;">
-          <span>Nota Final Calculada: <strong id="disc-nota-final" style="color:#fff;">0.00</strong></span>
+        <div id="lista-avaliacoes-container" style="display:flex; flex-direction:column; gap:8px; max-height:180px; overflow-y:auto;"></div>
+        <div style="margin-top:12px; font-size:12px; color:#aaa; display:flex; justify-content:space-between; align-items:center;">
+          <span>Nota Final: <strong id="disc-nota-final" style="color:#fff;">0 / 0  -  0.00%</strong></span>
         </div>
       </div>
 
@@ -463,22 +462,23 @@
           let disciplinasHTML = '';
           if (periodo.disciplinas && periodo.disciplinas.length > 0) {
             periodo.disciplinas.forEach(disc => {
-              let notaFinal = calcularNotaFinalDisciplina(disc);
+              let notaFinalNumerica = calcularNotaFinalDisciplina(disc);
               if (disc.status === 'concluida') {
                 if (disc.tipo === 'obrigratoria') totalObrigatorias += Number(disc.horas);
                 if (disc.tipo === 'optativa') totalOptativas += Number(disc.horas);
                 if (disc.tipo === 'complementar') totalComplementares += Number(disc.horas);
 
-                somaPonderadaPeriodo += (notaFinal * Number(disc.horas));
+                somaPonderadaPeriodo += (notaFinalNumerica * Number(disc.horas));
                 somaHorasPeriodo += Number(disc.horas);
               }
 
               let statusClass = `status-${disc.status}`;
+              let textoNotaFormatado = formatarTextoNotaFinal(disc);
               disciplinasHTML += `
                 <div class="disciplina-card" onclick="abrirModalDisciplina('${periodo.id}', '${disc.id}')">
                   <div>
                     <strong>${disc.name}</strong>
-                    <div style="font-size:11px; color:#888; margin-top:3px;">${disc.horas}h • ${disc.tipo} • Nota Final: <span style="color:#fff;">${notaFinal.toFixed(2)}</span></div>
+                    <div style="font-size:11px; color:#888; margin-top:3px;">${disc.horas}h • ${disc.tipo} • Nota: <span style="color:#fff;">${textoNotaFormatado}</span></div>
                   </div>
                   <span class="status-badge ${statusClass}">${disc.status}</span>
                 </div>
@@ -531,11 +531,20 @@
 
     function calcularNotaFinalDisciplina(disc) {
       if (!disc.avaliacoes || disc.avaliacoes.length === 0) return 0;
-      let somaNotas = 0;
+      let somaObtidas = 0;
+      disc.avaliacoes.forEach(a => { somaObtidas += (parseFloat(a.obtida) || 0); });
+      return somaObtidas;
+    }
+
+    function formatarTextoNotaFinal(disc) {
+      if (!disc.avaliacoes || disc.avaliacoes.length === 0) return "0 / 0  -  0.00%";
+      let somaObtidas = 0, somaTotais = 0;
       disc.avaliacoes.forEach(a => {
-        somaNotas += (parseFloat(a.obtida) || 0);
+        somaObtidas += (parseFloat(a.obtida) || 0);
+        somaTotais += (parseFloat(a.total) || 0);
       });
-      return somaNotas;
+      let perc = somaTotais > 0 ? (somaObtidas / somaTotais) * 100 : 0;
+      return `${somaObtidas.toFixed(1)} / ${somaTotais.toFixed(1)}  -  ${perc.toFixed(2)}%`;
     }
 
     function abrirModalPeriodo(id = null) {
@@ -626,10 +635,11 @@
       const div = document.createElement('div');
       div.style.cssText = "display:flex; gap:6px; align-items:center;";
       div.innerHTML = `
-        <input type="text" placeholder="Nome (Ex: P1)" value="${nome}" style="flex:2; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px;" class="av-nome">
-        <input type="number" placeholder="Valor" value="${total}" style="flex:1; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px;" class="av-total" oninput="atualizarCalculoNotaModal()">
-        <input type="number" placeholder="Nota" value="${obtida}" style="flex:1; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px;" class="av-obtida" oninput="atualizarCalculoNotaModal()">
-        <button type="button" onclick="this.parentElement.remove(); atualizarCalculoNotaModal();" style="background:#dc3545; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;">X</button>
+        <input type="text" placeholder="Nome" value="${nome}" style="flex:2; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px;" class="av-nome">
+        <input type="number" placeholder="Valor" value="${total}" style="width: 50px; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px; text-align:center;" class="av-total" oninput="atualizarCalculoNotaModal()">
+        <input type="number" placeholder="Nota" value="${obtida}" style="width: 50px; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px; text-align:center;" class="av-obtida" oninput="atualizarCalculoNotaModal()">
+        <span class="av-perc" style="font-size:11px; color:#aaa; width:45px; text-align:right;">0.0%</span>
+        <button type="button" onclick="this.parentElement.remove(); atualizarCalculoNotaModal();" style="background:#dc3545; color:#fff; border:none; padding:6px 8px; border-radius:4px; cursor:pointer;">X</button>
       `;
       container.appendChild(div);
       atualizarCalculoNotaModal();
@@ -637,12 +647,19 @@
 
     function atualizarCalculoNotaModal() {
       const linhas = document.querySelectorAll('#lista-avaliacoes-container > div');
-      let somaObtidas = 0;
+      let somaObtidas = 0, somaTotais = 0;
       linhas.forEach(l => {
+        let tot = parseFloat(l.querySelector('.av-total').value) || 0;
         let obt = parseFloat(l.querySelector('.av-obtida').value) || 0;
+        somaTotais += tot;
         somaObtidas += obt;
+
+        let percLinha = tot > 0 ? (obt / tot) * 100 : 0;
+        l.querySelector('.av-perc').innerText = percLinha.toFixed(1) + '%';
       });
-      document.getElementById('disc-nota-final').innerText = somaObtidas.toFixed(2);
+
+      let percGeral = somaTotais > 0 ? (somaObtidas / somaTotais) * 100 : 0;
+      document.getElementById('disc-nota-final').innerText = `${somaObtidas.toFixed(1)} / ${somaTotais.toFixed(1)}  -  ${percGeral.toFixed(2)}%`;
     }
 
     function salvarDisciplina() {
