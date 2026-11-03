@@ -199,8 +199,8 @@
       <h3>Opções</h3>
       <button class="menu-opcoes-btn" onclick="abrirModal()">✏️ Nova Atividade (Rotina)</button>
       <button class="menu-opcoes-btn" onclick="abrirModalGCal()">📅 Exportar para o Google Agenda</button>
-      <button class="menu-opcoes-btn" onclick="abrirModalNotificacoes()">🔔 Configurar Notificações por E-mail</button>
-      <button class="menu-opcoes-btn" onclick="abrirModalBackup()">💾 Backup</button>
+      <button class="menu-opcoes-btn" onclick="abrirModalNotificacoes()">🔔 Notificações por E-mail</button>
+      <button class="menu-opcoes-btn" onclick="abrirModalBackup()">💾 Backup & Restauração</button>
       
       <div class="modal-botoes">
         <button class="btn-cancelar" onclick="fecharOpcoes()">Fechar</button>
@@ -211,9 +211,12 @@
   <!-- MODAL CONFIGURAR NOTIFICAÇÕES (APPS SCRIPT E-MAIL) -->
   <div class="modal-overlay" id="modal-notificacoes">
     <div class="modal-box">
-      <h3>🔔 Notificações por E-mail (Apps Script)</h3>
+      <h3>🔔 Notificações por E-mail</h3>
       <div style="font-size: 12px; color: #ccc; line-height: 1.5; margin-bottom: 15px; max-height: 280px; overflow-y: auto; background: #121212; padding: 10px; border-radius: 6px; border: 1px solid #333;">
-        <p style="margin-top: 0;"><strong>Como receber lembretes no seu e-mail (mesmo com o app fechado):</strong></p>
+        <p style="margin-top: 0; color: #ffca28; font-weight: bold; background: #2a2200; padding: 8px; border-radius: 4px; border: 1px solid #665200;">
+          ⚠️ Importante: Antes de configurar as notificações, certifique-se de ter configurado a Sincronização Google Sheets no menu Backup & Restauração para que os dados da sua rotina e tarefas sejam salvos na nuvem.
+        </p>
+        <p><strong>Como receber lembretes no seu e-mail (mesmo com o app fechado):</strong></p>
         <ol style="padding-left: 20px; margin-bottom: 10px;">
           <li>Acesse a sua planilha conectada e vá em <strong>Extensões > Apps Script</strong>.</li>
           <li>Cole a função abaixo no final do seu código:</li>
@@ -223,7 +226,7 @@
           <button type="button" class="btn-icon" style="font-size: 11px; padding: 3px 8px;" onclick="copiarCodigoNotificacoes()">📋 Copiar Código</button>
         </div>
 
-        <textarea id="codigo-apps-script-notif" readonly style="width:100%; height:110px; background:#000; color:#0f0; font-family:monospace; font-size:10px; border:1px solid #444; border-radius:4px; padding:6px; box-sizing: border-box; margin-bottom:10px; white-space: pre; word-wrap: normal;">function verificarENotificarEmail(){var sheet=SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();var raw=sheet.getRange(1,1).getValue();if(!raw)return;var data=JSON.parse(raw);var email=Session.getActiveUser().getEmail();if(!email)return;var props=PropertiesService.getScriptProperties();var sent=JSON.parse(props.getProperty("sentNotifs")||"{}");var agora=new Date();var diasNomes=["domingo","segunda","terça","quarta","quinta","sexta","sábado"];var diaHoje=diasNomes[agora.getDay()];var horaAtualMin=agora.getHours()*60+agora.getMinutes();var antecedencia=parseInt(data.notifMinutos,10)||15;if(data.rotina){data.rotina.forEach(function(item){if(item.dia===diaHoje&&item.inicio){var p=item.inicio.split(":");var minItem=parseInt(p[0],10)*60+parseInt(p[1],10);var diff=minItem-horaAtualMin;var key="rotina_"+item.id+"_"+agora.toDateString();if(diff>=0&&diff<=antecedencia&&!sent[key]){GmailApp.sendEmail(email,"Lembrete: "+item.atividade,"Sua atividade \""+item.atividade+"\" começa em "+diff+" min (às "+item.inicio+").\n"+(item.detalhes||""));sent[key]=true;}}});}if(data.tarefas){var hojeIso=agora.getFullYear()+"-"+("0"+(agora.getMonth()+1)).slice(-2)+"-"+("0"+agora.getDate()).slice(-2);data.tarefas.forEach(function(t){if(t.data===hojeIso&&t.hora&&!t.concluida){var p=t.hora.split(":");var minTask=parseInt(p[0],10)*60+parseInt(p[1],10);var diff=minTask-horaAtualMin;var key="tarefa_"+t.id+"_"+hojeIso;if(diff>=0&&diff<=antecedencia&&!sent[key]){GmailApp.sendEmail(email,"Lembrete: "+t.titulo,"Sua tarefa \""+t.titulo+"\" vence em "+diff+" min (às "+t.hora+").");sent[key]=true;}}});}props.setProperty("sentNotifs",JSON.stringify(sent));}</textarea>
+        <textarea id="codigo-apps-script-notif" readonly style="width:100%; height:110px; background:#000; color:#fff; font-family:monospace; font-size:10px; border:1px solid #444; border-radius:4px; padding:6px; box-sizing: border-box; margin-bottom:10px; white-space: pre; word-wrap: normal;">function verificarENotificarEmail(){var sheet=SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();var raw=sheet.getRange(1,1).getValue();if(!raw)return;var data=JSON.parse(raw);var email=Session.getActiveUser().getEmail();if(!email)return;var props=PropertiesService.getScriptProperties();var sent=JSON.parse(props.getProperty("sentNotifs")||"{}");var agora=new Date();var diasNomes=["domingo","segunda","terça","quarta","quinta","sexta","sábado"];var diaHoje=diasNomes[agora.getDay()];var horaAtualMin=agora.getHours()*60+agora.getMinutes();var antecedencia=parseInt(data.notifMinutos,10)||15;if(data.rotina){data.rotina.forEach(function(item){if(item.dia===diaHoje&&item.inicio){var p=item.inicio.split(":");var minItem=parseInt(p[0],10)*60+parseInt(p[1],10);var diff=minItem-horaAtualMin;var key="rotina_"+item.id+"_"+agora.toDateString();if(diff>=0&&diff<=antecedencia&&!sent[key]){GmailApp.sendEmail(email,"Lembrete: "+item.atividade,"Sua atividade \""+item.atividade+"\" começa em "+diff+" min (às "+item.inicio+").\n"+(item.detalhes||""));sent[key]=true;}}});}if(data.tarefas){var hojeIso=agora.getFullYear()+"-"+("0"+(agora.getMonth()+1)).slice(-2)+"-"+("0"+agora.getDate()).slice(-2);data.tarefas.forEach(function(t){if(t.data===hojeIso&&t.hora&&!t.concluida){var p=t.hora.split(":");var minTask=parseInt(p[0],10)*60+parseInt(p[1],10);var diff=minTask-horaAtualMin;var key="tarefa_"+t.id+"_"+hojeIso;if(diff>=0&&diff<=antecedencia&&!sent[key]){GmailApp.sendEmail(email,"Lembrete: "+t.titulo,"Sua tarefa \""+t.titulo+"\" vence em "+diff+" min (às "+t.hora+").");sent[key]=true;}}});}props.setProperty("sentNotifs",JSON.stringify(sent));}</textarea>
 
         <ol start="3" style="padding-left: 20px; margin-bottom: 0;">
           <li>No menu à esquerda do Apps Script, clique no ícone de relógio <strong>(Gatilhos / Triggers)</strong>.</li>
@@ -449,6 +452,7 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
     const mapaDias = { 'domingo': 0, 'segunda': 1, 'terça': 2, 'quarta': 3, 'quinta': 4, 'sexta': 5, 'sábado': 6 };
     const mapaDiasStr = { 'domingo': 'col-dom', 'segunda': 'col-seg', 'terça': 'col-ter', 'quarta': 'col-qua', 'quinta': 'col-qui', 'sexta': 'col-sex', 'sábado': 'col-sab' };
     const diasSemanaNomes = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+    const diasSemanaCap = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
     window.onload = function() { 
       carregarDados(); 
@@ -711,11 +715,11 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
         } else {
           const partes = dataChave.split('-');
           const objData = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
-          const nomeDiaSemana = diasSemanaNomes[objData.getDay()];
-          const dataBR = `${partes[2]}/${partes[1]}/${partes[0].slice(2)}`;
+          const nomeDiaSemana = diasSemanaCap[objData.getDay()];
+          const dataBR = `${String(partes[2]).padStart(2, '0')}/${String(partes[1]).padStart(2, '0')}/${partes[0].slice(-2)}`;
           
           if (dataChave === hojeIso) {
-            tituloGrupo = `Hoje - ${nomeDiaSemana} ${dataBR}`;
+            tituloGrupo = `Hoje - ${nomeDiaSemana}, ${dataBR}`;
           } else {
             tituloGrupo = `${nomeDiaSemana}, ${dataBR}`;
           }
@@ -723,7 +727,7 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
 
         const divGrupo = document.createElement('div');
         divGrupo.style.cssText = 'margin-bottom: 6px;';
-        divGrupo.innerHTML = `<div style="font-size: 12px; font-weight: bold; color: #aaa; margin-bottom: 6px; text-transform: capitalize;">${tituloGrupo}</div>`;
+        divGrupo.innerHTML = `<div style="font-size: 12px; font-weight: bold; color: #aaa; margin-bottom: 6px;">${tituloGrupo}</div>`;
 
         const divLista = document.createElement('div');
         divLista.style.cssText = 'display: flex; flex-direction: column; gap: 4px;';
@@ -1006,11 +1010,15 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
     function renderizarTarefasHoje() {
       const hoje = new Date(); 
       const hojeDiaNome = diasSemanaNomes[hoje.getDay()]; 
-      const hojeDataStr = hoje.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'2-digit'}); 
+      const diaCap = diasSemanaCap[hoje.getDay()];
+      const diaStr = String(hoje.getDate()).padStart(2, '0');
+      const mesStr = String(hoje.getMonth() + 1).padStart(2, '0');
+      const anoStr = String(hoje.getFullYear()).slice(-2);
+      const hojeDataFormatada = `${diaStr}/${mesStr}/${anoStr}`;
       const chaveHojeId = hoje.toISOString().split('T')[0]; 
       const horaMinutoAtual = hoje.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-      document.getElementById('titulo-hoje').innerText = `Hoje - ${diasSemanaNomes[hoje.getDay()]} ${hojeDataStr}`;
+      document.getElementById('titulo-hoje').innerText = `Hoje - ${diaCap}, ${hojeDataFormatada}`;
       
       const contPendentes = document.getElementById('lista-hoje-pendentes'); 
       const contConcluidas = document.getElementById('lista-hoje-concluidas'); 
