@@ -3,49 +3,69 @@
 <head>
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- LINK PARA O MANIFESTO E COR TEMA (Obrigatórios para instalar o App) -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1a73e8">
-  
+  <meta name="theme-color" content="#121212">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  
   <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f0f2f5; color: #333; overflow-x: hidden; }
-    .header { padding: 10px 15px; background: #fff; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
-    h2 { margin: 0; font-size: 16px; }
-    button { background: #1a73e8; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
+    /* TEMA DARK MINIMALISTA */
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #121212; color: #e0e0e0; overflow-x: hidden; }
+    .header { padding: 12px 20px; background: #1e1e1e; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 100; }
+    h2 { margin: 0; font-size: 18px; font-weight: 600; color: #fff; letter-spacing: 0.5px; }
     
-    .calendario-container { display: flex; padding: 5px; position: relative; width: 100%; box-sizing: border-box; }
+    /* Botões Minimalistas */
+    .btn-icon { background: #2c2c2c; color: white; border: 1px solid #444; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; }
+    .btn-icon:hover { background: #3c3c3c; }
+    .btn-primary { background: #1a73e8; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.2s; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; }
+    .btn-primary:hover { background: #155db1; }
+    
+    .header-botoes { display: flex; gap: 10px; align-items: center; }
+
+    /* A GRADE CONTINUA BRANCA PARA DESTAQUE */
+    .calendario-container { display: flex; padding: 10px 5px; position: relative; width: 100%; box-sizing: border-box; background: #121212; }
     .eixo-horas { width: 55px; flex-shrink: 0; position: relative; margin-top: 0; }
-    .hora-label { position: absolute; right: 8px; font-size: 11px; color: #666; transform: translateY(-50%); font-weight: bold; }
+    .hora-label { position: absolute; right: 8px; font-size: 11px; color: #888; transform: translateY(-50%); font-weight: bold; }
     
-    .dias-container { display: flex; flex-grow: 1; width: 100%; border-left: 1px solid #ddd; border-top: 1px solid #ddd; }
-    .coluna-dia { flex: 1; border-right: 1px solid #ddd; position: relative; background: #fff; background-image: linear-gradient(#f0f0f0 1px, transparent 1px); background-size: 100% 40px; background-position: 0 25px; } 
-    .cabecalho-dia { text-align: center; font-weight: bold; padding: 5px 0; background: #000; color: white; border-bottom: 1px solid #ddd; position: absolute; top: 0; width: 100%; height: 25px; box-sizing: border-box; font-size: 11px; overflow: hidden; }
+    .dias-container { display: flex; flex-grow: 1; width: 100%; border-left: 1px solid #ccc; border-top: 1px solid #ccc; border-radius: 4px; overflow: hidden; }
+    .coluna-dia { flex: 1; border-right: 1px solid #ccc; position: relative; background: #fff; background-image: linear-gradient(#f0f0f0 1px, transparent 1px); background-size: 100% 40px; background-position: 0 25px; } 
+    .cabecalho-dia { text-align: center; font-weight: bold; padding: 5px 0; background: #000; color: white; border-bottom: 1px solid #ccc; position: absolute; top: 0; width: 100%; height: 25px; box-sizing: border-box; font-size: 11px; overflow: hidden; }
     
-    .evento { position: absolute; left: 1px; right: 1px; border-radius: 3px; padding: 2px 4px; color: white; overflow: hidden; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 1px 2px rgba(0,0,0,0.2); display: flex; flex-direction: column; justify-content: flex-start; box-sizing: border-box; }
+    .evento { position: absolute; left: 1px; right: 1px; border-radius: 3px; padding: 2px 4px; color: white; overflow: hidden; cursor: pointer; border: 1px solid rgba(0,0,0,0.2); box-shadow: 0 1px 3px rgba(0,0,0,0.3); display: flex; flex-direction: column; justify-content: flex-start; box-sizing: border-box; }
     .evento-titulo { font-weight: bold; font-size: 11px; line-height: 1.1; word-break: break-word; white-space: normal; }
     .evento-info { font-size: 9px; opacity: 0.9; }
     .evento-detalhes { font-size: 9px; opacity: 0.8; font-style: italic; word-break: break-word; }
     
-    .paleta-cores { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 5px; align-items: center; max-width: 250px; }
+    /* MODAIS NO MODO DARK */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
+    .modal-box { background: #1e1e1e; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #333; }
+    .modal-box h3 { margin-top: 0; margin-bottom: 15px; color: #fff; }
+    
+    .form-group { margin-bottom: 12px; display: flex; flex-direction: column; }
+    .form-group label { font-size: 12px; margin-bottom: 5px; font-weight: bold; color: #aaa; }
+    .form-group input, .form-group select { padding: 10px; border: 1px solid #444; border-radius: 6px; background: #121212; color: #fff; font-family: inherit; }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: #1a73e8; }
+    
+    .paleta-cores { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; align-items: center; max-width: 250px; }
     .bola-cor { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s; }
     .bola-cor:hover { transform: scale(1.1); }
-    .bola-cor.selecionada { border-color: #ff9800; transform: scale(1.15); box-shadow: 0 0 4px rgba(0,0,0,0.4); }
+    .bola-cor.selecionada { border-color: #fff; transform: scale(1.15); box-shadow: 0 0 6px rgba(0,0,0,0.8); }
 
-    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; justify-content: center; align-items: center; }
-    .modal-box { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-    .form-group { margin-bottom: 12px; display: flex; flex-direction: column; }
-    .form-group label { font-size: 12px; margin-bottom: 4px; font-weight: bold; }
-    .form-group input, .form-group select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-    .modal-botoes { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-    .btn-cancelar { background: #ccc; color: black; }
-    .btn-perigo { background: #dc3545; color: white; }
+    .modal-botoes { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }
+    .btn-cancelar { background: #333; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .btn-salvar { background: #1a73e8; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .btn-perigo { background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
 
+    /* MENU DE OPÇÕES */
+    .menu-opcoes-btn { display: flex; align-items: center; gap: 8px; width: 100%; margin-bottom: 10px; background: #2c2c2c; color: white; border: 1px solid #444; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; justify-content: center; }
+    .menu-opcoes-btn:hover { background: #3c3c3c; }
+    .menu-opcoes-btn.exportar { border-color: #1a73e8; color: #1a73e8; background: transparent; }
+    
+    /* IMPRESSÃO (Força tudo a ficar branco e nítido) */
     @media print {
       @page { margin: 10mm 5mm 5mm 5mm; }
-      body { zoom: 80%; background: white; margin: 0; padding: 0; } 
-      .header, button, .modal-overlay { display: none !important; } 
-      .calendario-container { padding: 0 !important; width: 100% !important; display: flex !important; }
+      body { zoom: 80%; background: white !important; margin: 0; padding: 0; } 
+      .header, .modal-overlay { display: none !important; } 
+      .calendario-container { padding: 0 !important; width: 100% !important; display: flex !important; background: white !important; }
       .eixo-horas { width: 70px !important; margin-top: 0 !important; }
       .hora-label { font-size: 14px !important; color: #000 !important; right: 10px !important; }
       .dias-container { width: 100% !important; border: 1px solid #000 !important; }
@@ -53,7 +73,6 @@
       .evento-titulo { font-size: 13px !important; }
       .evento-info { font-size: 11px !important; }
       .evento-detalhes { font-size: 10px !important; }
-      /* BORDAS PRETAS REMOVIDAS DO PDF */
       .evento { border: none !important; }
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     }
@@ -63,10 +82,9 @@
 
   <div class="header">
     <h2>Rotina</h2>
-    <div>
-      <button onclick="baixarPNG()" style="background: #e67e22; margin-right: 5px;">PNG</button>
-      <button onclick="baixarPDF()" style="background: #34a853; margin-right: 5px;">PDF</button>
-      <button onclick="abrirModal()">+ Novo</button>
+    <div class="header-botoes">
+      <button class="btn-icon" onclick="abrirOpcoes()">Opções</button>
+      <button class="btn-primary" onclick="abrirModal()">+</button>
     </div>
   </div>
 
@@ -83,14 +101,33 @@
     </div>
   </div>
 
+  <!-- MODAL DE OPÇÕES -->
+  <div class="modal-overlay" id="modal-opcoes">
+    <div class="modal-box">
+      <h3>Opções do App</h3>
+      <button class="menu-opcoes-btn exportar" onclick="baixarPDF()">📄 Exportar PDF</button>
+      <button class="menu-opcoes-btn exportar" onclick="baixarPNG()">🖼️ Exportar PNG</button>
+      <hr style="border: 0; border-top: 1px solid #333; margin: 15px 0;">
+      <button class="menu-opcoes-btn" onclick="baixarBackup()">💾 Salvar Backup (.json)</button>
+      
+      <label for="importar-arquivo" class="menu-opcoes-btn" style="text-align:center;">📂 Importar Progresso</label>
+      <input type="file" id="importar-arquivo" accept=".json" style="display: none;" onchange="importarBackup(event)">
+      
+      <div class="modal-botoes" style="margin-top: 10px;">
+        <button class="btn-cancelar" style="width: 100%;" onclick="fecharOpcoes()">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE ATIVIDADE -->
   <div class="modal-overlay" id="modal">
     <div class="modal-box">
       <h3 id="modal-titulo">Nova Atividade</h3>
-      <input type="hidden" id="form-linha">
+      <input type="hidden" id="form-id">
       
       <div class="form-group">
         <label>Atividade</label>
-        <input type="text" id="form-atividade">
+        <input type="text" id="form-atividade" placeholder="Ex: Estatística">
       </div>
       <div class="form-group">
         <label>Dia da Semana</label>
@@ -130,106 +167,113 @@
           <div class="bola-cor" style="background-color: #666666;" onclick="escolherCor('#666666')"></div>
           <div class="bola-cor" style="background-color: #000000;" onclick="escolherCor('#000000')"></div>
           <div class="bola-cor" style="background-color: #b7b7b7;" onclick="escolherCor('#b7b7b7')"></div>
-          <div class="bola-cor" style="background-color: #efefef; border: 1px solid #ccc;" onclick="escolherCor('#efefef')"></div>
-          
-          <input type="color" id="form-cor-picker" value="#1a73e8" style="width: 28px; height: 28px; border: none; cursor: pointer; padding: 0; background: none; border-radius: 50%;" onchange="escolherCor(this.value)" title="Outra cor">
+          <div class="bola-cor" style="background-color: #efefef; border: 1px solid #444;" onclick="escolherCor('#efefef')"></div>
+          <input type="color" id="form-cor-picker" value="#1a73e8" style="width: 28px; height: 28px; border: none; cursor: pointer; padding: 0; background: none; border-radius: 50%;" onchange="escolherCor(this.value)">
         </div>
         <input type="hidden" id="form-cor" value="#073763">
       </div>
 
       <div class="form-group">
         <label>Detalhes Adicionais</label>
-        <input type="text" id="form-detalhes">
+        <input type="text" id="form-detalhes" placeholder="Opcional">
       </div>
 
       <div class="modal-botoes">
         <button id="btn-excluir" class="btn-perigo" style="display: none; margin-right: auto;" onclick="excluirAtividade()">Excluir</button>
         <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
-        <button onclick="salvarFormulario()" id="btn-salvar">Salvar</button>
+        <button class="btn-salvar" onclick="salvarFormulario()">Salvar</button>
       </div>
     </div>
   </div>
 
   <script>
-    // REGISTRO DO SERVICE WORKER (Necessário para o botão "Instalar" funcionar no Android)
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(err => console.log('SW erro:', err));
-      });
-    }
+    if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); }); }
 
-    const URL_API = 'https://script.google.com/macros/s/AKfycbyvIt4FjYInGZi1vnxW5B56MuwlEC3gMyGnnkSRDMznNbrobq-Ji4uwRvb3qUYT8iDx/exec';
-
+    let dadosRotina = [];
     let HORA_INICIO = 6; 
     let HORA_FIM = 22;   
     const PIXELS_POR_HORA = 40; 
     const OFFSET_TOPO = 25; 
 
     const mapaDias = {
-      'domingo': 'col-dom', 'dom': 'col-dom',
-      'segunda': 'col-seg', 'seg': 'col-seg',
-      'terça': 'col-ter', 'ter': 'col-ter', 'terca': 'col-ter',
-      'quarta': 'col-qua', 'qua': 'col-qua',
-      'quinta': 'col-qui', 'qui': 'col-qui',
-      'sexta': 'col-sex', 'sex': 'col-sex',
-      'sábado': 'col-sab', 'sab': 'col-sab', 'sabado': 'col-sab'
+      'domingo': 'col-dom', 'segunda': 'col-seg', 'terça': 'col-ter', 
+      'quarta': 'col-qua', 'quinta': 'col-qui', 'sexta': 'col-sex', 'sábado': 'col-sab'
     };
 
     window.onload = function() {
-      carregarDadosDoApp();
+      carregarDados();
     };
 
-    function escolherCor(hex) {
-      document.getElementById('form-cor').value = hex;
-      document.getElementById('form-cor-picker').value = hex;
-      document.querySelectorAll('.bola-cor').forEach(b => {
-        let corBola = rgbParaHex(b.style.backgroundColor);
-        if(corBola.toLowerCase() === hex.toLowerCase()) {
-          b.classList.add('selecionada');
-        } else {
-          b.classList.remove('selecionada');
-        }
-      });
+    // SISTEMA DE ARMAZENAMENTO LOCAL (Substitui o Google Sheets)
+    function carregarDados() {
+      const salvos = localStorage.getItem('appRotinaDados');
+      if (salvos) {
+        dadosRotina = JSON.parse(salvos);
+      } else {
+        dadosRotina = [];
+      }
+      processarGrade();
     }
 
-    function rgbParaHex(rgb) {
-      if(!rgb.startsWith('rgb')) return rgb;
-      let valores = rgb.match(/\d+/g);
-      return "#" + ((1 << 24) + (parseInt(valores[0]) << 16) + (parseInt(valores[1]) << 8) + parseInt(valores[2])).toString(16).slice(1);
+    function salvarDadosLocalmente() {
+      localStorage.setItem('appRotinaDados', JSON.stringify(dadosRotina));
+      processarGrade();
     }
 
-    function carregarDadosDoApp() {
-      fetch(URL_API)
-        .then(response => response.json())
-        .then(dados => processarDadosDinamicos(dados))
-        .catch(err => console.log("Erro ao carregar:", err));
+    // BACKUP E IMPORTAÇÃO JSON
+    function baixarBackup() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dadosRotina));
+      const a = document.createElement('a');
+      a.setAttribute("href", dataStr);
+      a.setAttribute("download", "rotina_backup.json");
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      fecharOpcoes();
     }
 
-    function processarDadosDinamicos(dados) {
+    function importarBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importado = JSON.parse(e.target.result);
+          if (Array.isArray(importado)) {
+            dadosRotina = importado;
+            salvarDadosLocalmente();
+            alert("Progresso importado com sucesso!");
+            fecharOpcoes();
+          } else {
+            alert("Arquivo inválido.");
+          }
+        } catch (err) { alert("Erro ao ler o arquivo."); }
+      };
+      reader.readAsText(file);
+    }
+
+    function processarGrade() {
       document.querySelectorAll('.evento').forEach(e => e.remove());
       
-      if (dados && dados.length > 0) {
-        let menorHora = 24;
-        let maiorHora = 0;
-
-        dados.forEach(item => {
-          if (item.inicio && item.inicio.includes(':')) {
-            let hInicio = parseInt(item.inicio.split(':')[0], 10);
-            if (hInicio < menorHora) menorHora = hInicio;
+      if (dadosRotina.length > 0) {
+        let menorHora = 24, maiorHora = 0;
+        dadosRotina.forEach(item => {
+          if (item.inicio) {
+            let h = parseInt(item.inicio.split(':')[0], 10);
+            if (h < menorHora) menorHora = h;
           }
-          if (item.fim && item.fim.includes(':')) {
-            let hFim = parseInt(item.fim.split(':')[0], 10);
-            if (hFim > maiorHora) maiorHora = hFim;
+          if (item.fim) {
+            let h = parseInt(item.fim.split(':')[0], 10);
+            if (h > maiorHora) maiorHora = h;
           }
         });
-
         HORA_INICIO = (menorHora > 0) ? menorHora - 1 : 0;
         HORA_FIM = (maiorHora < 23) ? maiorHora + 1 : 24;
       }
       
       desenharGrade();
       
-      dados.forEach(item => {
+      dadosRotina.forEach(item => {
         const idColuna = mapaDias[item.dia];
         if(!idColuna) return; 
 
@@ -254,7 +298,6 @@
           ${heightPixels > 30 ? `<div class="evento-info">${item.inicio}-${item.fim}</div>` : ''}
           ${heightPixels > 50 && item.detalhes ? `<div class="evento-detalhes">${item.detalhes}</div>` : ''}
         `;
-
         bloco.onclick = () => abrirModal(item);
         coluna.appendChild(bloco);
       });
@@ -263,7 +306,6 @@
     function desenharGrade() {
       const alturaTotal = ((HORA_FIM - HORA_INICIO + 1) * PIXELS_POR_HORA) + OFFSET_TOPO;
       document.querySelectorAll('.coluna-dia').forEach(col => col.style.height = alturaTotal + 'px');
-
       const eixo = document.getElementById('eixo-horas');
       eixo.innerHTML = ''; 
       for(let i = HORA_INICIO; i <= HORA_FIM; i++) {
@@ -276,124 +318,88 @@
     }
 
     function calcularMinutos(horaString) {
-      if(!horaString || !horaString.includes(':')) return 0;
+      if(!horaString) return 0;
       const partes = horaString.split(':');
-      const horas = parseInt(partes[0], 10);
-      const minutos = parseInt(partes[1], 10);
-      return ((horas - HORA_INICIO) * PIXELS_POR_HORA) + (minutos * (PIXELS_POR_HORA / 60));
+      return ((parseInt(partes[0], 10) - HORA_INICIO) * PIXELS_POR_HORA) + (parseInt(partes[1], 10) * (PIXELS_POR_HORA / 60));
+    }
+
+    // MODAIS E FORMULÁRIOS
+    function abrirOpcoes() { document.getElementById('modal-opcoes').style.display = 'flex'; }
+    function fecharOpcoes() { document.getElementById('modal-opcoes').style.display = 'none'; }
+
+    function escolherCor(hex) {
+      document.getElementById('form-cor').value = hex;
+      document.getElementById('form-cor-picker').value = hex;
+      document.querySelectorAll('.bola-cor').forEach(b => {
+        let corBola = b.style.backgroundColor;
+        if(corBola.startsWith('rgb')) {
+          let v = corBola.match(/\d+/g);
+          corBola = "#" + ((1 << 24) + (parseInt(v[0]) << 16) + (parseInt(v[1]) << 8) + parseInt(v[2])).toString(16).slice(1);
+        }
+        b.classList.toggle('selecionada', corBola.toLowerCase() === hex.toLowerCase());
+      });
     }
 
     function abrirModal(itemExistente = null) {
       document.getElementById('modal').style.display = 'flex';
-      const btnExcluir = document.getElementById('btn-excluir');
-
       if(itemExistente) {
         document.getElementById('modal-titulo').innerText = 'Editar Atividade';
-        document.getElementById('form-linha').value = itemExistente.linhaPlanilha;
+        document.getElementById('form-id').value = itemExistente.id;
         document.getElementById('form-atividade').value = itemExistente.atividade;
-        
-        let selectDia = document.getElementById('form-dia');
-        for(let option of selectDia.options) {
-          if(option.value.includes(itemExistente.dia) || itemExistente.dia.includes(option.value)) {
-            selectDia.value = option.value; break;
-          }
-        }
+        document.getElementById('form-dia').value = itemExistente.dia;
         document.getElementById('form-inicio').value = itemExistente.inicio;
         document.getElementById('form-fim').value = itemExistente.fim;
-        document.getElementById('form-detalhes').value = itemExistente.detalhes;
-        escolherCor(itemExistente.cor || '#073763');
-        
-        btnExcluir.style.display = 'block';
+        document.getElementById('form-detalhes').value = itemExistente.detalhes || '';
+        escolherCor(itemExistente.cor);
+        document.getElementById('btn-excluir').style.display = 'block';
       } else {
         document.getElementById('modal-titulo').innerText = 'Nova Atividade';
-        document.getElementById('form-linha').value = '';
+        document.getElementById('form-id').value = '';
         document.getElementById('form-atividade').value = '';
         document.getElementById('form-inicio').value = '';
         document.getElementById('form-fim').value = '';
         document.getElementById('form-detalhes').value = '';
         escolherCor('#073763');
-        
-        btnExcluir.style.display = 'none';
+        document.getElementById('btn-excluir').style.display = 'none';
       }
     }
 
-    function fecharModal() {
-      document.getElementById('modal').style.display = 'none';
-    }
+    function fecharModal() { document.getElementById('modal').style.display = 'none'; }
 
     function salvarFormulario() {
+      const atividade = document.getElementById('form-atividade').value;
+      const dia = document.getElementById('form-dia').value;
       const inicio = document.getElementById('form-inicio').value;
       const fim = document.getElementById('form-fim').value;
-      const atividade = document.getElementById('form-atividade').value;
+      const cor = document.getElementById('form-cor').value;
+      const detalhes = document.getElementById('form-detalhes').value;
+      const idStr = document.getElementById('form-id').value;
 
-      if (!atividade || !inicio || !fim) {
-        alert("Preencha a atividade e os horários.");
-        return;
+      if (!atividade || !inicio || !fim) return alert("Preencha a atividade e os horários.");
+      if (inicio >= fim) return alert("Erro: O término não pode ser antes ou igual ao início.");
+
+      if (idStr) { // Editar
+        const index = dadosRotina.findIndex(i => i.id === idStr);
+        if (index !== -1) dadosRotina[index] = { id: idStr, atividade, dia, inicio, fim, cor, detalhes };
+      } else { // Criar novo
+        dadosRotina.push({ id: Date.now().toString(), atividade, dia, inicio, fim, cor, detalhes });
       }
-      if (inicio >= fim) {
-        alert("Erro: O término (" + fim + ") não pode ser antes ou igual ao início (" + inicio + ").");
-        return;
-      }
 
-      const btn = document.getElementById('btn-salvar');
-      btn.innerText = "Salvando...";
-      btn.disabled = true;
-
-      const dadosForm = {
-        acao: "salvar",
-        linha: document.getElementById('form-linha').value,
-        atividade: atividade,
-        dia: document.getElementById('form-dia').value,
-        inicio: inicio,
-        fim: fim,
-        cor: document.getElementById('form-cor').value,
-        detalhes: document.getElementById('form-detalhes').value
-      };
-
-      fetch(URL_API, {
-        method: 'POST',
-        body: JSON.stringify(dadosForm)
-      })
-      .then(res => res.json())
-      .then(res => {
-        fecharModal();
-        carregarDadosDoApp(); 
-        btn.innerText = "Salvar";
-        btn.disabled = false;
-      })
-      .catch(err => {
-        alert("Erro ao salvar.");
-        btn.innerText = "Salvar";
-        btn.disabled = false;
-      });
+      salvarDadosLocalmente();
+      fecharModal();
     }
 
     function excluirAtividade() {
-      const linha = document.getElementById('form-linha').value;
-      if (!linha) return;
-      
-      if (confirm("Tem certeza que deseja excluir esta atividade?")) {
-        const btn = document.getElementById('btn-excluir');
-        btn.innerText = "Excluindo...";
-        btn.disabled = true;
-
-        const payload = { acao: "excluir", linha: linha };
-
-        fetch(URL_API, {
-          method: 'POST',
-          body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(res => {
-          fecharModal();
-          carregarDadosDoApp();
-          btn.innerText = "Excluir";
-          btn.disabled = false;
-        });
+      const idStr = document.getElementById('form-id').value;
+      if (confirm("Tem certeza que deseja excluir?")) {
+        dadosRotina = dadosRotina.filter(i => i.id !== idStr);
+        salvarDadosLocalmente();
+        fecharModal();
       }
     }
 
     function baixarPDF() {
+      fecharOpcoes();
       const tituloOriginal = document.title;
       document.title = "Rotina"; 
       window.print();
@@ -401,17 +407,16 @@
     }
 
     function baixarPNG() {
-      const elemento = document.getElementById("area-impressao");
-      html2canvas(elemento, { 
-        scale: 2,
-        windowWidth: 1200,
-        windowHeight: 700
-      }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = 'Rotina.png';
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      });
+      fecharOpcoes();
+      setTimeout(() => {
+        const elemento = document.getElementById("area-impressao");
+        html2canvas(elemento, { scale: 2, windowWidth: 1200, windowHeight: 700 }).then(canvas => {
+          const link = document.createElement('a');
+          link.download = 'Rotina.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        });
+      }, 300); // pequeno delay para fechar o menu antes de tirar o print
     }
   </script>
 </body>
