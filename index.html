@@ -38,7 +38,7 @@
     
     /* MODAIS */
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: center; backdrop-filter: blur(3px); overflow-y: auto; padding: 20px 0; box-sizing: border-box; }
-    .modal-box { background: #1e1e1e; padding: 20px; border-radius: 12px; width: 90%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #333; max-height: 90vh; overflow-y: auto; box-sizing: border-box; }
+    .modal-box { background: #1e1e1e; padding: 20px; border-radius: 12px; width: 90%; max-width: 480px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #333; max-height: 90vh; overflow-y: auto; box-sizing: border-box; }
     .modal-box h3 { margin-top: 0; margin-bottom: 15px; color: #fff; }
     
     .form-group { margin-bottom: 12px; display: flex; flex-direction: column; }
@@ -128,10 +128,7 @@
       @page { size: landscape; margin: 5mm; }
       body { zoom: 100%; background: white !important; margin: 0; padding: 0; } 
       .header, .modal-overlay, #aba-curso, #aba-tarefas, #bloco-hoje, .trackers-container { display: none !important; } 
-      
-      /* Forçar a área de impressão a ter a proporção exata de 1800x1080 (5:3) */
       #area-impressao { display: flex !important; width: 100% !important; aspect-ratio: 1800 / 1080 !important; background: white !important; padding: 0 !important; }
-      
       .eixo-horas { width: 50px !important; margin-top: 0 !important; }
       .hora-label { font-size: 12px !important; color: #000 !important; right: 6px !important; }
       .dias-container { width: 100% !important; border: 1px solid #000 !important; }
@@ -217,7 +214,6 @@
     <div id="lista-periodos"></div>
   </div>
 
-  <!-- ABA TAREFAS -->
   <div id="aba-tarefas" style="display:none; padding:15px; max-width:900px; margin:0 auto; box-sizing:border-box;">
      <div id="lista-tarefas" class="tarefas-grid"></div>
   </div>
@@ -226,13 +222,13 @@
     <div class="modal-box">
       <h3>Opções</h3>
       <button class="menu-opcoes-btn" onclick="abrirModal()">✏️ Nova Atividade (Rotina)</button>
+      <button class="menu-opcoes-btn" onclick="abrirModalPlanilha()">☁️ Backup & Sincronização Google Sheets</button>
       <button class="menu-opcoes-btn" onclick="baixarPDF()">📄 Exportar PDF</button>
       <button class="menu-opcoes-btn" onclick="baixarPNG()">🖼️ Exportar PNG (1800x1080)</button>
       <button class="menu-opcoes-btn" onclick="baixarBackup()">💾 Salvar Backup (.json)</button>
       <label for="importar-arquivo" class="menu-opcoes-btn">📂 Importar Progresso</label>
       <input type="file" id="importar-arquivo" accept=".json" style="display: none;" onchange="importarBackup(event)">
       
-      <!-- Bloco de notificações movido para o final -->
       <div style="margin-top: 15px; margin-bottom: 10px; background: #2c2c2c; border: 1px solid #444; padding: 12px; border-radius: 8px;">
         <label style="font-size: 12px; font-weight: bold; color: #fff; margin-bottom: 5px; display:block;">🔔 Notificações (Web Push)</label>
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
@@ -249,6 +245,53 @@
     </div>
   </div>
 
+  <!-- MODAL GOOGLE SHEETS COM GUIA E CÓDIGO EMBUTIDO -->
+  <div class="modal-overlay" id="modal-planilha">
+    <div class="modal-box">
+      <h3>Sincronização com Google Planilhas</h3>
+      <div style="font-size: 12px; color: #ccc; line-height: 1.5; margin-bottom: 15px; max-height: 250px; overflow-y: auto; background: #121212; padding: 10px; border-radius: 6px; border: 1px solid #333;">
+        <p style="margin-top: 0;"><strong>Siga o passo a passo para conectar:</strong></p>
+        <ol style="padding-left: 20px; margin-bottom: 10px;">
+          <li>1° - Crie uma planilha em branco no seu Google Drive.</li>
+          <li>2° - No menu superior, vá em <strong>Extensões > Apps Script</strong>.</li>
+          <li>3° - Apague tudo o que estiver no editor e cole o código abaixo:</li>
+        </ol>
+        <textarea readonly style="width:100%; height:85px; background:#000; color:#0f0; font-family:monospace; font-size:9px; border:1px solid #444; border-radius:4px; padding:6px; box-sizing: border-box; margin-bottom:10px;" onclick="this.select()">
+function doPost(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  sheet.getRange(1, 1).setValue(e.postData.contents);
+  return ContentService.createTextOutput("Sucesso");
+}
+function doGet(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var val = sheet.getRange(1, 1).getValue();
+  return ContentService.createTextOutput(val || "").setMimeType(ContentService.MimeType.JSON);
+}
+        </textarea>
+        <ol start="4" style="padding-left: 20px; margin-bottom: 0;">
+          <li>4° - Clique em <strong>Implantar > Nova implantação</strong>.</li>
+          <li>5° - Selecione o tipo <strong>App da Web</strong>, defina quem pode acessar como <strong>Qualquer pessoa</strong> e clique em Implantar.</li>
+          <li>6° - Copie a URL do App da Web gerada e cole no campo abaixo.</li>
+        </ol>
+      </div>
+      
+      <div class="form-group">
+        <label>Link do App da Web (Google Sheets)</label>
+        <input type="url" id="url-google-sheets" placeholder="https://script.google.com/macros/s/..." onchange="salvarUrlPlanilha()">
+        <span id="status-sincronizacao" style="font-size: 11px; margin-top: 5px; color: #888;"></span>
+      </div>
+      
+      <div class="modal-botoes" style="justify-content: space-between;">
+        <button class="btn-secundario" onclick="baixarDaPlanilha()">Baixar da Nuvem</button>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn-cancelar" onclick="fecharModalPlanilha()">Fechar</button>
+          <button class="btn-salvar" onclick="testarSincronizacaoPlanilha()">Salvar e Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DO TRACKER -->
   <div class="modal-overlay" id="modal-tracker">
     <div class="modal-box">
       <h3>Editar Controle</h3>
@@ -337,12 +380,13 @@
   </div>
 
   <script>
-    if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(()=>{}); }); }
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(()=>{}); }
 
     let dadosRotina = []; let checksRotina = {};
     let dadosCurso = { nome: "", metaObrigatorias: 2400, metaOptativas: 300, metaComplementares: 200, periodos: [], metasMinimizado: true };
     let dadosTrackers = { agua: { titulo: '💧 Água', atual: 0, meta: 3.0, incremento: 0.2, resetHora: '00:00', lastReset: '', corFill: '#1155cc', unidade: 'L' }, custom: { titulo: '🎯 Custom', atual: 0, meta: 100, incremento: 10, resetHora: '00:00', lastReset: '', corFill: '#134f5c', unidade: 'un' } };
     let dadosTarefas = [];
+    let urlPlanilhaGoogle = "";
     
     let HORA_INICIO = 6, HORA_FIM = 22; const PIXELS_POR_HORA = 20, OFFSET_TOPO = 25; 
     let atividadeAtualSelecionada = null; let notifInterval = null; let tarefasNotificadasHoje = {}; let concluidasMinimizadas = true;
@@ -364,170 +408,156 @@
     }
 
     function carregarDados() {
-      const salvosRotina = localStorage.getItem('appRotinaDados'); const salvosCurso = localStorage.getItem('appCursoDados'); const salvosChecks = localStorage.getItem('appRotinaChecks'); const salvosTrackers = localStorage.getItem('appTrackersDados'); const salvosMinNotif = localStorage.getItem('appRotinaNotifMin'); const salvosTarefas = localStorage.getItem('appTarefasDados');
+      const salvosRotina = localStorage.getItem('appRotinaDados'); const salvosCurso = localStorage.getItem('appCursoDados'); const salvosChecks = localStorage.getItem('appRotinaChecks'); const salvosTrackers = localStorage.getItem('appTrackersDados'); const salvosMinNotif = localStorage.getItem('appRotinaNotifMin'); const salvosTarefas = localStorage.getItem('appTarefasDados'); const salvosUrlPlanilha = localStorage.getItem('appRotinaUrlPlanilha');
       if (salvosRotina) dadosRotina = JSON.parse(salvosRotina); if (salvosCurso) dadosCurso = JSON.parse(salvosCurso); if (salvosChecks) checksRotina = JSON.parse(salvosChecks); if (salvosTrackers) dadosTrackers = { ...dadosTrackers, ...JSON.parse(salvosTrackers) }; if (salvosTarefas) dadosTarefas = JSON.parse(salvosTarefas); if (salvosMinNotif) document.getElementById('notif-minutos').value = salvosMinNotif;
+      if (salvosUrlPlanilha) { urlPlanilhaGoogle = salvosUrlPlanilha; document.getElementById('url-google-sheets').value = urlPlanilhaGoogle; }
       if (dadosCurso.metasMinimizado === undefined) dadosCurso.metasMinimizado = true;
       document.getElementById('nome-curso').value = dadosCurso.nome || ""; document.getElementById('meta-obrigatorias').value = dadosCurso.metaObrigatorias || 2400; document.getElementById('meta-optativas').value = dadosCurso.metaOptativas || 300; document.getElementById('meta-complementares').value = dadosCurso.metaComplementares || 200;
       atualizarVisualMetasMinimizadas(); processarGrade(); renderizarCurso();
     }
-    function salvarDadosLocalmente() { localStorage.setItem('appRotinaDados', JSON.stringify(dadosRotina)); localStorage.setItem('appCursoDados', JSON.stringify(dadosCurso)); localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers)); localStorage.setItem('appTarefasDados', JSON.stringify(dadosTarefas)); processarGrade(); renderizarCurso(); }
+    
+    function salvarDadosLocalmente() { 
+        localStorage.setItem('appRotinaDados', JSON.stringify(dadosRotina)); 
+        localStorage.setItem('appCursoDados', JSON.stringify(dadosCurso)); 
+        localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers)); 
+        localStorage.setItem('appTarefasDados', JSON.stringify(dadosTarefas)); 
+        processarGrade(); renderizarCurso();
+        sincronizarComPlanilhaOculto(); 
+    }
 
-    /* LÓGICA DE EXPORTAÇÃO CORRIGIDA 1800x1080 */
+    /* --- GOOGLE SHEETS SYNC & RESTORE LOGIC --- */
+    function abrirModalPlanilha() { fecharOpcoes(); document.getElementById('status-sincronizacao').innerText = ''; document.getElementById('modal-planilha').style.display = 'flex'; }
+    function fecharModalPlanilha() { document.getElementById('modal-planilha').style.display = 'none'; }
+    function salvarUrlPlanilha() { urlPlanilhaGoogle = document.getElementById('url-google-sheets').value.trim(); localStorage.setItem('appRotinaUrlPlanilha', urlPlanilhaGoogle); }
+    
+    function testarSincronizacaoPlanilha() {
+        salvarUrlPlanilha();
+        if (!urlPlanilhaGoogle) return alert("Por favor, cole a URL do seu App da Web do Google Sheets primeiro.");
+        const statusEl = document.getElementById('status-sincronizacao');
+        statusEl.innerText = 'Enviando dados...'; statusEl.style.color = '#fff';
+        
+        const backupGeral = { rotina: dadosRotina, curso: dadosCurso, trackers: dadosTrackers, tarefas: dadosTarefas, checks: checksRotina, ultimaAtualizacao: new Date().toLocaleString() };
+        fetch(urlPlanilhaGoogle, { method: 'POST', body: JSON.stringify(backupGeral) })
+            .then(res => res.text())
+            .then(text => { statusEl.innerText = '✅ Sucesso! Planilha atualizada.'; statusEl.style.color = '#4caf50'; })
+            .catch(err => { statusEl.innerText = '❌ Erro ao conectar. Verifique o link e as permissões.'; statusEl.style.color = '#f44336'; console.error(err); });
+    }
+
+    function baixarDaPlanilha() {
+        salvarUrlPlanilha();
+        if (!urlPlanilhaGoogle) return alert("Por favor, cole a URL do seu App da Web do Google Sheets primeiro.");
+        const statusEl = document.getElementById('status-sincronizacao');
+        statusEl.innerText = 'Baixando dados da nuvem...'; statusEl.style.color = '#fff';
+
+        fetch(urlPlanilhaGoogle)
+            .then(res => res.text())
+            .then(text => {
+                if (!text || text.trim() === "") {
+                    statusEl.innerText = '⚠️ A planilha na nuvem está vazia.';
+                    statusEl.style.color = '#ff9800';
+                    return;
+                }
+                const importado = JSON.parse(text);
+                if (importado.rotina) {
+                    dadosRotina = importado.rotina;
+                    if(importado.curso) dadosCurso = importado.curso;
+                    if(importado.trackers) dadosTrackers = { ...dadosTrackers, ...importado.trackers };
+                    if(importado.tarefas) dadosTarefas = importado.tarefas;
+                    if(importado.checks) checksRotina = importado.checks;
+                    
+                    if (dadosCurso.metasMinimizado === undefined) dadosCurso.metasMinimizado = true;
+                    salvarDadosLocalmente();
+                    document.getElementById('nome-curso').value = dadosCurso.nome || "";
+                    document.getElementById('meta-obrigatorias').value = dadosCurso.metaObrigatorias || 2400;
+                    document.getElementById('meta-optativas').value = dadosCurso.metaOptativas || 300;
+                    document.getElementById('meta-complementares').value = dadosCurso.metaComplementares || 200;
+                    atualizarVisualMetasMinimizadas();
+                    renderizarTarefas();
+                    statusEl.innerText = '✅ Dados restaurados com sucesso!';
+                    statusEl.style.color = '#4caf50';
+                } else {
+                    statusEl.innerText = '❌ Formato de dados inválido na planilha.';
+                    statusEl.style.color = '#f44336';
+                }
+            })
+            .catch(err => {
+                statusEl.innerText = '❌ Erro ao ler da planilha. Verifique o link.';
+                statusEl.style.color = '#f44336';
+                console.error(err);
+            });
+    }
+
+    function sincronizarComPlanilhaOculto() {
+        if (!urlPlanilhaGoogle) return;
+        const backupGeral = { rotina: dadosRotina, curso: dadosCurso, trackers: dadosTrackers, tarefas: dadosTarefas, checks: checksRotina, ultimaAtualizacao: new Date().toLocaleString() };
+        fetch(urlPlanilhaGoogle, { method: 'POST', body: JSON.stringify(backupGeral) }).catch(() => {});
+    }
+
+    /* LÓGICA DE EXPORTAÇÃO */
     function baixarPNG() { 
       fecharOpcoes(); 
       setTimeout(() => { 
         const elemento = document.getElementById("area-impressao"); 
         html2canvas(elemento, { scale: 2, backgroundColor: '#121212' }).then(canvasOriginal => { 
-          const canvasFinal = document.createElement('canvas');
-          canvasFinal.width = 1800; canvasFinal.height = 1080;
-          const ctx = canvasFinal.getContext('2d');
+          const canvasFinal = document.createElement('canvas'); canvasFinal.width = 1800; canvasFinal.height = 1080; const ctx = canvasFinal.getContext('2d');
           ctx.fillStyle = '#121212'; ctx.fillRect(0,0, 1800, 1080);
-          
-          const scale = Math.min(1800 / canvasOriginal.width, 1080 / canvasOriginal.height);
-          const w = canvasOriginal.width * scale;
-          const h = canvasOriginal.height * scale;
-          const dx = (1800 - w) / 2; const dy = (1080 - h) / 2;
-          
-          ctx.drawImage(canvasOriginal, dx, dy, w, h);
-          const link = document.createElement('a'); 
-          link.download = 'Rotina.png'; 
-          link.href = canvasFinal.toDataURL('image/png'); 
-          link.click(); 
+          const scale = Math.min(1800 / canvasOriginal.width, 1080 / canvasOriginal.height); const w = canvasOriginal.width * scale; const h = canvasOriginal.height * scale;
+          const dx = (1800 - w) / 2; const dy = (1080 - h) / 2; ctx.drawImage(canvasOriginal, dx, dy, w, h);
+          const link = document.createElement('a'); link.download = 'Rotina.png'; link.href = canvasFinal.toDataURL('image/png'); link.click(); 
         }); 
       }, 300); 
     }
     function baixarPDF() { fecharOpcoes(); const tituloOriginal = document.title; document.title = "Rotina"; window.print(); setTimeout(() => { document.title = tituloOriginal; }, 1000); }
 
-    /* NOTIFICAÇÕES (COM SUPORTE A SERVICE WORKER E CORREÇÃO DE LÓGICA) */
+    /* NOTIFICAÇÕES */
     function salvarMinutosNotif() { localStorage.setItem('appRotinaNotifMin', document.getElementById('notif-minutos').value); }
     function solicitarPermissaoNotificacao() {
-      if (!("Notification" in window)) return alert("Este navegador não suporta notificações.");
-      Notification.requestPermission().then(permission => {
-        if (permission === "granted") { alert("Notificações ativadas com sucesso!"); salvarMinutosNotif(); iniciarNotificacoes(); } else alert("Permissão negada.");
-      });
+      if (!("Notification" in window)) return alert("Navegador não suporta notificações.");
+      Notification.requestPermission().then(permission => { if (permission === "granted") { alert("Ativadas!"); salvarMinutosNotif(); iniciarNotificacoes(); } else alert("Negado."); });
     }
-    function enviarNotificacao(titulo, opcoes) {
-        if (navigator.serviceWorker) { navigator.serviceWorker.ready.then(function(registration) { registration.showNotification(titulo, opcoes); }).catch(function() { new Notification(titulo, opcoes); }); } else { new Notification(titulo, opcoes); }
-    }
+    function enviarNotificacao(titulo, opcoes) { if (navigator.serviceWorker) { navigator.serviceWorker.ready.then(function(reg) { reg.showNotification(titulo, opcoes); }).catch(function() { new Notification(titulo, opcoes); }); } else { new Notification(titulo, opcoes); } }
     function iniciarNotificacoes() { if (notifInterval) clearInterval(notifInterval); verificarNotificacoes(); notifInterval = setInterval(verificarNotificacoes, 30000); }
     function verificarNotificacoes() {
-      if (Notification.permission !== 'granted') return;
-      const agora = new Date(); const hojeDataString = agora.toLocaleDateString();
+      if (Notification.permission !== 'granted') return; const agora = new Date(); const hojeDataString = agora.toLocaleDateString();
       if (tarefasNotificadasHoje.data !== hojeDataString) tarefasNotificadasHoje = { data: hojeDataString };
-      const diaAtualStr = diasSemanaNomes[agora.getDay()];
-      const minutosAtuais = (agora.getHours() * 60) + agora.getMinutes();
-      const minsAntecedencia = parseInt(document.getElementById('notif-minutos').value) || 15;
-      const alvoNotificacao = minutosAtuais + minsAntecedencia;
-      const tarefasDeHoje = dadosRotina.filter(t => t.dia === diaAtualStr);
-      tarefasDeHoje.forEach(t => {
-        const partes = t.inicio.split(':');
-        const minTarefa = (parseInt(partes[0], 10) * 60) + parseInt(partes[1], 10);
-        const uniqueKey = t.id + '_' + t.inicio;
-        if (alvoNotificacao === minTarefa && !tarefasNotificadasHoje[uniqueKey]) {
-          enviarNotificacao('Atenção: ' + t.atividade, { body: `Começa em ${minsAntecedencia} min (às ${t.inicio})` });
-          tarefasNotificadasHoje[uniqueKey] = true;
-        }
+      const diaAtualStr = diasSemanaNomes[agora.getDay()]; const minutosAtuais = (agora.getHours() * 60) + agora.getMinutes(); const minsAntecedencia = parseInt(document.getElementById('notif-minutos').value) || 15; const alvoNotificacao = minutosAtuais + minsAntecedencia;
+      dadosRotina.filter(t => t.dia === diaAtualStr).forEach(t => {
+        const partes = t.inicio.split(':'); const minTarefa = (parseInt(partes[0], 10) * 60) + parseInt(partes[1], 10); const uniqueKey = t.id + '_' + t.inicio;
+        if (alvoNotificacao === minTarefa && !tarefasNotificadasHoje[uniqueKey]) { enviarNotificacao('Atenção: ' + t.atividade, { body: `Começa em ${minsAntecedencia} min (às ${t.inicio})` }); tarefasNotificadasHoje[uniqueKey] = true; }
       });
     }
 
-    /* ABA DE TAREFAS (NOVO) */
+    /* ABA DE TAREFAS */
     function renderizarTarefas() {
-      const container = document.getElementById('lista-tarefas');
-      container.innerHTML = '';
-      
-      const tarefasOrdenadas = [...dadosTarefas].sort((a,b) => {
-        if(!a.dataHora && !b.dataHora) return 0;
-        if(!a.dataHora) return 1;
-        if(!b.dataHora) return -1;
-        return new Date(a.dataHora) - new Date(b.dataHora);
-      });
-
-      if(tarefasOrdenadas.length === 0) {
-          container.innerHTML = `<div style="color: #666; font-size: 13px;">Nenhuma tarefa pendente... Clique no + para criar.</div>`;
-          return;
-      }
-
+      const container = document.getElementById('lista-tarefas'); container.innerHTML = '';
+      const tarefasOrdenadas = [...dadosTarefas].sort((a,b) => { if(!a.dataHora && !b.dataHora) return 0; if(!a.dataHora) return 1; if(!b.dataHora) return -1; return new Date(a.dataHora) - new Date(b.dataHora); });
+      if(tarefasOrdenadas.length === 0) { container.innerHTML = `<div style="color: #666; font-size: 13px;">Nenhuma tarefa pendente... Clique no + para criar.</div>`; return; }
       tarefasOrdenadas.forEach(t => {
         let isAtrasado = false; let strData = '';
-        if(t.dataHora) {
-            const d = new Date(t.dataHora);
-            if(d < new Date()) isAtrasado = true;
-            strData = d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-        }
-
-        let htmlTags = '';
-        if (isAtrasado) htmlTags += `<span class="tarefa-tag atrasado">Atrasado</span>`;
-        if (strData) htmlTags += `<span class="tarefa-tag data">${strData}</span>`;
-        if (t.vinculo) {
-            const r = dadosRotina.find(x => x.id === t.vinculo);
-            if(r) htmlTags += `<span class="tarefa-tag" style="background:${r.cor}; color:${getContrastColor(r.cor)}">${r.atividade}</span>`;
-        }
-
-        container.innerHTML += `
-          <div class="tarefa-card" onclick="abrirModalTarefa('${t.id}')">
-            <div class="tarefa-titulo">${t.titulo}</div>
-            ${htmlTags ? `<div class="tarefa-tags">${htmlTags}</div>` : ''}
-            ${t.descricao ? `<div class="tarefa-desc">${t.descricao}</div>` : ''}
-          </div>
-        `;
+        if(t.dataHora) { const d = new Date(t.dataHora); if(d < new Date()) isAtrasado = true; strData = d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}); }
+        let htmlTags = ''; if (isAtrasado) htmlTags += `<span class="tarefa-tag atrasado">Atrasado</span>`; if (strData) htmlTags += `<span class="tarefa-tag data">${strData}</span>`;
+        if (t.vinculo) { const r = dadosRotina.find(x => x.id === t.vinculo); if(r) htmlTags += `<span class="tarefa-tag" style="background:${r.cor}; color:${getContrastColor(r.cor)}">${r.atividade}</span>`; }
+        container.innerHTML += `<div class="tarefa-card" onclick="abrirModalTarefa('${t.id}')"><div class="tarefa-titulo">${t.titulo}</div>${htmlTags ? `<div class="tarefa-tags">${htmlTags}</div>` : ''}${t.descricao ? `<div class="tarefa-desc">${t.descricao}</div>` : ''}</div>`;
       });
     }
-    function popularSelectVinculo() {
-        const s = document.getElementById('tarefa-vinculo');
-        s.innerHTML = '<option value="">Nenhum / Outro</option>';
-        const rotinaOrdenada = [...dadosRotina].sort((a,b) => a.atividade.localeCompare(b.atividade));
-        rotinaOrdenada.forEach(r => { s.innerHTML += `<option value="${r.id}">${r.atividade} (${r.dia})</option>`; });
-    }
+    function popularSelectVinculo() { const s = document.getElementById('tarefa-vinculo'); s.innerHTML = '<option value="">Nenhum / Outro</option>'; const rotinaOrdenada = [...dadosRotina].sort((a,b) => a.atividade.localeCompare(b.atividade)); rotinaOrdenada.forEach(r => { s.innerHTML += `<option value="${r.id}">${r.atividade} (${r.dia})</option>`; }); }
     function abrirModalTarefa(id = null) {
-      popularSelectVinculo();
-      document.getElementById('modal-tarefa').style.display = 'flex';
-      if(id) {
-          document.getElementById('tarefa-modal-titulo').innerText = 'Editar Tarefa';
-          const t = dadosTarefas.find(x => x.id === id);
-          document.getElementById('tarefa-id').value = t.id;
-          document.getElementById('tarefa-titulo').value = t.titulo;
-          document.getElementById('tarefa-datahora').value = t.dataHora || '';
-          document.getElementById('tarefa-vinculo').value = t.vinculo || '';
-          document.getElementById('tarefa-descricao').value = t.descricao || '';
-          document.getElementById('btn-excluir-tarefa').style.display = 'block';
-      } else {
-          document.getElementById('tarefa-modal-titulo').innerText = 'Nova Tarefa';
-          document.getElementById('tarefa-id').value = '';
-          document.getElementById('tarefa-titulo').value = '';
-          document.getElementById('tarefa-datahora').value = '';
-          document.getElementById('tarefa-vinculo').value = '';
-          document.getElementById('tarefa-descricao').value = '';
-          document.getElementById('btn-excluir-tarefa').style.display = 'none';
-      }
+      popularSelectVinculo(); document.getElementById('modal-tarefa').style.display = 'flex';
+      if(id) { document.getElementById('tarefa-modal-titulo').innerText = 'Editar Tarefa'; const t = dadosTarefas.find(x => x.id === id); document.getElementById('tarefa-id').value = t.id; document.getElementById('tarefa-titulo').value = t.titulo; document.getElementById('tarefa-datahora').value = t.dataHora || ''; document.getElementById('tarefa-vinculo').value = t.vinculo || ''; document.getElementById('tarefa-descricao').value = t.descricao || ''; document.getElementById('btn-excluir-tarefa').style.display = 'block'; } else { document.getElementById('tarefa-modal-titulo').innerText = 'Nova Tarefa'; document.getElementById('tarefa-id').value = ''; document.getElementById('tarefa-titulo').value = ''; document.getElementById('tarefa-datahora').value = ''; document.getElementById('tarefa-vinculo').value = ''; document.getElementById('tarefa-descricao').value = ''; document.getElementById('btn-excluir-tarefa').style.display = 'none'; }
     }
     function fecharModalTarefa() { document.getElementById('modal-tarefa').style.display = 'none'; }
-    function salvarTarefa() {
-      const id = document.getElementById('tarefa-id').value;
-      const titulo = document.getElementById('tarefa-titulo').value;
-      const dataHora = document.getElementById('tarefa-datahora').value;
-      const vinculo = document.getElementById('tarefa-vinculo').value;
-      const descricao = document.getElementById('tarefa-descricao').value;
-      if(!titulo) return alert('Dê um título à tarefa.');
-      if(id) {
-          const t = dadosTarefas.find(x => x.id === id);
-          t.titulo = titulo; t.dataHora = dataHora; t.vinculo = vinculo; t.descricao = descricao;
-      } else { dadosTarefas.push({ id: Date.now().toString(), titulo, dataHora, vinculo, descricao }); }
-      salvarDadosLocalmente(); renderizarTarefas(); fecharModalTarefa();
-    }
-    function excluirTarefa() {
-      const id = document.getElementById('tarefa-id').value;
-      if(confirm('Excluir esta tarefa?')) { dadosTarefas = dadosTarefas.filter(x => x.id !== id); salvarDadosLocalmente(); renderizarTarefas(); fecharModalTarefa(); }
-    }
+    function salvarTarefa() { const id = document.getElementById('tarefa-id').value; const titulo = document.getElementById('tarefa-titulo').value; const dataHora = document.getElementById('tarefa-datahora').value; const vinculo = document.getElementById('tarefa-vinculo').value; const descricao = document.getElementById('tarefa-descricao').value; if(!titulo) return alert('Dê um título à tarefa.'); if(id) { const t = dadosTarefas.find(x => x.id === id); t.titulo = titulo; t.dataHora = dataHora; t.vinculo = vinculo; t.descricao = descricao; } else { dadosTarefas.push({ id: Date.now().toString(), titulo, dataHora, vinculo, descricao }); } salvarDadosLocalmente(); renderizarTarefas(); fecharModalTarefa(); }
+    function excluirTarefa() { const id = document.getElementById('tarefa-id').value; if(confirm('Excluir esta tarefa?')) { dadosTarefas = dadosTarefas.filter(x => x.id !== id); salvarDadosLocalmente(); renderizarTarefas(); fecharModalTarefa(); } }
 
-    /* O RESTANTE DAS FUNÇÕES (Rotina, Curso, Trackers) CONTINUA IGUAL */
+    /* FUNÇÕES RESTANTES */
     function getResetTimestamp(dateObj, timeStr) { let [h, m] = timeStr.split(':').map(Number); let d = new Date(dateObj); d.setHours(h, m, 0, 0); return d; }
     function checarResetTrackers() { const agora = new Date(); let mudou = false; Object.keys(dadosTrackers).forEach(id => { let t = dadosTrackers[id]; if(!t.lastReset) { t.lastReset = agora.toISOString(); mudou = true; return; } let last = new Date(t.lastReset); let resetHoje = getResetTimestamp(agora, t.resetHora); let ultimoResetPassado = new Date(resetHoje); if (agora < ultimoResetPassado) ultimoResetPassado.setDate(ultimoResetPassado.getDate() - 1); if (last < ultimoResetPassado) { t.atual = 0; t.lastReset = agora.toISOString(); mudou = true; } }); if(mudou) localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers)); }
     function renderizarTrackers() { const container = document.getElementById('trackers-container'); container.innerHTML = ''; Object.keys(dadosTrackers).forEach(id => { let t = dadosTrackers[id]; let percent = Math.min(100, (t.atual / t.meta) * 100); container.innerHTML += `<div class="tracker-card"><div class="tracker-bg" style="background-color: ${t.corFill}; width: ${percent}%;"></div><div class="tracker-content"><div class="tracker-info"><span class="tracker-title">${t.titulo}</span><span class="tracker-text">${Number(t.atual).toFixed(1).replace(/\.0$/, '')} / ${t.meta} ${t.unidade}</span></div><div class="tracker-actions"><button class="btn-tracker" onclick="addTracker('${id}')">+</button><button class="btn-tracker" onclick="abrirConfigTracker('${id}')">...</button></div></div></div>`; }); }
-    function addTracker(id) { dadosTrackers[id].atual += parseFloat(dadosTrackers[id].incremento); dadosTrackers[id].lastReset = new Date().toISOString(); localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers)); renderizarTrackers(); }
+    function addTracker(id) { dadosTrackers[id].atual += parseFloat(dadosTrackers[id].incremento); dadosTrackers[id].lastReset = new Date().toISOString(); localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers)); renderizarTrackers(); sincronizarComPlanilhaOculto(); }
     function abrirConfigTracker(id) { let t = dadosTrackers[id]; document.getElementById('tracker-id').value = id; document.getElementById('tracker-titulo').value = t.titulo; document.getElementById('tracker-meta').value = t.meta; document.getElementById('tracker-unidade').value = t.unidade; document.getElementById('tracker-incremento').value = t.incremento; document.getElementById('tracker-reset').value = t.resetHora; document.getElementById('tracker-cor').value = t.corFill; document.getElementById('modal-tracker').style.display = 'flex'; }
     function fecharModalTracker() { document.getElementById('modal-tracker').style.display = 'none'; }
-    function salvarConfigTracker() { let id = document.getElementById('tracker-id').value; dadosTrackers[id].titulo = document.getElementById('tracker-titulo').value; dadosTrackers[id].meta = parseFloat(document.getElementById('tracker-meta').value) || 1; dadosTrackers[id].unidade = document.getElementById('tracker-unidade').value; dadosTrackers[id].incremento = parseFloat(document.getElementById('tracker-incremento').value) || 1; dadosTrackers[id].resetHora = document.getElementById('tracker-reset').value || '00:00'; dadosTrackers[id].corFill = document.getElementById('tracker-cor').value; localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers)); fecharModalTracker(); renderizarTrackers(); }
-    function zerarProgressoTracker() { let id = document.getElementById('tracker-id').value; if (confirm(`Tem certeza que deseja zerar o progresso de "${dadosTrackers[id].titulo}"?`)) { dadosTrackers[id].atual = 0; dadosTrackers[id].lastReset = new Date().toISOString(); localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers)); fecharModalTracker(); renderizarTrackers(); } }
+    function salvarConfigTracker() { let id = document.getElementById('tracker-id').value; dadosTrackers[id].titulo = document.getElementById('tracker-titulo').value; dadosTrackers[id].meta = parseFloat(document.getElementById('tracker-meta').value) || 1; dadosTrackers[id].unidade = document.getElementById('tracker-unidade').value; dadosTrackers[id].incremento = parseFloat(document.getElementById('tracker-incremento').value) || 1; dadosTrackers[id].resetHora = document.getElementById('tracker-reset').value || '00:00'; dadosTrackers[id].corFill = document.getElementById('tracker-cor').value; localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers)); fecharModalTracker(); renderizarTrackers(); salvarDadosLocalmente(); }
+    function zerarProgressoTracker() { let id = document.getElementById('tracker-id').value; if (confirm(`Zerar "${dadosTrackers[id].titulo}"?`)) { dadosTrackers[id].atual = 0; dadosTrackers[id].lastReset = new Date().toISOString(); localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers)); fecharModalTracker(); renderizarTrackers(); salvarDadosLocalmente(); } }
     function getContrastColor(hex) { if (hex.indexOf('#') === 0) hex = hex.slice(1); if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2]; let r = parseInt(hex.slice(0,2), 16), g = parseInt(hex.slice(2,4), 16), b = parseInt(hex.slice(4,6), 16); let yiq = ((r*299)+(g*587)+(b*114))/1000; return (yiq >= 128) ? '#000000' : '#ffffff'; }
     function alternarMinimizarConcluidas() { concluidasMinimizadas = !concluidasMinimizadas; atualizarVisualConcluidas(); }
     function atualizarVisualConcluidas() { const lista = document.getElementById('lista-hoje-concluidas'); const seta = document.getElementById('seta-concluidas'); if(concluidasMinimizadas) { lista.style.display = 'none'; seta.innerText = '▶'; } else { lista.style.display = 'flex'; seta.innerText = '▼'; } }
@@ -535,8 +565,7 @@
       const hoje = new Date(); const hojeDiaNome = diasSemanaNomes[hoje.getDay()]; const hojeDataStr = hoje.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'2-digit'}); const chaveHojeId = hoje.toISOString().split('T')[0]; 
       document.getElementById('titulo-hoje').innerText = `Hoje - ${diasSemanaNomes[hoje.getDay()]} ${hojeDataStr}`;
       const contPendentes = document.getElementById('lista-hoje-pendentes'); const contConcluidas = document.getElementById('lista-hoje-concluidas'); const boxConcluidas = document.getElementById('container-concluidas'); const numConcluidas = document.getElementById('contagem-concluidas');
-      contPendentes.innerHTML = ''; contConcluidas.innerHTML = '';
-      let tarefasHoje = dadosRotina.filter(t => t.dia === hojeDiaNome).sort((a,b) => a.inicio.localeCompare(b.inicio));
+      contPendentes.innerHTML = ''; contConcluidas.innerHTML = ''; let tarefasHoje = dadosRotina.filter(t => t.dia === hojeDiaNome).sort((a,b) => a.inicio.localeCompare(b.inicio));
       if(tarefasHoje.length === 0) { contPendentes.innerHTML = '<div style="color:#888; font-size:12px; font-style:italic; text-align:center;">Nenhuma atividade cadastrada para hoje.</div>'; boxConcluidas.style.display = 'none'; return; }
       if(!checksRotina[chaveHojeId]) checksRotina[chaveHojeId] = {}; let qtdConcluidas = 0;
       tarefasHoje.forEach(t => {
@@ -547,7 +576,7 @@
       if (qtdConcluidas > 0) { boxConcluidas.style.display = 'block'; numConcluidas.innerText = qtdConcluidas; } else { boxConcluidas.style.display = 'none'; }
       atualizarVisualConcluidas();
     }
-    function alternarCheckTarefa(dataChave, id, status) { if(!checksRotina[dataChave]) checksRotina[dataChave] = {}; checksRotina[dataChave][id] = status; localStorage.setItem('appRotinaChecks', JSON.stringify(checksRotina)); setTimeout(() => renderizarTarefasHoje(), 200); }
+    function alternarCheckTarefa(dataChave, id, status) { if(!checksRotina[dataChave]) checksRotina[dataChave] = {}; checksRotina[dataChave][id] = status; localStorage.setItem('appRotinaChecks', JSON.stringify(checksRotina)); setTimeout(() => renderizarTarefasHoje(), 200); sincronizarComPlanilhaOculto(); }
     function salvarCursoDados() { dadosCurso.nome = document.getElementById('nome-curso').value; dadosCurso.metaObrigatorias = parseFloat(document.getElementById('meta-obrigatorias').value) || 0; dadosCurso.metaOptativas = parseFloat(document.getElementById('meta-optativas').value) || 0; dadosCurso.metaComplementares = parseFloat(document.getElementById('meta-complementares').value) || 0; salvarDadosLocalmente(); }
     function alternarMinimizarMetas() { dadosCurso.metasMinimizado = !dadosCurso.metasMinimizado; atualizarVisualMetasMinimizadas(); salvarDadosLocalmente(); }
     function atualizarVisualMetasMinimizadas() { const container = document.getElementById('metas-detalhes-container'); const seta = document.getElementById('meta-seta'); if (dadosCurso.metasMinimizado) { container.style.display = 'none'; seta.innerText = '▶'; } else { container.style.display = 'grid'; seta.innerText = '▼'; } }
@@ -602,8 +631,8 @@
     function salvarFormulario() { const atividade = document.getElementById('form-atividade').value, dia = document.getElementById('form-dia').value, inicio = document.getElementById('form-inicio').value, fim = document.getElementById('form-fim').value, cor = document.getElementById('form-cor').value, detalhes = document.getElementById('form-detalhes').value, idStr = document.getElementById('form-id').value; if (!atividade || !inicio || !fim) return alert("Preencha a atividade e os horários."); if (inicio >= fim) return alert("Erro: O término não pode ser antes ou igual ao início."); if (idStr) { const index = dadosRotina.findIndex(i => i.id === idStr); if (index !== -1) dadosRotina[index] = { id: idStr, atividade, dia, inicio, fim, cor, detalhes }; } else { dadosRotina.push({ id: Date.now().toString(), atividade, dia, inicio, fim, cor, detalhes }); } salvarDadosLocalmente(); fecharModal(); }
     function duplicarAtividade() { document.getElementById('form-id').value = ''; document.getElementById('modal-titulo').innerText = 'Nova Atividade (Cópia)'; document.getElementById('btn-excluir').style.display = 'none'; document.getElementById('btn-duplicar').style.display = 'none'; document.getElementById('form-inicio').focus(); }
     function excluirAtividade() { const idStr = document.getElementById('form-id').value; if (confirm("Tem certeza que deseja excluir?")) { dadosRotina = dadosRotina.filter(i => i.id !== idStr); salvarDadosLocalmente(); fecharModal(); } }
-    function baixarBackup() { fecharOpcoes(); const backupGeral = { rotina: dadosRotina, curso: dadosCurso, trackers: dadosTrackers, tarefas: dadosTarefas }; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupGeral)); const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", "rotina_e_curso_backup.json"); document.body.appendChild(a); a.click(); a.remove(); }
-    function importarBackup(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const importado = JSON.parse(e.target.result); if (importado.rotina) { dadosRotina = importado.rotina; if(importado.curso) dadosCurso = importado.curso; if(importado.trackers) dadosTrackers = { ...dadosTrackers, ...importado.trackers }; if(importado.tarefas) dadosTarefas = importado.tarefas; } else if (Array.isArray(importado)) { dadosRotina = importado; } if (dadosCurso.metasMinimizado === undefined) dadosCurso.metasMinimizado = true; salvarDadosLocalmente(); document.getElementById('nome-curso').value = dadosCurso.nome || ""; document.getElementById('meta-obrigatorias').value = dadosCurso.metaObrigatorias || 2400; document.getElementById('meta-optativas').value = dadosCurso.metaOptativas || 300; document.getElementById('meta-complementares').value = dadosCurso.metaComplementares || 200; atualizarVisualMetasMinimizadas(); alert("Progresso importado com sucesso!"); fecharOpcoes(); renderizarTarefas(); } catch (err) { alert("Erro ao ler o arquivo."); } }; reader.readAsText(file); }
+    function baixarBackup() { fecharOpcoes(); const backupGeral = { rotina: dadosRotina, curso: dadosCurso, trackers: dadosTrackers, tarefas: dadosTarefas, checks: checksRotina, ultimaAtualizacao: new Date().toLocaleString() }; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupGeral)); const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", "rotina_e_curso_backup.json"); document.body.appendChild(a); a.click(); a.remove(); }
+    function importarBackup(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const importado = JSON.parse(e.target.result); if (importado.rotina) { dadosRotina = importado.rotina; if(importado.curso) dadosCurso = importado.curso; if(importado.trackers) dadosTrackers = { ...dadosTrackers, ...importado.trackers }; if(importado.tarefas) dadosTarefas = importado.tarefas; if(importado.checks) checksRotina = importado.checks; } else if (Array.isArray(importado)) { dadosRotina = importado; } if (dadosCurso.metasMinimizado === undefined) dadosCurso.metasMinimizado = true; salvarDadosLocalmente(); document.getElementById('nome-curso').value = dadosCurso.nome || ""; document.getElementById('meta-obrigatorias').value = dadosCurso.metaObrigatorias || 2400; document.getElementById('meta-optativas').value = dadosCurso.metaOptativas || 300; document.getElementById('meta-complementares').value = dadosCurso.metaComplementares || 200; atualizarVisualMetasMinimizadas(); alert("Progresso importado com sucesso!"); fecharOpcoes(); renderizarTarefas(); } catch (err) { alert("Erro ao ler o arquivo."); } }; reader.readAsText(file); }
   </script>
 </body>
 </html>
