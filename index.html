@@ -263,7 +263,7 @@
           <button type="button" class="btn-icon" style="font-size: 11px; padding: 3px 8px;" onclick="copiarCodigoAppsScript()">📋 Copiar Código</button>
         </div>
 
-        <textarea id="codigo-apps-script" readonly style="width:100%; height:110px; background:#000; color:#fff; font-family:monospace; font-size:10px; border:1px solid #444; border-radius:4px; padding:6px; box-sizing: border-box; margin-bottom:10px; white-space: pre; word-wrap: normal;
+        <textarea id="codigo-apps-script" readonly style="width:100%; height:110px; background:#000; color:#0f0; font-family:monospace; font-size:10px; border:1px solid #444; border-radius:4px; padding:6px; box-sizing: border-box; margin-bottom:10px; white-space: pre; word-wrap: normal;
           ">function doPost(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();sheet.getRange(1, 1).setValue(e.postData.contents);return ContentService.createTextOutput("Sucesso");}
           
 function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();var val = sheet.getRange(1, 1).getValue();return ContentService.createTextOutput(val || "").setMimeType(ContentService.MimeType.JSON);}</textarea>
@@ -641,7 +641,6 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
           const isChecked = t.concluida ? true : false;
           const corFundo = t.cor || '#222222';
           const corTexto = getContrastColor(corFundo);
-          const corBordaCheck = corTexto === '#000000' ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)';
 
           let isAtrasado = false;
           if (t.data && !isChecked) {
@@ -661,10 +660,9 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
           linhaHtml.onclick = () => abrirModalTarefa(t.id);
 
           linhaHtml.innerHTML = `
-            <div style="font-size: 13px; font-weight: bold; color: inherit; word-break: break-word; flex: 1; margin-right: 10px; line-height: 1.2;">
+            <div style="font-size: 13px; font-weight: bold; color: inherit; word-break: break-word; flex: 1; line-height: 1.2;">
               ${textoHorario}${escapeHTML(t.titulo)}${badgeAtrasado}
             </div>
-            <input type="checkbox" class="checkbox-dia" style="border-color: ${corBordaCheck}; margin-top: 2px; flex-shrink: 0;" onchange="alternarCheckTarefaGeral('${t.id}', this.checked)" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation()">
           `;
 
           divLista.appendChild(linhaHtml);
@@ -889,21 +887,100 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
     function getContrastColor(hex) { if (hex.indexOf('#') === 0) hex = hex.slice(1); if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2]; let r = parseInt(hex.slice(0,2), 16), g = parseInt(hex.slice(2,4), 16), b = parseInt(hex.slice(4,6), 16); let yiq = ((r*299)+(g*587)+(b*114))/1000; return (yiq >= 128) ? '#000000' : '#ffffff'; }
     function alternarMinimizarConcluidas() { concluidasMinimizadas = !concluidasMinimizadas; atualizarVisualConcluidas(); }
     function atualizarVisualConcluidas() { const lista = document.getElementById('lista-hoje-concluidas'); const seta = document.getElementById('seta-concluidas'); if(concluidasMinimizadas) { lista.style.display = 'none'; seta.innerText = '▶'; } else { lista.style.display = 'flex'; seta.innerText = '▼'; } }
+    
     function renderizarTarefasHoje() {
-      const hoje = new Date(); const hojeDiaNome = diasSemanaNomes[hoje.getDay()]; const hojeDataStr = hoje.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'2-digit'}); const chaveHojeId = hoje.toISOString().split('T')[0]; 
+      const hoje = new Date(); 
+      const hojeDiaNome = diasSemanaNomes[hoje.getDay()]; 
+      const hojeDataStr = hoje.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'2-digit'}); 
+      const chaveHojeId = hoje.toISOString().split('T')[0]; 
+
       document.getElementById('titulo-hoje').innerText = `Hoje - ${diasSemanaNomes[hoje.getDay()]} ${hojeDataStr}`;
-      const contPendentes = document.getElementById('lista-hoje-pendentes'); const contConcluidas = document.getElementById('lista-hoje-concluidas'); const boxConcluidas = document.getElementById('container-concluidas'); const numConcluidas = document.getElementById('contagem-concluidas');
-      contPendentes.innerHTML = ''; contConcluidas.innerHTML = ''; let tarefasHoje = dadosRotina.filter(t => t.dia === hojeDiaNome).sort((a,b) => a.inicio.localeCompare(b.inicio));
-      if(tarefasHoje.length === 0) { contPendentes.innerHTML = '<div style="color:#888; font-size:12px; font-style:italic; text-align:center;">Nenhuma atividade cadastrada para hoje.</div>'; boxConcluidas.style.display = 'none'; return; }
-      if(!checksRotina[chaveHojeId]) checksRotina[chaveHojeId] = {}; let qtdConcluidas = 0;
-      tarefasHoje.forEach(t => {
-        const isChecked = checksRotina[chaveHojeId][t.id] ? true : false; const detalhesText = t.detalhes ? `<span style="font-weight:normal; opacity:0.8;">(${t.detalhes})</span>` : ''; const corFundo = t.cor || '#222222'; const corTexto = getContrastColor(corFundo); const corBordaCheck = corTexto === '#000000' ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)';
-        const htmlLinha = `<div class="tarefa-linha ${isChecked ? 'concluida' : ''}" style="background-color: ${corFundo}; color: ${corTexto}; border: 1px solid rgba(0,0,0,0.3);"><div class="tarefa-texto" style="font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 12px; font-weight: bold; color: inherit;">${t.inicio} - ${t.atividade} ${detalhesText}</div><input type="checkbox" class="checkbox-dia" style="border-color: ${corBordaCheck}; margin-top:0px;" onchange="alternarCheckTarefa('${chaveHojeId}', '${t.id}', this.checked)" ${isChecked ? 'checked' : ''}></div>`;
-        if(isChecked) { contConcluidas.innerHTML += htmlLinha; qtdConcluidas++; } else { contPendentes.innerHTML += htmlLinha; }
+      
+      const contPendentes = document.getElementById('lista-hoje-pendentes'); 
+      const contConcluidas = document.getElementById('lista-hoje-concluidas'); 
+      const boxConcluidas = document.getElementById('container-concluidas'); 
+      const numConcluidas = document.getElementById('contagem-concluidas');
+
+      contPendentes.innerHTML = ''; 
+      contConcluidas.innerHTML = ''; 
+
+      if(!checksRotina[chaveHojeId]) checksRotina[chaveHojeId] = {}; 
+
+      let itensHoje = [];
+
+      // 1. Atividades da Rotina Semanal
+      dadosRotina.filter(t => t.dia === hojeDiaNome).forEach(t => {
+        const isChecked = checksRotina[chaveHojeId][t.id] ? true : false;
+        const detalhesText = t.detalhes ? `<span style="font-weight:normal; opacity:0.8;">(${escapeHTML(t.detalhes)})</span>` : '';
+        itensHoje.push({
+          id: t.id,
+          tipo: 'rotina',
+          horario: t.inicio || '00:00',
+          texto: `${t.inicio} - ${escapeHTML(t.atividade)} ${detalhesText}`,
+          cor: t.cor || '#222222',
+          isChecked: isChecked
+        });
       });
-      if (qtdConcluidas > 0) { boxConcluidas.style.display = 'block'; numConcluidas.innerText = qtdConcluidas; } else { boxConcluidas.style.display = 'none'; }
+
+      // 2. Tarefas específicas agendadas para Hoje
+      dadosTarefas.filter(t => t.data === chaveHojeId).forEach(t => {
+        const isChecked = t.concluida ? true : false;
+        const textoHorario = t.hora ? `${t.hora} - ` : '';
+        itensHoje.push({
+          id: t.id,
+          tipo: 'tarefa',
+          horario: t.hora || '00:00',
+          texto: `${textoHorario}${escapeHTML(t.titulo)}`,
+          cor: t.cor || '#073763',
+          isChecked: isChecked
+        });
+      });
+
+      // Ordenar tudo cronologicamente pelo horário
+      itensHoje.sort((a,b) => a.horario.localeCompare(b.horario));
+
+      if(itensHoje.length === 0) { 
+        contPendentes.innerHTML = '<div style="color:#888; font-size:12px; font-style:italic; text-align:center;">Nenhuma atividade ou tarefa para hoje.</div>'; 
+        boxConcluidas.style.display = 'none'; 
+        return; 
+      }
+
+      let qtdConcluidas = 0;
+
+      itensHoje.forEach(item => {
+        const corFundo = item.cor;
+        const corTexto = getContrastColor(corFundo);
+        const corBordaCheck = corTexto === '#000000' ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)';
+        
+        const handlerOnchange = item.tipo === 'rotina' 
+          ? `alternarCheckTarefa('${chaveHojeId}', '${item.id}', this.checked)` 
+          : `alternarCheckTarefaGeral('${item.id}', this.checked)`;
+
+        const htmlLinha = `
+          <div class="tarefa-linha ${item.isChecked ? 'concluida' : ''}" style="background-color: ${corFundo}; color: ${corTexto}; border: 1px solid rgba(0,0,0,0.3); padding: 6px 10px; border-radius: 6px; display: flex; align-items: flex-start; justify-content: space-between;">
+            <div class="tarefa-texto" style="font-size: 13px; white-space: normal; word-break: break-word; flex: 1; margin-right: 12px; font-weight: bold; color: inherit; line-height: 1.2;">
+              ${item.texto}
+            </div>
+            <input type="checkbox" class="checkbox-dia" style="border-color: ${corBordaCheck}; margin-top: 2px; flex-shrink: 0;" onchange="${handlerOnchange}" ${item.isChecked ? 'checked' : ''}>
+          </div>`;
+
+        if(item.isChecked) { 
+          contConcluidas.innerHTML += htmlLinha; 
+          qtdConcluidas++; 
+        } else { 
+          contPendentes.innerHTML += htmlLinha; 
+        }
+      });
+
+      if (qtdConcluidas > 0) { 
+        boxConcluidas.style.display = 'block'; 
+        numConcluidas.innerText = qtdConcluidas; 
+      } else { 
+        boxConcluidas.style.display = 'none'; 
+      }
       atualizarVisualConcluidas();
     }
+
     function alternarCheckTarefa(dataChave, id, status) { if(!checksRotina[dataChave]) checksRotina[dataChave] = {}; checksRotina[dataChave][id] = status; localStorage.setItem('appRotinaChecks', JSON.stringify(checksRotina)); setTimeout(() => renderizarTarefasHoje(), 200); sincronizarComPlanilhaOculto(); }
     function salvarCursoDados() { dadosCurso.nome = document.getElementById('nome-curso').value; dadosCurso.metaObrigatorias = parseFloat(document.getElementById('meta-obrigatorias').value) || 0; dadosCurso.metaOptativas = parseFloat(document.getElementById('meta-optativas').value) || 0; dadosCurso.metaComplementares = parseFloat(document.getElementById('meta-complementares').value) || 0; salvarDadosLocalmente(); }
     function alternarMinimizarMetas() { dadosCurso.metasMinimizado = !dadosCurso.metasMinimizado; atualizarVisualMetasMinimizadas(); salvarDadosLocalmente(); }
