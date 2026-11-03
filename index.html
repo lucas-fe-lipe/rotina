@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#121212">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   
   <style>
     html, body { background: #121212; color: #e0e0e0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; height: 100%; overflow-x: hidden; }
@@ -123,21 +122,6 @@
     .tarefa-tag { padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
     .tarefa-tag.atrasado { background: #dc3545; color: white; }
     .tarefa-tag.data { background: #333; color: #ccc; border: 1px solid #555; }
-
-    @media print {
-      @page { size: landscape; margin: 5mm; }
-      body { zoom: 100%; background: white !important; margin: 0; padding: 0; } 
-      .header, .modal-overlay, #aba-curso, #aba-tarefas, #bloco-hoje, .trackers-container { display: none !important; } 
-      #area-impressao { display: flex !important; width: 100% !important; aspect-ratio: 1800 / 1080 !important; background: white !important; padding: 0 !important; }
-      .eixo-horas { width: 50px !important; margin-top: 0 !important; }
-      .hora-label { font-size: 12px !important; color: #000 !important; right: 6px !important; }
-      .dias-container { width: 100% !important; border: 1px solid #000 !important; }
-      .cabecalho-dia { font-size: 14px !important; height: 30px !important; line-height: 20px !important; }
-      .evento-titulo { font-size: 11px !important; }
-      .evento-detalhes { font-size: 9px !important; }
-      .evento { border: none !important; }
-      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    }
   </style>
 </head>
 <body>
@@ -218,13 +202,13 @@
      <div id="lista-tarefas" class="tarefas-grid"></div>
   </div>
 
+  <!-- MENU DE OPÇÕES (ATUALIZADO) -->
   <div class="modal-overlay" id="modal-opcoes">
     <div class="modal-box">
       <h3>Opções</h3>
       <button class="menu-opcoes-btn" onclick="abrirModal()">✏️ Nova Atividade (Rotina)</button>
       <button class="menu-opcoes-btn" onclick="abrirModalPlanilha()">☁️ Backup & Sincronização Google Sheets</button>
-      <button class="menu-opcoes-btn" onclick="baixarPDF()">📄 Exportar PDF</button>
-      <button class="menu-opcoes-btn" onclick="baixarPNG()">🖼️ Exportar PNG (1800x1080)</button>
+      <button class="menu-opcoes-btn" onclick="abrirModalGCal()">📅 Exportar para o Google Agenda</button>
       <button class="menu-opcoes-btn" onclick="baixarBackup()">💾 Salvar Backup (.json)</button>
       <label for="importar-arquivo" class="menu-opcoes-btn">📂 Importar Progresso</label>
       <input type="file" id="importar-arquivo" accept=".json" style="display: none;" onchange="importarBackup(event)">
@@ -245,7 +229,34 @@
     </div>
   </div>
 
-  <!-- MODAL GOOGLE SHEETS COM GUIA E CÓDIGO EMBUTIDO -->
+  <!-- MODAL EXPORTAR GOOGLE AGENDA -->
+  <div class="modal-overlay" id="modal-gcal">
+    <div class="modal-box">
+      <h3>Exportar para o Google Agenda</h3>
+      <p style="font-size: 12px; color: #aaa; line-height: 1.4; margin-top: 0;">
+        Escolha até quando você deseja que a sua grade horária semanal se repita no seu Google Agenda:
+      </p>
+      
+      <div class="form-group">
+        <label>Período de Repetição da Rotina</label>
+        <select id="gcal-limite">
+          <option value="junho">Até o final de Junho deste ano</option>
+          <option value="dezembro" selected>Até o final de Dezembro deste ano</option>
+        </select>
+      </div>
+
+      <div style="font-size: 11px; color: #888; background: #121212; padding: 8px; border-radius: 6px; border: 1px solid #333; margin-bottom: 12px;">
+        💡 <strong>Nota:</strong> As suas <strong>Tarefas</strong> com data e hora definidas também serão exportadas automaticamente para o Google Agenda.
+      </div>
+
+      <div class="modal-botoes">
+        <button class="btn-cancelar" onclick="fecharModalGCal()">Cancelar</button>
+        <button class="btn-salvar" onclick="gerarExportacaoGoogleAgenda()">Gerar Links (.ics / Web)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL GOOGLE SHEETS -->
   <div class="modal-overlay" id="modal-planilha">
     <div class="modal-box">
       <h3>Sincronização com Google Planilhas</h3>
@@ -373,8 +384,7 @@ function doGet(e) {
       <div class="form-group"><label>Descrição / Anotações</label><textarea id="tarefa-descricao" rows="3"></textarea></div>
       <div class="modal-botoes">
         <button id="btn-excluir-tarefa" class="btn-perigo" style="display:none; margin-right:auto;" onclick="excluirTarefa()">Excluir</button>
-        <button class="btn-cancelar" onclick="fecharModalTarefa()">Cancelar</button>
-        <button class="btn-salvar" onclick="salvarTarefa()">Salvar</button>
+        <button class="btn-cancelar" onclick="fecharModalTarefa()">Cancelar</button><button class="btn-salvar" onclick="salvarTarefa()">Salvar</button>
       </div>
     </div>
   </div>
@@ -390,7 +400,8 @@ function doGet(e) {
     
     let HORA_INICIO = 6, HORA_FIM = 22; const PIXELS_POR_HORA = 20, OFFSET_TOPO = 25; 
     let atividadeAtualSelecionada = null; let notifInterval = null; let tarefasNotificadasHoje = {}; let concluidasMinimizadas = true;
-    const mapaDias = { 'domingo': 'col-dom', 'segunda': 'col-seg', 'terça': 'col-ter', 'quarta': 'col-qua', 'quinta': 'col-qui', 'sexta': 'col-sex', 'sábado': 'col-sab' };
+    const mapaDias = { 'domingo': 0, 'segunda': 1, 'terça': 2, 'quarta': 3, 'quinta': 4, 'sexta': 5, 'sábado': 6 };
+    const mapaDiasStr = { 'domingo': 'col-dom', 'segunda': 'col-seg', 'terça': 'col-ter', 'quarta': 'col-qua', 'quinta': 'col-qui', 'sexta': 'col-sex', 'sábado': 'col-sab' };
     const diasSemanaNomes = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 
     window.onload = function() { carregarDados(); checarResetTrackers(); renderizarTrackers(); renderizarTarefas(); if ("Notification" in window && Notification.permission === "granted") iniciarNotificacoes(); };
@@ -423,6 +434,90 @@ function doGet(e) {
         localStorage.setItem('appTarefasDados', JSON.stringify(dadosTarefas)); 
         processarGrade(); renderizarCurso();
         sincronizarComPlanilhaOculto(); 
+    }
+
+    /* --- GOOGLE AGENDA EXPORT LOGIC (.ICS) --- */
+    function abrirModalGCal() { fecharOpcoes(); document.getElementById('modal-gcal').style.display = 'flex'; }
+    function fecharModalGCal() { document.getElementById('modal-gcal').style.display = 'none'; }
+
+    function gerarExportacaoGoogleAgenda() {
+      const limiteOpcao = document.getElementById('gcal-limite').value;
+      const anoAtual = new Date().getFullYear();
+      // Define a data limite de repetição: 30 de junho ou 31 de dezembro
+      const dataLimiteStr = limiteOpcao === 'junho' ? `${anoAtual}0630T235959Z` : `${anoAtual}1231T235959Z`;
+
+      let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//MeuAppRotina//PT\nCALSCALE:GREGORIAN\nMETHOD:PUBLISH\n";
+
+      // 1. Exportar Atividades da Rotina com RRULE (Repetição semanal)
+      dadosRotina.forEach(item => {
+        let diaSemanaNum = mapaDias[item.dia];
+        if (diaSemanaNum === undefined) return;
+
+        // Acha a próxima ocorrência desse dia da semana a partir de hoje
+        let d = new Date();
+        let diaAtual = d.getDay();
+        let diff = diaSemanaNum - diaAtual;
+        if (diff <= 0) diff += 7;
+        d.setDate(d.getDate() + diff);
+
+        let [hIni, mIni] = item.inicio.split(':');
+        let [hFim, mFim] = item.fim.split(':');
+
+        let dInicio = new Date(d);
+        dInicio.setHours(parseInt(hIni), parseInt(mIni), 0);
+        let dFim = new Date(d);
+        dFim.setHours(parseInt(hFim), parseInt(mFim), 0);
+
+        let dtStart = formatarDataICS(dInicio);
+        let dtEnd = formatarDataICS(dFim);
+        let rruleDay = ['SU','MO','TU','WE','TH','FR','SA'][diaSemanaNum];
+
+        icsContent += "BEGIN:VEVENT\n";
+        icsContent += `SUMMARY:${item.atividade}\n`;
+        if (item.detalhes) icsContent += `DESCRIPTION:${item.detalhes}\n`;
+        icsContent += `DTSTART:${dtStart}\n`;
+        icsContent += `DTEND:${dtEnd}\n`;
+        icsContent += `RRULE:FREQ=WEEKLY;BYDAY=${rruleDay};UNTIL=${dataLimiteStr}\n`;
+        icsContent += "END:VEVENT\n";
+      });
+
+      // 2. Exportar Tarefas com Data/Hora específica
+      dadosTarefas.forEach(t => {
+        if (!t.dataHora) return;
+        let dInicio = new Date(t.dataHora);
+        let dFim = new Date(dInicio.getTime() + (60 * 60 * 1000)); // 1 hora de duração padrão
+
+        icsContent += "BEGIN:VEVENT\n";
+        icsContent += `SUMMARY:[Tarefa] ${t.titulo}\n`;
+        if (t.descricao) icsContent += `DESCRIPTION:${t.descricao}\n`;
+        icsContent += `DTSTART:${formatarDataICS(dInicio)}\n`;
+        icsContent += `DTEND:${formatarDataICS(dFim)}\n`;
+        icsContent += "END:VEVENT\n";
+      });
+
+      icsContent += "END:VCALENDAR";
+
+      // Baixar arquivo .ics
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.download = 'minha_rotina_google_agenda.ics';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      fecharModalGCal();
+      alert("Arquivo de agenda (.ics) gerado com sucesso! Abra-o ou importe-o no Google Agenda para sincronizar todos os eventos e repetições.");
+    }
+
+    function formatarDataICS(date) {
+      const pad = n => n < 10 ? '0' + n : n;
+      return date.getUTCFullYear() +
+        pad(date.getUTCMonth() + 1) +
+        pad(date.getUTCDate()) + 'T' +
+        pad(date.getUTCHours()) +
+        pad(date.getUTCMinutes()) +
+        pad(date.getUTCSeconds()) + 'Z';
     }
 
     /* --- GOOGLE SHEETS SYNC & RESTORE LOGIC --- */
@@ -493,37 +588,51 @@ function doGet(e) {
         fetch(urlPlanilhaGoogle, { method: 'POST', body: JSON.stringify(backupGeral) }).catch(() => {});
     }
 
-    /* LÓGICA DE EXPORTAÇÃO */
-    function baixarPNG() { 
-      fecharOpcoes(); 
-      setTimeout(() => { 
-        const elemento = document.getElementById("area-impressao"); 
-        html2canvas(elemento, { scale: 2, backgroundColor: '#121212' }).then(canvasOriginal => { 
-          const canvasFinal = document.createElement('canvas'); canvasFinal.width = 1800; canvasFinal.height = 1080; const ctx = canvasFinal.getContext('2d');
-          ctx.fillStyle = '#121212'; ctx.fillRect(0,0, 1800, 1080);
-          const scale = Math.min(1800 / canvasOriginal.width, 1080 / canvasOriginal.height); const w = canvasOriginal.width * scale; const h = canvasOriginal.height * scale;
-          const dx = (1800 - w) / 2; const dy = (1080 - h) / 2; ctx.drawImage(canvasOriginal, dx, dy, w, h);
-          const link = document.createElement('a'); link.download = 'Rotina.png'; link.href = canvasFinal.toDataURL('image/png'); link.click(); 
-        }); 
-      }, 300); 
-    }
-    function baixarPDF() { fecharOpcoes(); const tituloOriginal = document.title; document.title = "Rotina"; window.print(); setTimeout(() => { document.title = tituloOriginal; }, 1000); }
-
-    /* NOTIFICAÇÕES */
+    /* --- NOTIFICAÇÕES (ROTINA E TAREFAS) --- */
     function salvarMinutosNotif() { localStorage.setItem('appRotinaNotifMin', document.getElementById('notif-minutos').value); }
     function solicitarPermissaoNotificacao() {
       if (!("Notification" in window)) return alert("Navegador não suporta notificações.");
-      Notification.requestPermission().then(permission => { if (permission === "granted") { alert("Ativadas!"); salvarMinutosNotif(); iniciarNotificacoes(); } else alert("Negado."); });
+      Notification.requestPermission().then(permission => { if (permission === "granted") { alert("Notificações ativadas com sucesso!"); salvarMinutosNotif(); iniciarNotificacoes(); } else alert("Permissão negada."); });
     }
     function enviarNotificacao(titulo, opcoes) { if (navigator.serviceWorker) { navigator.serviceWorker.ready.then(function(reg) { reg.showNotification(titulo, opcoes); }).catch(function() { new Notification(titulo, opcoes); }); } else { new Notification(titulo, opcoes); } }
     function iniciarNotificacoes() { if (notifInterval) clearInterval(notifInterval); verificarNotificacoes(); notifInterval = setInterval(verificarNotificacoes, 30000); }
+    
     function verificarNotificacoes() {
-      if (Notification.permission !== 'granted') return; const agora = new Date(); const hojeDataString = agora.toLocaleDateString();
+      if (Notification.permission !== 'granted') return; 
+      const agora = new Date(); 
+      const hojeDataString = agora.toLocaleDateString();
       if (tarefasNotificadasHoje.data !== hojeDataString) tarefasNotificadasHoje = { data: hojeDataString };
-      const diaAtualStr = diasSemanaNomes[agora.getDay()]; const minutosAtuais = (agora.getHours() * 60) + agora.getMinutes(); const minsAntecedencia = parseInt(document.getElementById('notif-minutos').value) || 15; const alvoNotificacao = minutosAtuais + minsAntecedencia;
+
+      const minsAntecedencia = parseInt(document.getElementById('notif-minutos').value) || 15; 
+      const minutosAtuais = (agora.getHours() * 60) + agora.getMinutes(); 
+      const alvoNotificacao = minutosAtuais + minsAntecedencia;
+
+      // 1. Verificar Atividades da Rotina de Hoje
+      const diaAtualStr = diasSemanaNomes[agora.getDay()];
       dadosRotina.filter(t => t.dia === diaAtualStr).forEach(t => {
-        const partes = t.inicio.split(':'); const minTarefa = (parseInt(partes[0], 10) * 60) + parseInt(partes[1], 10); const uniqueKey = t.id + '_' + t.inicio;
-        if (alvoNotificacao === minTarefa && !tarefasNotificadasHoje[uniqueKey]) { enviarNotificacao('Atenção: ' + t.atividade, { body: `Começa em ${minsAntecedencia} min (às ${t.inicio})` }); tarefasNotificadasHoje[uniqueKey] = true; }
+        const partes = t.inicio.split(':'); 
+        const minTarefa = (parseInt(partes[0], 10) * 60) + parseInt(partes[1], 10); 
+        const uniqueKey = 'rotina_' + t.id + '_' + t.inicio;
+        if (alvoNotificacao === minTarefa && !tarefasNotificadasHoje[uniqueKey]) { 
+          enviarNotificacao('Rotina: ' + t.atividade, { body: `Começa em ${minsAntecedencia} min (às ${t.inicio})` }); 
+          tarefasNotificadasHoje[uniqueKey] = true; 
+        }
+      });
+
+      // 2. Verificar Tarefas com Data/Hora agendada para hoje
+      dadosTarefas.forEach(t => {
+        if (!t.dataHora) return;
+        const dataTarefa = new Date(t.dataHora);
+        // Verifica se a tarefa é hoje
+        if (dataTarefa.toDateString() === agora.toDateString()) {
+          const minTarefa = (dataTarefa.getHours() * 60) + dataTarefa.getMinutes();
+          const uniqueKey = 'tarefa_' + t.id;
+          if (alvoNotificacao === minTarefa && !tarefasNotificadasHoje[uniqueKey]) {
+            const horaFormatada = dataTarefa.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            enviarNotificacao('Tarefa Pendente: ' + t.titulo, { body: `Prazo às ${horaFormatada} (${minsAntecedencia} min restantes)` });
+            tarefasNotificadasHoje[uniqueKey] = true;
+          }
+        }
       });
     }
 
@@ -616,7 +725,7 @@ function doGet(e) {
     function atualizarCalculoNotaModal() { const linhas = document.querySelectorAll('#lista-avaliacoes-container > div'); let somaObtidas = 0, somaTotais = 0; linhas.forEach(l => { let tot = parseFloat(l.querySelector('.av-total').value) || 0; let obtInput = l.querySelector('.av-obtida').value.trim(); let spanPerc = l.querySelector('.av-perc'); if (obtInput !== '' && !isNaN(parseFloat(obtInput))) { let obt = parseFloat(obtInput); somaTotais += tot; somaObtidas += obt; let percLinha = tot > 0 ? (obt / tot) * 100 : 0; spanPerc.innerText = percLinha.toFixed(1) + '%'; if (percLinha < 60) { spanPerc.style.color = '#ff4d4d'; } else { spanPerc.style.color = '#aaa'; } } else { spanPerc.innerText = '-'; spanPerc.style.color = '#aaa'; } }); let percGeral = somaTotais > 0 ? (somaObtidas / somaTotais) * 100 : 0; let labelFinal = document.getElementById('disc-nota-final'); labelFinal.innerText = `${somaObtidas.toFixed(1)} / ${somaTotais.toFixed(1)} - ${percGeral.toFixed(2)}%`; if (somaTotais > 0 && percGeral < 60) { labelFinal.style.color = '#ff4d4d'; } else { labelFinal.style.color = '#fff'; } }
     function salvarDisciplina() { const periodoId = document.getElementById('disc-periodo-id').value; const discId = document.getElementById('disc-id').value; const name = document.getElementById('disc-nome').value, professor = document.getElementById('disc-professor').value, horas = parseFloat(document.getElementById('disc-horas').value) || 0, tipo = document.getElementById('disc-tipo').value, status = document.getElementById('disc-status').value; if (!name) return alert("Insira o nome da disciplina."); let avaliacoes = []; const linhas = document.querySelectorAll('#lista-avaliacoes-container > div'); linhas.forEach(l => { let obtVal = l.querySelector('.av-obtida').value.trim(); avaliacoes.push({ nome: l.querySelector('.av-nome').value || 'Avaliação', total: parseFloat(l.querySelector('.av-total').value) || 0, obtida: obtVal === '' ? '' : parseFloat(obtVal) || 0 }); }); const p = dadosCurso.periodos.find(x => x.id === periodoId); if (discId) { const d = p.disciplinas.find(x => x.id === discId); d.name = name; d.professor = professor; d.horas = horas; d.tipo = tipo; d.status = status; d.avaliacoes = avaliacoes; } else { if (!p.disciplinas) p.disciplinas = []; p.disciplinas.push({ id: Date.now().toString(), name, professor, horas, tipo, status, avaliacoes }); } salvarDadosLocalmente(); fecharModalDisciplina(); }
     function excluirDisciplina() { const periodoId = document.getElementById('disc-periodo-id').value, discId = document.getElementById('disc-id').value; if (confirm("Deseja realmente excluir esta disciplina?")) { const p = dadosCurso.periodos.find(x => x.id === periodoId); p.disciplinas = p.disciplinas.filter(x => x.id !== discId); salvarDadosLocalmente(); fecharModalDisciplina(); } }
-    function processarGrade() { document.querySelectorAll('.evento').forEach(e => e.remove()); if (dadosRotina.length > 0) { let menorMinutos = 24 * 60, maiorMinutos = 0; dadosRotina.forEach(item => { if (item.inicio) { let partes = item.inicio.split(':'); let m = parseInt(partes[0], 10) * 60 + parseInt(partes[1], 10); if (m < menorMinutos) menorMinutos = m; } if (item.fim) { let partes = item.fim.split(':'); let m = parseInt(partes[0], 10) * 60 + parseInt(partes[1], 10); if (m > maiorMinutos) maiorMinutos = m; } }); HORA_INICIO = Math.floor(menorMinutos / 60); HORA_FIM = Math.ceil(maiorMinutos / 60); if (HORA_FIM <= HORA_INICIO) HORA_FIM = HORA_INICIO + 1; } else { HORA_INICIO = 6; HORA_FIM = 22; } desenharGrade(); dadosRotina.forEach(item => { const idColuna = mapaDias[item.dia]; if(!idColuna) return; const coluna = document.getElementById(idColuna); const topPixels = calcularMinutos(item.inicio) + OFFSET_TOPO; const heightPixels = calcularMinutos(item.fim) - calcularMinutos(item.inicio); const bloco = document.createElement('div'); bloco.className = `evento`; bloco.style.backgroundColor = item.cor || '#073763'; bloco.style.color = (item.cor === '#efefef' || item.cor === '#b7b7b7') ? '#000' : '#fff'; bloco.style.top = topPixels + 'px'; bloco.style.height = Math.max(heightPixels, 12) + 'px'; bloco.innerHTML = `<div class="evento-titulo">${item.atividade}</div>${heightPixels > 25 && item.detalhes ? `<div class="evento-detalhes">${item.detalhes}</div>` : ''}`; bloco.onclick = () => abrirDetalhesAtividade(item); coluna.appendChild(bloco); }); renderizarTarefasHoje(); }
+    function processarGrade() { document.querySelectorAll('.evento').forEach(e => e.remove()); if (dadosRotina.length > 0) { let menorMinutos = 24 * 60, maiorMinutos = 0; dadosRotina.forEach(item => { if (item.inicio) { let partes = item.inicio.split(':'); let m = parseInt(partes[0], 10) * 60 + parseInt(partes[1], 10); if (m < menorMinutos) menorMinutos = m; } if (item.fim) { let partes = item.fim.split(':'); let m = parseInt(partes[0], 10) * 60 + parseInt(partes[1], 10); if (m > maiorMinutos) maiorMinutos = m; } }); HORA_INICIO = Math.floor(menorMinutos / 60); HORA_FIM = Math.ceil(maiorMinutos / 60); if (HORA_FIM <= HORA_INICIO) HORA_FIM = HORA_INICIO + 1; } else { HORA_INICIO = 6; HORA_FIM = 22; } desenharGrade(); dadosRotina.forEach(item => { const idColuna = mapaDiasStr[item.dia]; if(!idColuna) return; const coluna = document.getElementById(idColuna); const topPixels = calcularMinutos(item.inicio) + OFFSET_TOPO; const heightPixels = calcularMinutos(item.fim) - calcularMinutos(item.inicio); const bloco = document.createElement('div'); bloco.className = `evento`; bloco.style.backgroundColor = item.cor || '#073763'; bloco.style.color = (item.cor === '#efefef' || item.cor === '#b7b7b7') ? '#000' : '#fff'; bloco.style.top = topPixels + 'px'; bloco.style.height = Math.max(heightPixels, 12) + 'px'; bloco.innerHTML = `<div class="evento-titulo">${item.atividade}</div>${heightPixels > 25 && item.detalhes ? `<div class="evento-detalhes">${item.detalhes}</div>` : ''}`; bloco.onclick = () => abrirDetalhesAtividade(item); coluna.appendChild(bloco); }); renderizarTarefasHoje(); }
     function desenharGrade() { const totalHoras = HORA_FIM - HORA_INICIO; const alturaTotal = (totalHoras * PIXELS_POR_HORA) + OFFSET_TOPO; document.querySelectorAll('.coluna-dia').forEach(col => col.style.height = alturaTotal + 'px'); const eixo = document.getElementById('eixo-horas'); eixo.innerHTML = ''; for(let i = HORA_INICIO; i <= HORA_FIM; i++) { let label = document.createElement('div'); label.className = 'hora-label'; label.style.top = (OFFSET_TOPO + ((i - HORA_INICIO) * PIXELS_POR_HORA)) + 'px'; label.innerText = (i < 10 ? '0'+i : i) + ':00'; eixo.appendChild(label); } }
     function calcularMinutos(horaString) { if(!horaString) return 0; const partes = horaString.split(':'); return ((parseInt(partes[0], 10) - HORA_INICIO) * PIXELS_POR_HORA) + (parseInt(partes[1], 10) * (PIXELS_POR_HORA / 60)); }
     function abrirDetalhesAtividade(item) { atividadeAtualSelecionada = item; document.getElementById('detalhes-titulo').innerText = item.atividade; document.getElementById('detalhes-dia').innerText = item.dia; document.getElementById('detalhes-horario').innerText = `${item.inicio} às ${item.fim}`; document.getElementById('detalhes-texto').innerText = item.detalhes || 'Nenhum detalhe adicional'; document.getElementById('modal-detalhes').style.display = 'flex'; }
