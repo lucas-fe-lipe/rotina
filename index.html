@@ -272,17 +272,18 @@
           <button type="button" class="btn-icon" style="font-size: 11px; padding: 3px 8px;" onclick="copiarCodigoAppsScript()">📋 Copiar Código</button>
         </div>
 
-        <textarea id="codigo-apps-script" readonly style="width:100%; height:110px; background:#000; color:#0f0; font-family:monospace; font-size:10px; border:1px solid #444; border-radius:4px; padding:6px; box-sizing: border-box; margin-bottom:10px; white-space: pre; word-wrap: normal;">function doPost(e) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  sheet.getRange(1, 1).setValue(e.postData.contents);
-  return ContentService.createTextOutput("Sucesso");
-}
-
-function doGet(e) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var val = sheet.getRange(1, 1).getValue();
-  return ContentService.createTextOutput(val || "").setMimeType(ContentService.MimeType.JSON);
-}</textarea>
+        <textarea id="codigo-apps-script" readonly style="width:100%; height:110px; background:#000; color:#00f; font-family:monospace; font-size:10px; border:1px solid #444; border-radius:4px; padding:6px; box-sizing: border-box; margin-bottom:10px; white-space: pre; word-wrap: normal;
+          ">function doPost(e) {
+              var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+              sheet.getRange(1, 1).setValue(e.postData.contents);
+              return ContentService.createTextOutput("Sucesso");
+          }
+          
+          function doGet(e) {
+              var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+              var val = sheet.getRange(1, 1).getValue();
+              return ContentService.createTextOutput(val || "").setMimeType(ContentService.MimeType.JSON);
+          }</textarea>
 
         <ol start="4" style="padding-left: 20px; margin-bottom: 0;">
           <li>Clique em <strong>Implantar > Nova implantação</strong>.</li>
