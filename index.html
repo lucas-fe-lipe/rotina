@@ -352,7 +352,14 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    //COLAR AQUIII
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6RoXhGAi8abS6pxD6xsoKJYqFj9WIrx4",
+      authDomain: "rotina-github.firebaseapp.com",
+      projectId: "rotina-github",
+      storageBucket: "rotina-github.firebasestorage.app",
+      messagingSenderId: "358250993909",
+      appId: "1:358250993909:web:fd55641425ac619e248dbc"
+    };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
