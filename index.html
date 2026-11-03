@@ -10,18 +10,19 @@
   <style>
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #121212; color: #e0e0e0; overflow-x: hidden; }
     
-    .header { padding: 12px 20px; background: #1e1e1e; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 100; }
-    .abas { display: flex; gap: 15px; }
-    .aba-btn { background: transparent; color: #888; border: none; font-size: 16px; font-weight: bold; cursor: pointer; padding: 5px 10px; transition: 0.2s; border-bottom: 2px solid transparent; }
-    .aba-btn.ativa { color: #fff; border-bottom: 2px solid #1a73e8; }
+    /* HEADER COMPACTO EM UMA SÓ LINHA (Sem Azuis) */
+    .header { padding: 8px 12px; background: #1e1e1e; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 100; white-space: nowrap; }
+    .abas { display: flex; gap: 8px; }
+    .aba-btn { background: transparent; color: #888; border: none; font-size: 14px; font-weight: bold; cursor: pointer; padding: 4px 6px; transition: 0.2s; border-bottom: 2px solid transparent; }
+    .aba-btn.ativa { color: #fff; border-bottom: 2px solid #aaa; }
     .aba-btn:hover { color: #fff; }
     
-    .btn-icon { background: #2c2c2c; color: white; border: 1px solid #444; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; }
+    .btn-icon { background: #2c2c2c; color: white; border: 1px solid #444; padding: 6px 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.2s; }
     .btn-icon:hover { background: #3c3c3c; }
-    .btn-primary { background: #1a73e8; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
-    .btn-primary:hover { background: #155db1; }
+    .btn-primary { background: #333; color: white; border: 1px solid #555; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
+    .btn-primary:hover { background: #444; }
     
-    .header-botoes { display: flex; gap: 10px; align-items: center; }
+    .header-botoes { display: flex; gap: 6px; align-items: center; }
 
     /* GRADE DA ROTINA */
     .calendario-container { display: flex; padding: 10px 5px; position: relative; width: 100%; box-sizing: border-box; background: #121212; }
@@ -45,7 +46,7 @@
     .form-group { margin-bottom: 12px; display: flex; flex-direction: column; }
     .form-group label { font-size: 12px; margin-bottom: 5px; font-weight: bold; color: #aaa; }
     .form-group input, .form-group select { padding: 10px; border: 1px solid #444; border-radius: 6px; background: #121212; color: #fff; font-family: inherit; }
-    .form-group input:focus, .form-group select:focus { outline: none; border-color: #1a73e8; }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: #888; }
     
     .paleta-cores { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; align-items: center; max-width: 250px; }
     .bola-cor { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.1s; }
@@ -55,39 +56,39 @@
     .modal-botoes { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }
     .btn-cancelar { background: #333; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
     .btn-cancelar:hover { background: #444; }
-    .btn-salvar { background: #1a73e8; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .btn-salvar { background: #444; color: white; border: 1px solid #666; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .btn-salvar:hover { background: #555; }
     .btn-perigo { background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
 
-    /* MENU DE OPÇÕES (Botões perfeitamente padronizados) */
+    /* MENU DE OPÇÕES */
     .menu-opcoes-btn { display: flex; align-items: center; gap: 8px; width: 100%; margin-bottom: 10px; background: #2c2c2c; color: white; border: 1px solid #444; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; justify-content: center; box-sizing: border-box; text-align: center; }
     .menu-opcoes-btn:hover { background: #3c3c3c; }
     
-    /* ABA MEU CURSO & ESTILOS ACADÊMICOS */
+    /* ABA MEU CURSO */
     .container-curso { padding: 20px; max-width: 900px; margin: 0 auto; display: none; }
     .curso-header { background: #1e1e1e; padding: 20px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; }
     .curso-header input { background: transparent; border: none; color: #fff; font-size: 24px; font-weight: bold; width: 100%; border-bottom: 1px solid transparent; transition: 0.2s; }
-    .curso-header input:focus { outline: none; border-bottom: 1px solid #1a73e8; }
+    .curso-header input:focus { outline: none; border-bottom: 1px solid #666; }
     
     .metas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px; }
     .meta-card { background: #121212; padding: 12px; border-radius: 6px; border: 1px solid #333; }
     .meta-card label { font-size: 11px; color: #888; display: block; margin-bottom: 3px; }
     .meta-card input { background: #1e1e1e; border: 1px solid #444; color: #fff; padding: 5px; border-radius: 4px; width: 80px; font-weight: bold; }
     .barra-progresso-container { background: #333; height: 8px; border-radius: 4px; margin-top: 8px; overflow: hidden; }
-    .barra-progresso { background: #1a73e8; height: 100%; width: 0%; transition: width 0.3s; }
+    .barra-progresso { background: #aaa; height: 100%; width: 0%; transition: width 0.3s; }
 
     .periodo-box { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
-    .periodo-titulo { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; }
+    .periodo-titulo { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
     
     .disciplina-card { background: #121212; border: 1px solid #333; border-radius: 6px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
     .disciplina-card:hover { border-color: #555; }
     
     .status-badge { font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
-    .status-concluida { background: #137333; color: #e6f4ea; }
-    .status-cursando { background: #b06000; color: #fef7e0; }
-    .status-reprovado { background: #c5221f; color: #fce8e6; }
-    .status-acursar { background: #3c4043; color: #e8eaed; }
+    .status-concluida { background: #2e7d32; color: #e8f5e9; }
+    .status-cursando { background: #e65100; color: #fff3e0; }
+    .status-reprovado { background: #c62828; color: #ffebee; }
+    .status-acursar { background: #424242; color: #f5f5f5; }
 
-    /* IMPRESSÃO */
     @media print {
       @page { margin: 10mm 5mm 5mm 5mm; }
       body { zoom: 80%; background: white !important; margin: 0; padding: 0; } 
@@ -107,7 +108,7 @@
 </head>
 <body>
 
-  <!-- HEADER E ABAS -->
+  <!-- HEADER COMPACTO -->
   <div class="header">
     <div class="abas">
       <button class="aba-btn ativa" id="tab-rotina" onclick="mudarAba('rotina')">📅 Rotina</button>
@@ -115,8 +116,7 @@
     </div>
     
     <div class="header-botoes" id="botoes-rotina">
-      <button class="btn-icon" onclick="abrirOpcoes()">Opções</button>
-      <button class="btn-primary" onclick="abrirModal()">+</button>
+      <button class="btn-primary" onclick="abrirOpcoes()">   +   </button>
     </div>
     
     <div class="header-botoes" id="botoes-curso" style="display: none;">
@@ -148,7 +148,6 @@
         <div><strong>CRA Geral:</strong> <span id="cra-geral" style="color:#fff;">0.00</span></div>
       </div>
 
-      <!-- METAS DE HORAS -->
       <div class="metas-grid">
         <div class="meta-card">
           <label>Obrigatórias (Concluídas / Meta)</label>
@@ -182,15 +181,15 @@
     </div>
   </div>
 
-  <!-- MODAL OPÇÕES DA ROTINA -->
+  <!-- MODAL OPÇÕES COM "+ ATIVIDADE" -->
   <div class="modal-overlay" id="modal-opcoes">
     <div class="modal-box">
-      <h3>Opções da Rotina</h3>
+      <h3>Opções</h3>
+      <button class="menu-opcoes-btn" onclick="abrirModal()">+ Atividade</button>
       <button class="menu-opcoes-btn" onclick="baixarPDF()">📄 Exportar PDF</button>
       <button class="menu-opcoes-btn" onclick="baixarPNG()">🖼️ Exportar PNG</button>
       <button class="menu-opcoes-btn" onclick="baixarBackup()">💾 Salvar Backup (.json)</button>
       
-      <!-- Input de arquivo ajustado perfeitamente -->
       <label for="importar-arquivo" class="menu-opcoes-btn">📂 Importar Progresso</label>
       <input type="file" id="importar-arquivo" accept=".json" style="display: none;" onchange="importarBackup(event)">
       
@@ -200,7 +199,7 @@
     </div>
   </div>
 
-  <!-- MODAL CRIAR/EDITAR PERÍODO -->
+  <!-- MODAL PERÍODO -->
   <div class="modal-overlay" id="modal-periodo">
     <div class="modal-box">
       <h3 id="periodo-modal-titulo">Novo Período</h3>
@@ -227,7 +226,7 @@
     </div>
   </div>
 
-  <!-- MODAL CRIAR/EDITAR DISCIPLINA -->
+  <!-- MODAL DISCIPLINA COM LANÇAMENTO DE NOTAS SEMPRE ATIVO -->
   <div class="modal-overlay" id="modal-disciplina">
     <div class="modal-box">
       <h3 id="disciplina-modal-titulo">Nova Disciplina</h3>
@@ -262,14 +261,15 @@
         </select>
       </div>
 
-      <div id="secao-avaliacoes" style="margin-top: 15px; border-top: 1px solid #333; padding-top: 15px; display:none;">
+      <!-- SEÇÃO DE AVALIAÇÕES SEMPRE VISÍVEL -->
+      <div id="secao-avaliacoes" style="margin-top: 15px; border-top: 1px solid #333; padding-top: 15px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
           <strong style="font-size:13px; color:#aaa;">Avaliações e Notas</strong>
           <button class="btn-primary" style="padding:4px 10px; font-size:12px;" onclick="adicionarAvaliacaoLinha()">+ Prova</button>
         </div>
         <div id="lista-avaliacoes-container" style="display:flex; flex-direction:column; gap:8px; max-height:150px; overflow-y:auto;"></div>
         <div style="margin-top:10px; font-size:12px; color:#aaa; display:flex; justify-content:space-between;">
-          <span>Média / Nota Final: <strong id="disc-nota-final" style="color:#fff;">0.00</strong></span>
+          <span>Nota Final Calculada: <strong id="disc-nota-final" style="color:#fff;">0.00</strong></span>
         </div>
       </div>
 
@@ -330,7 +330,7 @@
           <div class="bola-cor" style="background-color: #000000;" onclick="escolherCor('#000000')"></div>
           <div class="bola-cor" style="background-color: #b7b7b7;" onclick="escolherCor('#b7b7b7')"></div>
           <div class="bola-cor" style="background-color: #efefef; border: 1px solid #444;" onclick="escolherCor('#efefef')"></div>
-          <input type="color" id="form-cor-picker" value="#1a73e8" style="width: 28px; height: 28px; border: none; cursor: pointer; padding: 0; background: none; border-radius: 50%;" onchange="escolherCor(this.value)">
+          <input type="color" id="form-cor-picker" value="#333333" style="width: 28px; height: 28px; border: none; cursor: pointer; padding: 0; background: none; border-radius: 50%;" onchange="escolherCor(this.value)">
         </div>
         <input type="hidden" id="form-cor" value="#073763">
       </div>
@@ -411,7 +411,6 @@
       salvarDadosLocalmente();
     }
 
-    // BACKUP
     function baixarBackup() {
       const backupGeral = { rotina: dadosRotina, curso: dadosCurso };
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupGeral));
@@ -449,10 +448,9 @@
       reader.readAsText(file);
     }
 
-    // LÓGICA DE CÁLCULO E RENDERIZAÇÃO DO CURSO
     function renderizarCurso() {
       let totalObrigatorias = 0, totalOptativas = 0, totalComplementares = 0;
-      let somaPonderadaNotasGeral = 0, somaHorasGeral = 0;
+      let somaPonderadaGeral = 0, somaHorasGeral = 0;
 
       const container = document.getElementById('lista-periodos');
       if (!dadosCurso.periodos || dadosCurso.periodos.length === 0) {
@@ -480,7 +478,7 @@
                 <div class="disciplina-card" onclick="abrirModalDisciplina('${periodo.id}', '${disc.id}')">
                   <div>
                     <strong>${disc.name}</strong>
-                    <div style="font-size:11px; color:#888; margin-top:3px;">${disc.horas}h • ${disc.tipo} • Média: <span style="color:#fff;">${notaFinal.toFixed(2)}</span></div>
+                    <div style="font-size:11px; color:#888; margin-top:3px;">${disc.horas}h • ${disc.tipo} • Nota Final: <span style="color:#fff;">${notaFinal.toFixed(2)}</span></div>
                   </div>
                   <span class="status-badge ${statusClass}">${disc.status}</span>
                 </div>
@@ -515,7 +513,6 @@
         });
       }
 
-      // Atualiza Barras e CRA Geral
       document.getElementById('horas-obrigatorias-atual').innerText = totalObrigatorias;
       document.getElementById('horas-optativas-atual').innerText = totalOptativas;
       document.getElementById('horas-complementares-atual').innerText = totalComplementares;
@@ -536,13 +533,11 @@
       if (!disc.avaliacoes || disc.avaliacoes.length === 0) return 0;
       let somaNotas = 0;
       disc.avaliacoes.forEach(a => {
-        let obtida = parseFloat(a.obtida) || 0;
-        somaNotas += obtida;
+        somaNotas += (parseFloat(a.obtida) || 0);
       });
-      return somaNotas; // Ou média ponderada se preferir somar pesos
+      return somaNotas;
     }
 
-    // MODAL PERÍODO
     function abrirModalPeriodo(id = null) {
       document.getElementById('modal-periodo').style.display = 'flex';
       if (id) {
@@ -591,8 +586,6 @@
       }
     }
 
-    // MODAL DISCIPLINA
-    function abrirModalPeriodoRef() {} // Helper
     function abrirModalDisciplina(periodoId, discId = null) {
       document.getElementById('modal-disciplina').style.display = 'flex';
       document.getElementById('disc-periodo-id').value = periodoId;
@@ -608,8 +601,10 @@
         document.getElementById('disc-tipo').value = d.tipo;
         document.getElementById('disc-status').value = d.status;
 
-        if (d.avaliacoes) {
+        if (d.avaliacoes && d.avaliacoes.length > 0) {
           d.avaliacoes.forEach(a => adicionarAvaliacaoLinha(a.nome, a.total, a.obtida));
+        } else {
+          adicionarAvaliacaoLinha("P1", 10, "");
         }
         document.getElementById('btn-excluir-disc').style.display = 'block';
       } else {
@@ -618,7 +613,7 @@
         document.getElementById('disc-nome').value = '';
         document.getElementById('disc-horas').value = '60';
         document.getElementById('disc-tipo').value = 'obrigratoria';
-        document.getElementById('disc-status').value = 'acursar';
+        document.getElementById('disc-status').value = 'cursando';
         document.getElementById('btn-excluir-disc').style.display = 'none';
         adicionarAvaliacaoLinha("P1", 10, "");
       }
@@ -642,11 +637,9 @@
 
     function atualizarCalculoNotaModal() {
       const linhas = document.querySelectorAll('#lista-avaliacoes-container > div');
-      let somaObtidas = 0, somaTotais = 0;
+      let somaObtidas = 0;
       linhas.forEach(l => {
-        let tot = parseFloat(l.querySelector('.av-total').value) || 0;
         let obt = parseFloat(l.querySelector('.av-obtida').value) || 0;
-        somaTotais += tot;
         somaObtidas += obt;
       });
       document.getElementById('disc-nota-final').innerText = somaObtidas.toFixed(2);
@@ -696,7 +689,6 @@
       }
     }
 
-    // ROTINA (Funções originais mantidas perfeitamente)
     function processarGrade() {
       document.querySelectorAll('.evento').forEach(e => e.remove());
       if (dadosRotina.length > 0) {
@@ -767,7 +759,10 @@
       });
     }
 
-    function abrirModal(itemExistente = null) { abrirModalRotina(itemExistente); }
+    function abrirModal(itemExistente = null) {
+      fecharOpcoes();
+      abrirModalRotina(itemExistente);
+    }
     function abrirModalRotina(itemExistente = null) {
       document.getElementById('modal').style.display = 'flex';
       if(itemExistente) {
