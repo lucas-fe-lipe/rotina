@@ -8,25 +8,22 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   
   <style>
-    /* TEMA DARK MINIMALISTA */
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #121212; color: #e0e0e0; overflow-x: hidden; }
     
-    /* HEADER COM ABAS */
     .header { padding: 12px 20px; background: #1e1e1e; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 100; }
     .abas { display: flex; gap: 15px; }
     .aba-btn { background: transparent; color: #888; border: none; font-size: 16px; font-weight: bold; cursor: pointer; padding: 5px 10px; transition: 0.2s; border-bottom: 2px solid transparent; }
     .aba-btn.ativa { color: #fff; border-bottom: 2px solid #1a73e8; }
     .aba-btn:hover { color: #fff; }
     
-    /* Botões Minimalistas */
     .btn-icon { background: #2c2c2c; color: white; border: 1px solid #444; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; transition: 0.2s; }
     .btn-icon:hover { background: #3c3c3c; }
-    .btn-primary { background: #1a73e8; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.2s; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; }
+    .btn-primary { background: #1a73e8; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
     .btn-primary:hover { background: #155db1; }
     
     .header-botoes { display: flex; gap: 10px; align-items: center; }
 
-    /* GRADE DA ROTINA (BRANCA PARA DESTAQUE) */
+    /* GRADE DA ROTINA */
     .calendario-container { display: flex; padding: 10px 5px; position: relative; width: 100%; box-sizing: border-box; background: #121212; }
     .eixo-horas { width: 55px; flex-shrink: 0; position: relative; margin-top: 0; }
     .hora-label { position: absolute; right: 8px; font-size: 11px; color: #888; transform: translateY(-50%); font-weight: bold; }
@@ -40,9 +37,9 @@
     .evento-info { font-size: 9px; opacity: 0.9; }
     .evento-detalhes { font-size: 9px; opacity: 0.8; font-style: italic; word-break: break-word; }
     
-    /* MODAIS NO MODO DARK */
-    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: center; backdrop-filter: blur(3px); }
-    .modal-box { background: #1e1e1e; padding: 20px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #333; }
+    /* MODAIS */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: center; backdrop-filter: blur(3px); overflow-y: auto; padding: 20px 0; }
+    .modal-box { background: #1e1e1e; padding: 20px; border-radius: 12px; width: 90%; max-width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid #333; max-height: 90vh; overflow-y: auto; }
     .modal-box h3 { margin-top: 0; margin-bottom: 15px; color: #fff; }
     
     .form-group { margin-bottom: 12px; display: flex; flex-direction: column; }
@@ -61,16 +58,35 @@
     .btn-salvar { background: #1a73e8; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
     .btn-perigo { background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
 
-    /* MENU DE OPÇÕES (Botões padronizados) */
-    .menu-opcoes-btn { display: flex; align-items: center; gap: 8px; width: 100%; margin-bottom: 10px; background: #2c2c2c; color: white; border: 1px solid #444; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; justify-content: center; }
+    /* MENU DE OPÇÕES (Botões perfeitamente padronizados) */
+    .menu-opcoes-btn { display: flex; align-items: center; gap: 8px; width: 100%; margin-bottom: 10px; background: #2c2c2c; color: white; border: 1px solid #444; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; justify-content: center; box-sizing: border-box; text-align: center; }
     .menu-opcoes-btn:hover { background: #3c3c3c; }
     
-    /* ABA MEU CURSO */
-    .container-curso { padding: 20px; max-width: 800px; margin: 0 auto; display: none; }
+    /* ABA MEU CURSO & ESTILOS ACADÊMICOS */
+    .container-curso { padding: 20px; max-width: 900px; margin: 0 auto; display: none; }
     .curso-header { background: #1e1e1e; padding: 20px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; }
     .curso-header input { background: transparent; border: none; color: #fff; font-size: 24px; font-weight: bold; width: 100%; border-bottom: 1px solid transparent; transition: 0.2s; }
     .curso-header input:focus { outline: none; border-bottom: 1px solid #1a73e8; }
     
+    .metas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px; }
+    .meta-card { background: #121212; padding: 12px; border-radius: 6px; border: 1px solid #333; }
+    .meta-card label { font-size: 11px; color: #888; display: block; margin-bottom: 3px; }
+    .meta-card input { background: #1e1e1e; border: 1px solid #444; color: #fff; padding: 5px; border-radius: 4px; width: 80px; font-weight: bold; }
+    .barra-progresso-container { background: #333; height: 8px; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+    .barra-progresso { background: #1a73e8; height: 100%; width: 0%; transition: width 0.3s; }
+
+    .periodo-box { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
+    .periodo-titulo { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; }
+    
+    .disciplina-card { background: #121212; border: 1px solid #333; border-radius: 6px; padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
+    .disciplina-card:hover { border-color: #555; }
+    
+    .status-badge { font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
+    .status-concluida { background: #137333; color: #e6f4ea; }
+    .status-cursando { background: #b06000; color: #fef7e0; }
+    .status-reprovado { background: #c5221f; color: #fce8e6; }
+    .status-acursar { background: #3c4043; color: #e8eaed; }
+
     /* IMPRESSÃO */
     @media print {
       @page { margin: 10mm 5mm 5mm 5mm; }
@@ -98,19 +114,17 @@
       <button class="aba-btn" id="tab-curso" onclick="mudarAba('curso')">🎓 Meu Curso</button>
     </div>
     
-    <!-- Botões da Rotina -->
     <div class="header-botoes" id="botoes-rotina">
       <button class="btn-icon" onclick="abrirOpcoes()">Opções</button>
       <button class="btn-primary" onclick="abrirModal()">+</button>
     </div>
     
-    <!-- Botões do Curso (Ocultos por padrão) -->
     <div class="header-botoes" id="botoes-curso" style="display: none;">
-      <button class="btn-primary" onclick="adicionarPeriodo()" style="width: auto;">+ Período</button>
+      <button class="btn-primary" onclick="abrirModalPeriodo()">+ Período</button>
     </div>
   </div>
 
-  <!-- CONTEÚDO: ABA ROTINA -->
+  <!-- ABA ROTINA -->
   <div id="aba-rotina">
     <div class="calendario-container" id="area-impressao">
       <div class="eixo-horas" id="eixo-horas"></div>
@@ -126,35 +140,143 @@
     </div>
   </div>
 
-  <!-- CONTEÚDO: ABA MEU CURSO -->
+  <!-- ABA MEU CURSO -->
   <div id="aba-curso" class="container-curso">
     <div class="curso-header">
-      <input type="text" id="nome-curso" placeholder="Nome do seu Curso (Ex: Eng. de Computação)">
-      <div style="display: flex; gap: 20px; margin-top: 15px; color: #aaa; font-size: 14px;">
-        <div><strong>CRA Geral:</strong> <span id="cra-geral">0.00</span></div>
-        <div><strong>Progresso:</strong> <span id="progresso-geral">0%</span></div>
+      <input type="text" id="nome-curso" placeholder="Nome do Curso (Ex: Engenharia Elétrica)" oninput="salvarCursoDados()">
+      <div style="display: flex; gap: 20px; margin-top: 15px; color: #aaa; font-size: 14px; flex-wrap: wrap;">
+        <div><strong>CRA Geral:</strong> <span id="cra-geral" style="color:#fff;">0.00</span></div>
+      </div>
+
+      <!-- METAS DE HORAS -->
+      <div class="metas-grid">
+        <div class="meta-card">
+          <label>Obrigatórias (Concluídas / Meta)</label>
+          <div style="display:flex; align-items:center; gap:5px;">
+            <span id="horas-obrigatorias-atual" style="font-weight:bold; color:#fff;">0</span> / 
+            <input type="number" id="meta-obrigatorias" value="2400" onchange="salvarCursoDados()"> h
+          </div>
+          <div class="barra-progresso-container"><div class="barra-progresso" id="barra-obrigatorias"></div></div>
+        </div>
+        <div class="meta-card">
+          <label>Optativas (Concluídas / Meta)</label>
+          <div style="display:flex; align-items:center; gap:5px;">
+            <span id="horas-optativas-atual" style="font-weight:bold; color:#fff;">0</span> / 
+            <input type="number" id="meta-optativas" value="300" onchange="salvarCursoDados()"> h
+          </div>
+          <div class="barra-progresso-container"><div class="barra-progresso" id="barra-optativas"></div></div>
+        </div>
+        <div class="meta-card">
+          <label>Complementares (Concluídas / Meta)</label>
+          <div style="display:flex; align-items:center; gap:5px;">
+            <span id="horas-complementares-atual" style="font-weight:bold; color:#fff;">0</span> / 
+            <input type="number" id="meta-complementares" value="200" onchange="salvarCursoDados()"> h
+          </div>
+          <div class="barra-progresso-container"><div class="barra-progresso" id="barra-complementares"></div></div>
+        </div>
       </div>
     </div>
     
-    <div id="lista-periodos" style="color: #aaa; text-align: center; margin-top: 40px;">
-      Nenhum período cadastrado ainda. Clique em "+ Período" para começar.
+    <div id="lista-periodos">
+      <div style="color: #666; text-align: center; margin-top: 40px;">Nenhum período cadastrado ainda. Clique em "+ Período" acima.</div>
     </div>
   </div>
 
-  <!-- MODAL DE OPÇÕES DA ROTINA -->
+  <!-- MODAL OPÇÕES DA ROTINA -->
   <div class="modal-overlay" id="modal-opcoes">
     <div class="modal-box">
       <h3>Opções da Rotina</h3>
-      <!-- Todos os botões iguais -->
       <button class="menu-opcoes-btn" onclick="baixarPDF()">📄 Exportar PDF</button>
       <button class="menu-opcoes-btn" onclick="baixarPNG()">🖼️ Exportar PNG</button>
       <button class="menu-opcoes-btn" onclick="baixarBackup()">💾 Salvar Backup (.json)</button>
-      <label for="importar-arquivo" class="menu-opcoes-btn" style="text-align:center; display:block;">📂 Importar Progresso</label>
+      
+      <!-- Input de arquivo ajustado perfeitamente -->
+      <label for="importar-arquivo" class="menu-opcoes-btn">📂 Importar Progresso</label>
       <input type="file" id="importar-arquivo" accept=".json" style="display: none;" onchange="importarBackup(event)">
       
-      <!-- Botão Voltar/Fechar menor -->
       <div class="modal-botoes">
         <button class="btn-cancelar" onclick="fecharOpcoes()">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CRIAR/EDITAR PERÍODO -->
+  <div class="modal-overlay" id="modal-periodo">
+    <div class="modal-box">
+      <h3 id="periodo-modal-titulo">Novo Período</h3>
+      <input type="hidden" id="periodo-id">
+      <div class="form-group">
+        <label>Nome do Período</label>
+        <input type="text" id="periodo-nome" placeholder="Ex: 1° Período">
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <div class="form-group" style="flex: 1;">
+          <label>Data Início</label>
+          <input type="date" id="periodo-inicio">
+        </div>
+        <div class="form-group" style="flex: 1;">
+          <label>Data Fim</label>
+          <input type="date" id="periodo-fim">
+        </div>
+      </div>
+      <div class="modal-botoes">
+        <button id="btn-excluir-periodo" class="btn-perigo" style="display:none; margin-right:auto;" onclick="excluirPeriodo()">Excluir</button>
+        <button class="btn-cancelar" onclick="fecharModalPeriodo()">Cancelar</button>
+        <button class="btn-salvar" onclick="salvarPeriodo()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CRIAR/EDITAR DISCIPLINA -->
+  <div class="modal-overlay" id="modal-disciplina">
+    <div class="modal-box">
+      <h3 id="disciplina-modal-titulo">Nova Disciplina</h3>
+      <input type="hidden" id="disc-id">
+      <input type="hidden" id="disc-periodo-id">
+      
+      <div class="form-group">
+        <label>Nome da Disciplina</label>
+        <input type="text" id="disc-nome" placeholder="Ex: Cálculo I">
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <div class="form-group" style="flex: 2;">
+          <label>Carga Horária (Horas)</label>
+          <input type="number" id="disc-horas" value="60">
+        </div>
+        <div class="form-group" style="flex: 3;">
+          <label>Tipo de Hora</label>
+          <select id="disc-tipo">
+            <option value="obrigratoria">Obrigatória</option>
+            <option value="optativa">Optativa</option>
+            <option value="complementar">Complementar</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="disc-status">
+          <option value="acursar">A Cursar</option>
+          <option value="cursando">Cursando</option>
+          <option value="concluida">Concluída</option>
+          <option value="reprovado">Reprovado</option>
+        </select>
+      </div>
+
+      <div id="secao-avaliacoes" style="margin-top: 15px; border-top: 1px solid #333; padding-top: 15px; display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <strong style="font-size:13px; color:#aaa;">Avaliações e Notas</strong>
+          <button class="btn-primary" style="padding:4px 10px; font-size:12px;" onclick="adicionarAvaliacaoLinha()">+ Prova</button>
+        </div>
+        <div id="lista-avaliacoes-container" style="display:flex; flex-direction:column; gap:8px; max-height:150px; overflow-y:auto;"></div>
+        <div style="margin-top:10px; font-size:12px; color:#aaa; display:flex; justify-content:space-between;">
+          <span>Média / Nota Final: <strong id="disc-nota-final" style="color:#fff;">0.00</strong></span>
+        </div>
+      </div>
+
+      <div class="modal-botoes">
+        <button id="btn-excluir-disc" class="btn-perigo" style="display:none; margin-right:auto;" onclick="excluirDisciplina()">Excluir</button>
+        <button class="btn-cancelar" onclick="fecharModalDisciplina()">Cancelar</button>
+        <button class="btn-salvar" onclick="salvarDisciplina()">Salvar</button>
       </div>
     </div>
   </div>
@@ -229,15 +351,17 @@
   <script>
     if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); }); }
 
-    // DADOS
     let dadosRotina = [];
-    let dadosCurso = { nome: "", periodos: [] };
+    let dadosCurso = { 
+      nome: "", 
+      metaObrigatorias: 2400, 
+      metaOptativas: 300, 
+      metaComplementares: 200, 
+      periodos: [] 
+    };
     
-    // VARIÁVEIS DA GRADE
-    let HORA_INICIO = 6; 
-    let HORA_FIM = 22;   
-    const PIXELS_POR_HORA = 40; 
-    const OFFSET_TOPO = 25; 
+    let HORA_INICIO = 6, HORA_FIM = 22;   
+    const PIXELS_POR_HORA = 40, OFFSET_TOPO = 25; 
 
     const mapaDias = {
       'domingo': 'col-dom', 'segunda': 'col-seg', 'terça': 'col-ter', 
@@ -248,36 +372,43 @@
       carregarDados();
     };
 
-    // SISTEMA DE NAVEGAÇÃO DE ABAS
     function mudarAba(aba) {
-      // Botoes Tab
       document.getElementById('tab-rotina').classList.toggle('ativa', aba === 'rotina');
       document.getElementById('tab-curso').classList.toggle('ativa', aba === 'curso');
-      
-      // Conteudos
       document.getElementById('aba-rotina').style.display = aba === 'rotina' ? 'block' : 'none';
       document.getElementById('aba-curso').style.display = aba === 'curso' ? 'block' : 'none';
-      
-      // Botoes do Header
       document.getElementById('botoes-rotina').style.display = aba === 'rotina' ? 'flex' : 'none';
       document.getElementById('botoes-curso').style.display = aba === 'curso' ? 'flex' : 'none';
     }
 
-    // ARMAZENAMENTO LOCAL
     function carregarDados() {
       const salvosRotina = localStorage.getItem('appRotinaDados');
       const salvosCurso = localStorage.getItem('appCursoDados');
-      
       if (salvosRotina) dadosRotina = JSON.parse(salvosRotina);
       if (salvosCurso) dadosCurso = JSON.parse(salvosCurso);
       
+      document.getElementById('nome-curso').value = dadosCurso.nome || "";
+      document.getElementById('meta-obrigatorias').value = dadosCurso.metaObrigatorias || 2400;
+      document.getElementById('meta-optativas').value = dadosCurso.metaOptativas || 300;
+      document.getElementById('meta-complementares').value = dadosCurso.metaComplementares || 200;
+
       processarGrade();
+      renderizarCurso();
     }
 
     function salvarDadosLocalmente() {
       localStorage.setItem('appRotinaDados', JSON.stringify(dadosRotina));
-      // Aqui salvaremos também os dados do curso futuramente
+      localStorage.setItem('appCursoDados', JSON.stringify(dadosCurso));
       processarGrade();
+      renderizarCurso();
+    }
+
+    function salvarCursoDados() {
+      dadosCurso.nome = document.getElementById('nome-curso').value;
+      dadosCurso.metaObrigatorias = parseFloat(document.getElementById('meta-obrigatorias').value) || 0;
+      dadosCurso.metaOptativas = parseFloat(document.getElementById('meta-optativas').value) || 0;
+      dadosCurso.metaComplementares = parseFloat(document.getElementById('meta-complementares').value) || 0;
+      salvarDadosLocalmente();
     }
 
     // BACKUP
@@ -300,15 +431,17 @@
       reader.onload = function(e) {
         try {
           const importado = JSON.parse(e.target.result);
-          // Verifica se é o backup novo (com as duas áreas) ou o antigo só de rotina
           if (importado.rotina) {
             dadosRotina = importado.rotina;
             if(importado.curso) dadosCurso = importado.curso;
           } else if (Array.isArray(importado)) {
             dadosRotina = importado;
           }
-          
           salvarDadosLocalmente();
+          document.getElementById('nome-curso').value = dadosCurso.nome || "";
+          document.getElementById('meta-obrigatorias').value = dadosCurso.metaObrigatorias || 2400;
+          document.getElementById('meta-optativas').value = dadosCurso.metaOptativas || 300;
+          document.getElementById('meta-complementares').value = dadosCurso.metaComplementares || 200;
           alert("Progresso importado com sucesso!");
           fecharOpcoes();
         } catch (err) { alert("Erro ao ler o arquivo."); }
@@ -316,54 +449,284 @@
       reader.readAsText(file);
     }
 
-    // LÓGICA DA ROTINA
+    // LÓGICA DE CÁLCULO E RENDERIZAÇÃO DO CURSO
+    function renderizarCurso() {
+      let totalObrigatorias = 0, totalOptativas = 0, totalComplementares = 0;
+      let somaPonderadaNotasGeral = 0, somaHorasGeral = 0;
+
+      const container = document.getElementById('lista-periodos');
+      if (!dadosCurso.periodos || dadosCurso.periodos.length === 0) {
+        container.innerHTML = `<div style="color: #666; text-align: center; margin-top: 40px;">Nenhum período cadastrado ainda. Clique em "+ Período" acima.</div>`;
+      } else {
+        container.innerHTML = '';
+        dadosCurso.periodos.forEach(periodo => {
+          let somaPonderadaPeriodo = 0, somaHorasPeriodo = 0;
+          
+          let disciplinasHTML = '';
+          if (periodo.disciplinas && periodo.disciplinas.length > 0) {
+            periodo.disciplinas.forEach(disc => {
+              let notaFinal = calcularNotaFinalDisciplina(disc);
+              if (disc.status === 'concluida') {
+                if (disc.tipo === 'obrigratoria') totalObrigatorias += Number(disc.horas);
+                if (disc.tipo === 'optativa') totalOptativas += Number(disc.horas);
+                if (disc.tipo === 'complementar') totalComplementares += Number(disc.horas);
+
+                somaPonderadaPeriodo += (notaFinal * Number(disc.horas));
+                somaHorasPeriodo += Number(disc.horas);
+              }
+
+              let statusClass = `status-${disc.status}`;
+              disciplinasHTML += `
+                <div class="disciplina-card" onclick="abrirModalDisciplina('${periodo.id}', '${disc.id}')">
+                  <div>
+                    <strong>${disc.name}</strong>
+                    <div style="font-size:11px; color:#888; margin-top:3px;">${disc.horas}h • ${disc.tipo} • Média: <span style="color:#fff;">${notaFinal.toFixed(2)}</span></div>
+                  </div>
+                  <span class="status-badge ${statusClass}">${disc.status}</span>
+                </div>
+              `;
+            });
+          } else {
+            disciplinasHTML = `<div style="color:#666; font-size:12px; text-align:center; padding:10px;">Nenhuma disciplina neste período.</div>`;
+          }
+
+          let craPeriodo = somaHorasPeriodo > 0 ? (somaPonderadaPeriodo / somaHorasPeriodo) : 0;
+          if (somaHorasPeriodo > 0) {
+            somaPonderadaGeral += somaPonderadaPeriodo;
+            somaHorasGeral += somaHorasPeriodo;
+          }
+
+          container.innerHTML += `
+            <div class="periodo-box">
+              <div class="periodo-titulo">
+                <div>
+                  <strong style="font-size:16px; color:#fff;">${periodo.nome}</strong>
+                  <span style="font-size:12px; color:#888; margin-left:10px;">(${periodo.inicio || ''} até ${periodo.fim || ''})</span>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                  <span style="font-size:13px; color:#aaa;">CRA: <strong style="color:#fff;">${craPeriodo.toFixed(2)}</strong></span>
+                  <button class="btn-icon" style="padding:4px 8px; font-size:11px;" onclick="abrirModalPeriodo('${periodo.id}')">Editar</button>
+                  <button class="btn-primary" style="padding:4px 10px; font-size:12px;" onclick="abrirModalDisciplina('${periodo.id}')">+ Disciplina</button>
+                </div>
+              </div>
+              <div>${disciplinasHTML}</div>
+            </div>
+          `;
+        });
+      }
+
+      // Atualiza Barras e CRA Geral
+      document.getElementById('horas-obrigatorias-atual').innerText = totalObrigatorias;
+      document.getElementById('horas-optativas-atual').innerText = totalOptativas;
+      document.getElementById('horas-complementares-atual').innerText = totalComplementares;
+
+      const metaObr = dadosCurso.metaObrigatorias || 2400;
+      const metaOpt = dadosCurso.metaOptativas || 300;
+      const metaComp = dadosCurso.metaComplementares || 200;
+
+      document.getElementById('barra-obrigatorias').style.width = Math.min(100, (totalObrigatorias / metaObr) * 100) + '%';
+      document.getElementById('barra-optativas').style.width = Math.min(100, (totalOptativas / metaOpt) * 100) + '%';
+      document.getElementById('barra-complementares').style.width = Math.min(100, (totalComplementares / metaComp) * 100) + '%';
+
+      let craGeral = somaHorasGeral > 0 ? (somaPonderadaGeral / somaHorasGeral) : 0;
+      document.getElementById('cra-geral').innerText = craGeral.toFixed(2);
+    }
+
+    function calcularNotaFinalDisciplina(disc) {
+      if (!disc.avaliacoes || disc.avaliacoes.length === 0) return 0;
+      let somaNotas = 0;
+      disc.avaliacoes.forEach(a => {
+        let obtida = parseFloat(a.obtida) || 0;
+        somaNotas += obtida;
+      });
+      return somaNotas; // Ou média ponderada se preferir somar pesos
+    }
+
+    // MODAL PERÍODO
+    function abrirModalPeriodo(id = null) {
+      document.getElementById('modal-periodo').style.display = 'flex';
+      if (id) {
+        document.getElementById('periodo-modal-titulo').innerText = 'Editar Período';
+        const p = dadosCurso.periodos.find(x => x.id === id);
+        document.getElementById('periodo-id').value = p.id;
+        document.getElementById('periodo-nome').value = p.nome;
+        document.getElementById('periodo-inicio').value = p.inicio || '';
+        document.getElementById('periodo-fim').value = p.fim || '';
+        document.getElementById('btn-excluir-periodo').style.display = 'block';
+      } else {
+        document.getElementById('periodo-modal-titulo').innerText = 'Novo Período';
+        document.getElementById('periodo-id').value = '';
+        document.getElementById('periodo-nome').value = '';
+        document.getElementById('periodo-inicio').value = '';
+        document.getElementById('periodo-fim').value = '';
+        document.getElementById('btn-excluir-periodo').style.display = 'none';
+      }
+    }
+    function fecharModalPeriodo() { document.getElementById('modal-periodo').style.display = 'none'; }
+
+    function salvarPeriodo() {
+      const id = document.getElementById('periodo-id').value;
+      const nome = document.getElementById('periodo-nome').value;
+      const inicio = document.getElementById('periodo-inicio').value;
+      const fim = document.getElementById('periodo-fim').value;
+      if (!nome) return alert("Insira o nome do período.");
+
+      if (id) {
+        const p = dadosCurso.periodos.find(x => x.id === id);
+        p.nome = nome; p.inicio = inicio; p.fim = fim;
+      } else {
+        if (!dadosCurso.periodos) dadosCurso.periodos = [];
+        dadosCurso.periodos.push({ id: Date.now().toString(), nome, inicio, fim, disciplinas: [] });
+      }
+      salvarDadosLocalmente();
+      fecharModalPeriodo();
+    }
+
+    function excluirPeriodo() {
+      const id = document.getElementById('periodo-id').value;
+      if (confirm("Excluir este período apagará todas as disciplinas associadas. Continuar?")) {
+        dadosCurso.periodos = dadosCurso.periodos.filter(x => x.id !== id);
+        salvarDadosLocalmente();
+        fecharModalPeriodo();
+      }
+    }
+
+    // MODAL DISCIPLINA
+    function abrirModalPeriodoRef() {} // Helper
+    function abrirModalDisciplina(periodoId, discId = null) {
+      document.getElementById('modal-disciplina').style.display = 'flex';
+      document.getElementById('disc-periodo-id').value = periodoId;
+      document.getElementById('lista-avaliacoes-container').innerHTML = '';
+
+      if (discId) {
+        document.getElementById('disciplina-modal-titulo').innerText = 'Editar Disciplina';
+        const p = dadosCurso.periodos.find(x => x.id === periodoId);
+        const d = p.disciplinas.find(x => x.id === discId);
+        document.getElementById('disc-id').value = d.id;
+        document.getElementById('disc-nome').value = d.name;
+        document.getElementById('disc-horas').value = d.horas;
+        document.getElementById('disc-tipo').value = d.tipo;
+        document.getElementById('disc-status').value = d.status;
+
+        if (d.avaliacoes) {
+          d.avaliacoes.forEach(a => adicionarAvaliacaoLinha(a.nome, a.total, a.obtida));
+        }
+        document.getElementById('btn-excluir-disc').style.display = 'block';
+      } else {
+        document.getElementById('disciplina-modal-titulo').innerText = 'Nova Disciplina';
+        document.getElementById('disc-id').value = '';
+        document.getElementById('disc-nome').value = '';
+        document.getElementById('disc-horas').value = '60';
+        document.getElementById('disc-tipo').value = 'obrigratoria';
+        document.getElementById('disc-status').value = 'acursar';
+        document.getElementById('btn-excluir-disc').style.display = 'none';
+        adicionarAvaliacaoLinha("P1", 10, "");
+      }
+      atualizarCalculoNotaModal();
+    }
+    function fecharModalDisciplina() { document.getElementById('modal-disciplina').style.display = 'none'; }
+
+    function adicionarAvaliacaoLinha(nome = "", total = 10, obtida = "") {
+      const container = document.getElementById('lista-avaliacoes-container');
+      const div = document.createElement('div');
+      div.style.cssText = "display:flex; gap:6px; align-items:center;";
+      div.innerHTML = `
+        <input type="text" placeholder="Nome (Ex: P1)" value="${nome}" style="flex:2; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px;" class="av-nome">
+        <input type="number" placeholder="Valor" value="${total}" style="flex:1; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px;" class="av-total" oninput="atualizarCalculoNotaModal()">
+        <input type="number" placeholder="Nota" value="${obtida}" style="flex:1; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px;" class="av-obtida" oninput="atualizarCalculoNotaModal()">
+        <button type="button" onclick="this.parentElement.remove(); atualizarCalculoNotaModal();" style="background:#dc3545; color:#fff; border:none; padding:6px 10px; border-radius:4px; cursor:pointer;">X</button>
+      `;
+      container.appendChild(div);
+      atualizarCalculoNotaModal();
+    }
+
+    function atualizarCalculoNotaModal() {
+      const linhas = document.querySelectorAll('#lista-avaliacoes-container > div');
+      let somaObtidas = 0, somaTotais = 0;
+      linhas.forEach(l => {
+        let tot = parseFloat(l.querySelector('.av-total').value) || 0;
+        let obt = parseFloat(l.querySelector('.av-obtida').value) || 0;
+        somaTotais += tot;
+        somaObtidas += obt;
+      });
+      document.getElementById('disc-nota-final').innerText = somaObtidas.toFixed(2);
+    }
+
+    function salvarDisciplina() {
+      const periodoId = document.getElementById('disc-periodo-id').value;
+      const discId = document.getElementById('disc-id').value;
+      const name = document.getElementById('disc-nome').value;
+      const horas = parseFloat(document.getElementById('disc-horas').value) || 0;
+      const tipo = document.getElementById('disc-tipo').value;
+      const status = document.getElementById('disc-status').value;
+
+      if (!name) return alert("Insira o nome da disciplina.");
+
+      let avaliacoes = [];
+      const linhas = document.querySelectorAll('#lista-avaliacoes-container > div');
+      linhas.forEach(l => {
+        avaliacoes.push({
+          nome: l.querySelector('.av-nome').value || 'Avaliação',
+          total: parseFloat(l.querySelector('.av-total').value) || 0,
+          obtida: parseFloat(l.querySelector('.av-obtida').value) || 0
+        });
+      });
+
+      const p = dadosCurso.periodos.find(x => x.id === periodoId);
+      if (discId) {
+        const d = p.disciplinas.find(x => x.id === discId);
+        d.name = name; d.horas = horas; d.tipo = tipo; d.status = status; d.avaliacoes = avaliacoes;
+      } else {
+        if (!p.disciplinas) p.disciplinas = [];
+        p.disciplinas.push({ id: Date.now().toString(), name, horas, tipo, status, avaliacoes });
+      }
+
+      salvarDadosLocalmente();
+      fecharModalDisciplina();
+    }
+
+    function excluirDisciplina() {
+      const periodoId = document.getElementById('disc-periodo-id').value;
+      const discId = document.getElementById('disc-id').value;
+      if (confirm("Deseja realmente excluir esta disciplina?")) {
+        const p = dadosCurso.periodos.find(x => x.id === periodoId);
+        p.disciplinas = p.disciplinas.filter(x => x.id !== discId);
+        salvarDadosLocalmente();
+        fecharModalDisciplina();
+      }
+    }
+
+    // ROTINA (Funções originais mantidas perfeitamente)
     function processarGrade() {
       document.querySelectorAll('.evento').forEach(e => e.remove());
-      
       if (dadosRotina.length > 0) {
         let menorHora = 24, maiorHora = 0;
         dadosRotina.forEach(item => {
-          if (item.inicio) {
-            let h = parseInt(item.inicio.split(':')[0], 10);
-            if (h < menorHora) menorHora = h;
-          }
-          if (item.fim) {
-            let h = parseInt(item.fim.split(':')[0], 10);
-            if (h > maiorHora) maiorHora = h;
-          }
+          if (item.inicio) { let h = parseInt(item.inicio.split(':')[0], 10); if (h < menorHora) menorHora = h; }
+          if (item.fim) { let h = parseInt(item.fim.split(':')[0], 10); if (h > maiorHora) maiorHora = h; }
         });
         HORA_INICIO = (menorHora > 0) ? menorHora - 1 : 0;
         HORA_FIM = (maiorHora < 23) ? maiorHora + 1 : 24;
       }
-      
       desenharGrade();
-      
       dadosRotina.forEach(item => {
         const idColuna = mapaDias[item.dia];
         if(!idColuna) return; 
-
         const coluna = document.getElementById(idColuna);
         const topPixels = calcularMinutos(item.inicio) + OFFSET_TOPO;
         const heightPixels = calcularMinutos(item.fim) - calcularMinutos(item.inicio);
-
         const bloco = document.createElement('div');
         bloco.className = `evento`;
         bloco.style.backgroundColor = item.cor || '#073763';
-        if(item.cor === '#efefef' || item.cor === '#b7b7b7') {
-          bloco.style.color = '#000';
-        } else {
-          bloco.style.color = '#fff';
-        }
-
+        bloco.style.color = (item.cor === '#efefef' || item.cor === '#b7b7b7') ? '#000' : '#fff';
         bloco.style.top = topPixels + 'px';
         bloco.style.height = Math.max(heightPixels, 15) + 'px'; 
-        
         bloco.innerHTML = `
           <div class="evento-titulo">${item.atividade}</div>
           ${heightPixels > 30 ? `<div class="evento-info">${item.inicio}-${item.fim}</div>` : ''}
           ${heightPixels > 50 && item.detalhes ? `<div class="evento-detalhes">${item.detalhes}</div>` : ''}
         `;
-        bloco.onclick = () => abrirModal(item);
+        bloco.onclick = () => abrirModalRotina(item);
         coluna.appendChild(bloco);
       });
     }
@@ -388,7 +751,6 @@
       return ((parseInt(partes[0], 10) - HORA_INICIO) * PIXELS_POR_HORA) + (parseInt(partes[1], 10) * (PIXELS_POR_HORA / 60));
     }
 
-    // CONTROLES DE MODAL E CORES
     function abrirOpcoes() { document.getElementById('modal-opcoes').style.display = 'flex'; }
     function fecharOpcoes() { document.getElementById('modal-opcoes').style.display = 'none'; }
 
@@ -405,7 +767,8 @@
       });
     }
 
-    function abrirModal(itemExistente = null) {
+    function abrirModal(itemExistente = null) { abrirModalRotina(itemExistente); }
+    function abrirModalRotina(itemExistente = null) {
       document.getElementById('modal').style.display = 'flex';
       if(itemExistente) {
         document.getElementById('modal-titulo').innerText = 'Editar Atividade';
@@ -428,7 +791,6 @@
         document.getElementById('btn-excluir').style.display = 'none';
       }
     }
-
     function fecharModal() { document.getElementById('modal').style.display = 'none'; }
 
     function salvarFormulario() {
@@ -463,7 +825,6 @@
       }
     }
 
-    // EXPORTAÇÕES
     function baixarPDF() {
       fecharOpcoes();
       const tituloOriginal = document.title;
@@ -483,11 +844,6 @@
           link.click();
         });
       }, 300);
-    }
-
-    // LÓGICA INICIAL DO CURSO (Para próximos passos)
-    function adicionarPeriodo() {
-      alert("Módulo de Períodos e CRA será implementado aqui no próximo passo!");
     }
   </script>
 </body>
