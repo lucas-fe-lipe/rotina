@@ -449,20 +449,17 @@
       } else {
         container.innerHTML = '';
         
-        // ORDENAÇÃO DOS PERÍODOS
         const hojeStr = new Date().toISOString().split('T')[0];
         
         let periodosOrdenados = [...dadosCurso.periodos].sort((a, b) => {
-          let tipoA = classificarPeriodo(a, hojeStr); // 1: atual, 2: anterior, 3: futuro
+          let tipoA = classificarPeriodo(a, hojeStr);
           let tipoB = classificarPeriodo(b, hojeStr);
           
           if (tipoA !== tipoB) return tipoA - tipoB;
           
           if (tipoA === 1 || tipoA === 2) {
-            // Anteriores ou Atual: mais recente para o mais velho (decrescente por data fim/inicio)
             return (b.fim || '').localeCompare(a.fim || '');
           } else {
-            // Futuros: do mais próximo ao mais distante (crescente por data inicio)
             return (a.inicio || '').localeCompare(b.inicio || '');
           }
         });
@@ -555,10 +552,10 @@
     }
 
     function classificarPeriodo(p, hoje) {
-      if (!p.inicio || !p.fim) return 2; // Sem data vai para anteriores
-      if (hoje >= p.inicio && hoje <= p.fim) return 1; // Atual
-      if (hoje > p.fim) return 2; // Anterior (passado)
-      return 3; // Futuro
+      if (!p.inicio || !p.fim) return 2;
+      if (hoje >= p.inicio && hoje <= p.fim) return 1;
+      if (hoje > p.fim) return 2;
+      return 3;
     }
 
     function alternarMinimizarPeriodo(periodoId) {
@@ -572,7 +569,11 @@
     function calcularNotaFinalDisciplina(disc) {
       if (!disc.avaliacoes || disc.avaliacoes.length === 0) return 0;
       let somaObtidas = 0;
-      disc.avaliacoes.forEach(a => { somaObtidas += (parseFloat(a.obtida) || 0); });
+      disc.avaliacoes.forEach(a => { 
+        if (a.obtida !== undefined && a.obtida !== null && a.obtida !== '') {
+          somaObtidas += (parseFloat(a.obtida) || 0); 
+        }
+      });
       return somaObtidas;
     }
 
@@ -580,8 +581,10 @@
       if (!disc.avaliacoes || disc.avaliacoes.length === 0) return { temNota: false, perc: 0 };
       let somaObtidas = 0, somaTotais = 0;
       disc.avaliacoes.forEach(a => {
-        somaObtidas += (parseFloat(a.obtida) || 0);
-        somaTotais += (parseFloat(a.total) || 0);
+        if (a.obtida !== undefined && a.obtida !== null && a.obtida !== '') {
+          somaObtidas += (parseFloat(a.obtida) || 0);
+          somaTotais += (parseFloat(a.total) || 0);
+        }
       });
       let perc = somaTotais > 0 ? (somaObtidas / somaTotais) * 100 : 0;
       return { temNota: somaTotais > 0, perc: perc };
@@ -591,8 +594,10 @@
       if (!disc.avaliacoes || disc.avaliacoes.length === 0) return "0 / 0  -  0.00%";
       let somaObtidas = 0, somaTotais = 0;
       disc.avaliacoes.forEach(a => {
-        somaObtidas += (parseFloat(a.obtida) || 0);
-        somaTotais += (parseFloat(a.total) || 0);
+        if (a.obtida !== undefined && a.obtida !== null && a.obtida !== '') {
+          somaObtidas += (parseFloat(a.obtida) || 0);
+          somaTotais += (parseFloat(a.total) || 0);
+        }
       });
       let perc = somaTotais > 0 ? (somaObtidas / somaTotais) * 100 : 0;
       return `${somaObtidas.toFixed(1)} / ${somaTotais.toFixed(1)}  -  ${perc.toFixed(2)}%`;
@@ -690,7 +695,7 @@
         <input type="text" placeholder="Nome" value="${nome}" style="width: 42%; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px; box-sizing:border-box;" class="av-nome">
         <input type="number" placeholder="Valor" value="${total}" style="width: 48px; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px; text-align:center; box-sizing:border-box;" class="av-total" oninput="atualizarCalculoNotaModal()">
         <input type="number" placeholder="Nota" value="${obtida}" style="width: 48px; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px; text-align:center; box-sizing:border-box;" class="av-obtida" oninput="atualizarCalculoNotaModal()">
-        <span class="av-perc" style="font-size:11px; color:#aaa; width:48px; text-align:right; font-weight:bold;">0.0%</span>
+        <span class="av-perc" style="font-size:11px; color:#aaa; width:48px; text-align:right; font-weight:bold;">-</span>
         <button type="button" onclick="this.parentElement.remove(); atualizarCalculoNotaModal();" style="background:#dc3545; color:#fff; border:none; padding:6px 8px; border-radius:4px; cursor:pointer;">X</button>
       `;
       container.appendChild(div);
@@ -703,17 +708,24 @@
       
       linhas.forEach(l => {
         let tot = parseFloat(l.querySelector('.av-total').value) || 0;
-        let obt = parseFloat(l.querySelector('.av-obtida').value) || 0;
-        somaTotais += tot;
-        somaObtidas += obt;
-
-        let percLinha = tot > 0 ? (obt / tot) * 100 : 0;
+        let obtInput = l.querySelector('.av-obtida').value.trim();
         let spanPerc = l.querySelector('.av-perc');
-        spanPerc.innerText = percLinha.toFixed(1) + '%';
-        
-        if (percLinha < 60) {
-          spanPerc.style.color = '#ff4d4d';
+
+        if (obtInput !== '' && !isNaN(parseFloat(obtInput))) {
+          let obt = parseFloat(obtInput);
+          somaTotais += tot;
+          somaObtidas += obt;
+
+          let percLinha = tot > 0 ? (obt / tot) * 100 : 0;
+          spanPerc.innerText = percLinha.toFixed(1) + '%';
+          
+          if (percLinha < 60) {
+            spanPerc.style.color = '#ff4d4d';
+          } else {
+            spanPerc.style.color = '#aaa';
+          }
         } else {
+          spanPerc.innerText = '-';
           spanPerc.style.color = '#aaa';
         }
       });
@@ -742,10 +754,11 @@
       let avaliacoes = [];
       const linhas = document.querySelectorAll('#lista-avaliacoes-container > div');
       linhas.forEach(l => {
+        let obtVal = l.querySelector('.av-obtida').value.trim();
         avaliacoes.push({
           nome: l.querySelector('.av-nome').value || 'Avaliação',
           total: parseFloat(l.querySelector('.av-total').value) || 0,
-          obtida: parseFloat(l.querySelector('.av-obtida').value) || 0
+          obtida: obtVal === '' ? '' : parseFloat(obtVal) || 0
         });
       });
 
