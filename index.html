@@ -3,6 +3,10 @@
 <head>
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- LINK PARA O MANIFESTO E COR TEMA (Obrigatórios para instalar o App) -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1a73e8">
+  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #f0f2f5; color: #333; overflow-x: hidden; }
@@ -11,14 +15,10 @@
     button { background: #1a73e8; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
     
     .calendario-container { display: flex; padding: 5px; position: relative; width: 100%; box-sizing: border-box; }
-    
-    /* CORREÇÃO 1: Eixo de horas sem margem para não empurrar os textos para baixo */
     .eixo-horas { width: 55px; flex-shrink: 0; position: relative; margin-top: 0; }
     .hora-label { position: absolute; right: 8px; font-size: 11px; color: #666; transform: translateY(-50%); font-weight: bold; }
     
     .dias-container { display: flex; flex-grow: 1; width: 100%; border-left: 1px solid #ddd; border-top: 1px solid #ddd; }
-    
-    /* CORREÇÃO 2: background-position alinha a linha cinza exatamente com o horário redondo */
     .coluna-dia { flex: 1; border-right: 1px solid #ddd; position: relative; background: #fff; background-image: linear-gradient(#f0f0f0 1px, transparent 1px); background-size: 100% 40px; background-position: 0 25px; } 
     .cabecalho-dia { text-align: center; font-weight: bold; padding: 5px 0; background: #000; color: white; border-bottom: 1px solid #ddd; position: absolute; top: 0; width: 100%; height: 25px; box-sizing: border-box; font-size: 11px; overflow: hidden; }
     
@@ -53,7 +53,8 @@
       .evento-titulo { font-size: 13px !important; }
       .evento-info { font-size: 11px !important; }
       .evento-detalhes { font-size: 10px !important; }
-      .evento { border: 1px solid #000 !important; }
+      /* BORDAS PRETAS REMOVIDAS DO PDF */
+      .evento { border: none !important; }
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     }
   </style>
@@ -150,6 +151,13 @@
   </div>
 
   <script>
+    // REGISTRO DO SERVICE WORKER (Necessário para o botão "Instalar" funcionar no Android)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(err => console.log('SW erro:', err));
+      });
+    }
+
     const URL_API = 'https://script.google.com/macros/s/AKfycbyvIt4FjYInGZi1vnxW5B56MuwlEC3gMyGnnkSRDMznNbrobq-Ji4uwRvb3qUYT8iDx/exec';
 
     let HORA_INICIO = 6; 
