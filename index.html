@@ -10,7 +10,6 @@
   <style>
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: #121212; color: #e0e0e0; overflow-x: hidden; }
     
-    /* HEADER COMPACTO EM UMA SÓ LINHA */
     .header { padding: 8px 12px; background: #1e1e1e; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; position: sticky; top: 0; z-index: 100; white-space: nowrap; }
     .abas { display: flex; gap: 8px; }
     .aba-btn { background: transparent; color: #888; border: none; font-size: 14px; font-weight: bold; cursor: pointer; padding: 4px 6px; transition: 0.2s; border-bottom: 2px solid transparent; }
@@ -60,11 +59,9 @@
     .btn-salvar:hover { background: #555; }
     .btn-perigo { background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
 
-    /* MENU DE OPÇÕES PERFEITAMENTE PADRONIZADO */
     .menu-opcoes-btn { display: flex; align-items: center; gap: 8px; width: 100%; margin-bottom: 10px; background: #2c2c2c; color: white; border: 1px solid #444; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; justify-content: center; box-sizing: border-box; text-align: center; font-size: 13px; font-family: inherit; }
     .menu-opcoes-btn:hover { background: #3c3c3c; }
     
-    /* ABA MEU CURSO */
     .container-curso { padding: 20px; max-width: 900px; margin: 0 auto; display: none; }
     .curso-header { background: #1e1e1e; padding: 20px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; }
     .curso-header input { background: transparent; border: none; color: #fff; font-size: 24px; font-weight: bold; width: 100%; border-bottom: 1px solid transparent; transition: 0.2s; }
@@ -108,7 +105,6 @@
 </head>
 <body>
 
-  <!-- HEADER COMPACTO -->
   <div class="header">
     <div class="abas">
       <button class="aba-btn ativa" id="tab-rotina" onclick="mudarAba('rotina')">📅 Rotina</button>
@@ -124,7 +120,6 @@
     </div>
   </div>
 
-  <!-- ABA ROTINA -->
   <div id="aba-rotina">
     <div class="calendario-container" id="area-impressao">
       <div class="eixo-horas" id="eixo-horas"></div>
@@ -140,7 +135,6 @@
     </div>
   </div>
 
-  <!-- ABA MEU CURSO -->
   <div id="aba-curso" class="container-curso">
     <div class="curso-header">
       <input type="text" id="nome-curso" placeholder="Nome do Curso (Ex: Engenharia Elétrica)" oninput="salvarCursoDados()">
@@ -181,7 +175,6 @@
     </div>
   </div>
 
-  <!-- MODAL OPÇÕES COM BOTÕES 100% PADRONIZADOS -->
   <div class="modal-overlay" id="modal-opcoes">
     <div class="modal-box">
       <h3>Opções</h3>
@@ -199,7 +192,6 @@
     </div>
   </div>
 
-  <!-- MODAL PERÍODO -->
   <div class="modal-overlay" id="modal-periodo">
     <div class="modal-box">
       <h3 id="periodo-modal-titulo">Novo Período</h3>
@@ -226,7 +218,6 @@
     </div>
   </div>
 
-  <!-- MODAL DISCIPLINA (CAMPOS DE NOTAS REDUZIDOS + PERCENTUAL AO LADO + FORMATO SOLICITADO) -->
   <div class="modal-overlay" id="modal-disciplina">
     <div class="modal-box">
       <h3 id="disciplina-modal-titulo">Nova Disciplina</h3>
@@ -280,7 +271,6 @@
     </div>
   </div>
 
-  <!-- MODAL DE NOVA ATIVIDADE (ROTINA) -->
   <div class="modal-overlay" id="modal">
     <div class="modal-box">
       <h3 id="modal-titulo">Nova Atividade</h3>
@@ -474,11 +464,19 @@
 
               let statusClass = `status-${disc.status}`;
               let textoNotaFormatado = formatarTextoNotaFinal(disc);
+              
+              // Verifica se a nota final está abaixo de 60% para colorir de vermelho
+              let corNota = '#fff';
+              let dadosCalculadosNota = calcularPercNotaFinal(disc);
+              if (dadosCalculadosNota.temNota && dadosCalculadosNota.perc < 60) {
+                corNota = '#ff4d4d';
+              }
+
               disciplinasHTML += `
                 <div class="disciplina-card" onclick="abrirModalDisciplina('${periodo.id}', '${disc.id}')">
                   <div>
                     <strong>${disc.name}</strong>
-                    <div style="font-size:11px; color:#888; margin-top:3px;">${disc.horas}h • ${disc.tipo} • Nota: <span style="color:#fff;">${textoNotaFormatado}</span></div>
+                    <div style="font-size:11px; color:#888; margin-top:3px;">${disc.horas}h • ${disc.tipo} • Nota: <span style="color:${corNota}; font-weight:bold;">${textoNotaFormatado}</span></div>
                   </div>
                   <span class="status-badge ${statusClass}">${disc.status}</span>
                 </div>
@@ -534,6 +532,17 @@
       let somaObtidas = 0;
       disc.avaliacoes.forEach(a => { somaObtidas += (parseFloat(a.obtida) || 0); });
       return somaObtidas;
+    }
+
+    function calcularPercNotaFinal(disc) {
+      if (!disc.avaliacoes || disc.avaliacoes.length === 0) return { temNota: false, perc: 0 };
+      let somaObtidas = 0, somaTotais = 0;
+      disc.avaliacoes.forEach(a => {
+        somaObtidas += (parseFloat(a.obtida) || 0);
+        somaTotais += (parseFloat(a.total) || 0);
+      });
+      let perc = somaTotais > 0 ? (somaObtidas / somaTotais) * 100 : 0;
+      return { temNota: somaTotais > 0, perc: perc };
     }
 
     function formatarTextoNotaFinal(disc) {
@@ -634,11 +643,13 @@
       const container = document.getElementById('lista-avaliacoes-container');
       const div = document.createElement('div');
       div.style.cssText = "display:flex; gap:6px; align-items:center;";
+      
+      // Nome reduzido em ~50% (flex: 1 em vez de flex: 2)
       div.innerHTML = `
-        <input type="text" placeholder="Nome" value="${nome}" style="flex:2; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px;" class="av-nome">
-        <input type="number" placeholder="Valor" value="${total}" style="width: 50px; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px; text-align:center;" class="av-total" oninput="atualizarCalculoNotaModal()">
-        <input type="number" placeholder="Nota" value="${obtida}" style="width: 50px; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px; text-align:center;" class="av-obtida" oninput="atualizarCalculoNotaModal()">
-        <span class="av-perc" style="font-size:11px; color:#aaa; width:45px; text-align:right;">0.0%</span>
+        <input type="text" placeholder="Nome" value="${nome}" style="flex:1; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px;" class="av-nome">
+        <input type="number" placeholder="Valor" value="${total}" style="width: 48px; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px; text-align:center;" class="av-total" oninput="atualizarCalculoNotaModal()">
+        <input type="number" placeholder="Nota" value="${obtida}" style="width: 48px; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px; text-align:center;" class="av-obtida" oninput="atualizarCalculoNotaModal()">
+        <span class="av-perc" style="font-size:11px; color:#aaa; width:48px; text-align:right; font-weight:bold;">0.0%</span>
         <button type="button" onclick="this.parentElement.remove(); atualizarCalculoNotaModal();" style="background:#dc3545; color:#fff; border:none; padding:6px 8px; border-radius:4px; cursor:pointer;">X</button>
       `;
       container.appendChild(div);
@@ -648,6 +659,7 @@
     function atualizarCalculoNotaModal() {
       const linhas = document.querySelectorAll('#lista-avaliacoes-container > div');
       let somaObtidas = 0, somaTotais = 0;
+      
       linhas.forEach(l => {
         let tot = parseFloat(l.querySelector('.av-total').value) || 0;
         let obt = parseFloat(l.querySelector('.av-obtida').value) || 0;
@@ -655,11 +667,27 @@
         somaObtidas += obt;
 
         let percLinha = tot > 0 ? (obt / tot) * 100 : 0;
-        l.querySelector('.av-perc').innerText = percLinha.toFixed(1) + '%';
+        let spanPerc = l.querySelector('.av-perc');
+        spanPerc.innerText = percLinha.toFixed(1) + '%';
+        
+        // Cor vermelha se o percentual individual for menor que 60%
+        if (percLinha < 60) {
+          spanPerc.style.color = '#ff4d4d';
+        } else {
+          spanPerc.style.color = '#aaa';
+        }
       });
 
       let percGeral = somaTotais > 0 ? (somaObtidas / somaTotais) * 100 : 0;
-      document.getElementById('disc-nota-final').innerText = `${somaObtidas.toFixed(1)} / ${somaTotais.toFixed(1)}  -  ${percGeral.toFixed(2)}%`;
+      let labelFinal = document.getElementById('disc-nota-final');
+      labelFinal.innerText = `${somaObtidas.toFixed(1)} / ${somaTotais.toFixed(1)}  -  ${percGeral.toFixed(2)}%`;
+      
+      // Cor vermelha na nota final se for menor que 60%
+      if (somaTotais > 0 && percGeral < 60) {
+        labelFinal.style.color = '#ff4d4d';
+      } else {
+        labelFinal.style.color = '#fff';
+      }
     }
 
     function salvarDisciplina() {
