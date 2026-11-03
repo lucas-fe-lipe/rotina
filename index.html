@@ -140,36 +140,46 @@
   <div id="aba-curso" class="container-curso">
     <div class="curso-header">
       <input type="text" id="nome-curso" placeholder="Nome do Curso (Ex: Engenharia Elétrica)" oninput="salvarCursoDados()">
-      <div style="display: flex; gap: 20px; margin-top: 10px; color: #aaa; font-size: 13px; flex-wrap: wrap;">
+      
+      <!-- CRA GERAL E RESUMO TOTAL NA MESMA LINHA -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; color: #aaa; font-size: 13px; flex-wrap: wrap; gap: 10px;">
         <div><strong>CRA Geral:</strong> <span id="cra-geral" style="color:#fff;">0.00</span></div>
+        <div><span id="resumo-horas-totais" style="color:#fff; font-weight:bold;">0h / 0h (0,00%)</span></div>
       </div>
 
-      <div class="metas-grid">
-        <div class="meta-card">
-          <label>Obrigatórias (Concluídas / Meta)</label>
-          <div class="meta-conteudo">
-            <span id="horas-obrigatorias-atual">0</span> / 
-            <input type="number" id="meta-obrigatorias" value="2400" onchange="salvarCursoDados()"> h
-          </div>
-          <div class="barra-progresso-container"><div class="barra-progresso" id="barra-obrigatorias"></div></div>
+      <!-- BLOCO DE HORAS DETALHADAS MINIMIZÁVEL -->
+      <div style="margin-top: 12px; border-top: 1px solid #333; padding-top: 8px;">
+        <div onclick="alternarMinimizarMetas()" style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: #aaa; font-size: 11px; font-weight: bold;">
+          <span><span id="meta-seta">▶</span> Detalhes de Horas por Tipo</span>
         </div>
-        <div class="meta-card">
-          <label>Optativas (Concluídas / Meta)</label>
-          <div class="meta-conteudo">
-            <span id="horas-optativas-atual">0</span> / 
-            <input type="number" id="meta-optativas" value="300" onchange="salvarCursoDados()"> h
+        <div id="metas-detalhes-container" class="metas-grid" style="display: none;">
+          <div class="meta-card">
+            <label>Obrigatórias (Concluídas / Meta)</label>
+            <div class="meta-conteudo">
+              <span id="horas-obrigatorias-atual">0</span> / 
+              <input type="number" id="meta-obrigatorias" value="2400" onchange="salvarCursoDados()"> h
+            </div>
+            <div class="barra-progresso-container"><div class="barra-progresso" id="barra-obrigatorias"></div></div>
           </div>
-          <div class="barra-progresso-container"><div class="barra-progresso" id="barra-optativas"></div></div>
-        </div>
-        <div class="meta-card">
-          <label>Complementares (Concluídas / Meta)</label>
-          <div class="meta-conteudo">
-            <span id="horas-complementares-atual">0</span> / 
-            <input type="number" id="meta-complementares" value="200" onchange="salvarCursoDados()"> h
+          <div class="meta-card">
+            <label>Optativas (Concluídas / Meta)</label>
+            <div class="meta-conteudo">
+              <span id="horas-optativas-atual">0</span> / 
+              <input type="number" id="meta-optativas" value="300" onchange="salvarCursoDados()"> h
+            </div>
+            <div class="barra-progresso-container"><div class="barra-progresso" id="barra-optativas"></div></div>
           </div>
-          <div class="barra-progresso-container"><div class="barra-progresso" id="barra-complementares"></div></div>
+          <div class="meta-card">
+            <label>Complementares (Concluídas / Meta)</label>
+            <div class="meta-conteudo">
+              <span id="horas-complementares-atual">0</span> / 
+              <input type="number" id="meta-complementares" value="200" onchange="salvarCursoDados()"> h
+            </div>
+            <div class="barra-progresso-container"><div class="barra-progresso" id="barra-complementares"></div></div>
+          </div>
         </div>
       </div>
+
     </div>
     
     <div id="lista-periodos">
@@ -229,6 +239,10 @@
       <div class="form-group">
         <label>Nome da Disciplina</label>
         <input type="text" id="disc-nome" placeholder="Ex: Cálculo I">
+      </div>
+      <div class="form-group">
+        <label>Nome do Professor</label>
+        <input type="text" id="disc-professor" placeholder="Opcional (Ex: Prof. Carlos)">
       </div>
       <div style="display: flex; gap: 10px;">
         <div class="form-group" style="flex: 2;">
@@ -348,7 +362,8 @@
       metaObrigatorias: 2400, 
       metaOptativas: 300, 
       metaComplementares: 200, 
-      periodos: [] 
+      periodos: [],
+      metasMinimizado: true
     };
     
     let HORA_INICIO = 6, HORA_FIM = 22;   
@@ -378,11 +393,14 @@
       if (salvosRotina) dadosRotina = JSON.parse(salvosRotina);
       if (salvosCurso) dadosCurso = JSON.parse(salvosCurso);
       
+      if (dadosCurso.metasMinimizado === undefined) dadosCurso.metasMinimizado = true;
+
       document.getElementById('nome-curso').value = dadosCurso.nome || "";
       document.getElementById('meta-obrigatorias').value = dadosCurso.metaObrigatorias || 2400;
       document.getElementById('meta-optativas').value = dadosCurso.metaOptativas || 300;
       document.getElementById('meta-complementares').value = dadosCurso.metaComplementares || 200;
 
+      atualizarVisualMetasMinimizadas();
       processarGrade();
       renderizarCurso();
     }
@@ -400,6 +418,24 @@
       dadosCurso.metaOptativas = parseFloat(document.getElementById('meta-optativas').value) || 0;
       dadosCurso.metaComplementares = parseFloat(document.getElementById('meta-complementares').value) || 0;
       salvarDadosLocalmente();
+    }
+
+    function alternarMinimizarMetas() {
+      dadosCurso.metasMinimizado = !dadosCurso.metasMinimizado;
+      atualizarVisualMetasMinimizadas();
+      salvarDadosLocalmente();
+    }
+
+    function atualizarVisualMetasMinimizadas() {
+      const container = document.getElementById('metas-detalhes-container');
+      const seta = document.getElementById('meta-seta');
+      if (dadosCurso.metasMinimizado) {
+        container.style.display = 'none';
+        seta.innerText = '▶';
+      } else {
+        container.style.display = 'grid';
+        seta.innerText = '▼';
+      }
     }
 
     function baixarBackup() {
@@ -427,11 +463,13 @@
           } else if (Array.isArray(importado)) {
             dadosRotina = importado;
           }
+          if (dadosCurso.metasMinimizado === undefined) dadosCurso.metasMinimizado = true;
           salvarDadosLocalmente();
           document.getElementById('nome-curso').value = dadosCurso.nome || "";
           document.getElementById('meta-obrigatorias').value = dadosCurso.metaObrigatorias || 2400;
           document.getElementById('meta-optativas').value = dadosCurso.metaOptativas || 300;
           document.getElementById('meta-complementares').value = dadosCurso.metaComplementares || 200;
+          atualizarVisualMetasMinimizadas();
           alert("Progresso importado com sucesso!");
           fecharOpcoes();
         } catch (err) { alert("Erro ao ler o arquivo."); }
@@ -441,7 +479,7 @@
 
     function renderizarCurso() {
       let totalObrigatorias = 0, totalOptativas = 0, totalComplementares = 0;
-      let somaPonderadaGeral = 0, somaHorasGeral = 0;
+      let somaPonderadaGeral = 0, somaHorasCRA = 0;
 
       const container = document.getElementById('lista-periodos');
       if (!dadosCurso.periodos || dadosCurso.periodos.length === 0) {
@@ -465,19 +503,27 @@
         });
 
         periodosOrdenados.forEach(periodo => {
-          let somaPonderadaPeriodo = 0, somaHorasPeriodo = 0;
+          let somaPonderadaPeriodo = 0, somaHorasPeriodoCRA = 0;
+          let totalHorasPeriodo = 0;
           
           let disciplinasHTML = '';
           if (periodo.disciplinas && periodo.disciplinas.length > 0) {
             periodo.disciplinas.forEach(disc => {
               let notaFinalNumerica = calcularNotaFinalDisciplina(disc);
-              if (disc.status === 'concluida') {
-                if (disc.tipo === 'obrigratoria') totalObrigatorias += Number(disc.horas);
-                if (disc.tipo === 'optativa') totalOptativas += Number(disc.horas);
-                if (disc.tipo === 'complementar') totalComplementares += Number(disc.horas);
+              let h = Number(disc.horas) || 0;
 
-                somaPonderadaPeriodo += (notaFinalNumerica * Number(disc.horas));
-                somaHorasPeriodo += Number(disc.horas);
+              if (disc.status === 'concluida') {
+                if (disc.tipo === 'obrigratoria') totalObrigatorias += h;
+                if (disc.tipo === 'optativa') totalOptativas += h;
+                if (disc.tipo === 'complementar') totalComplementares += h;
+
+                totalHorasPeriodo += h;
+
+                // Disciplinas complementares NÃO entram no CRA
+                if (disc.tipo !== 'complementar') {
+                  somaPonderadaPeriodo += (notaFinalNumerica * h);
+                  somaHorasPeriodoCRA += h;
+                }
               }
 
               let statusClass = `status-${disc.status}`;
@@ -489,10 +535,13 @@
                 corNota = '#ff4d4d';
               }
 
+              let profHTML = disc.professor ? `<div style="font-size:10px; color:#aaa; margin-top:2px;">Prof: ${disc.professor}</div>` : '';
+
               disciplinasHTML += `
                 <div class="disciplina-card" onclick="abrirModalDisciplina('${periodo.id}', '${disc.id}')">
                   <div>
                     <strong>${disc.name}</strong>
+                    ${profHTML}
                     <div style="font-size:11px; color:#888; margin-top:3px;">${disc.horas}h • ${disc.tipo} • Nota: <span style="color:${corNota}; font-weight:bold;">${textoNotaFormatado}</span></div>
                   </div>
                   <span class="status-badge ${statusClass}">${disc.status}</span>
@@ -503,10 +552,10 @@
             disciplinasHTML = `<div style="color:#666; font-size:12px; text-align:center; padding:10px;">Nenhuma disciplina neste período.</div>`;
           }
 
-          let craPeriodo = somaHorasPeriodo > 0 ? (somaPonderadaPeriodo / somaHorasPeriodo) : 0;
-          if (somaHorasPeriodo > 0) {
+          let craPeriodo = somaHorasPeriodoCRA > 0 ? (somaPonderadaPeriodo / somaHorasPeriodoCRA) : 0;
+          if (somaHorasPeriodoCRA > 0) {
             somaPonderadaGeral += somaPonderadaPeriodo;
-            somaHorasGeral += somaHorasPeriodo;
+            somaHorasCRA += somaHorasPeriodoCRA;
           }
 
           if (periodo.minimizado === undefined) periodo.minimizado = false;
@@ -522,7 +571,7 @@
                   <span style="font-size:11px; color:#888; margin-left:8px;">(${periodo.inicio || ''} até ${periodo.fim || ''})</span>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;" onclick="event.stopPropagation()">
-                  <span style="font-size:12px; color:#aaa;">CRA: <strong style="color:#fff;">${craPeriodo.toFixed(2)}</strong></span>
+                  <span style="font-size:12px; color:#aaa;">CRA: <strong style="color:#fff;">${craPeriodo.toFixed(2)}</strong> | Horas: <strong style="color:#fff;">${totalHorasPeriodo}h</strong></span>
                   <button class="btn-icon" style="padding:3px 6px; font-size:10px;" onclick="abrirModalPeriodo('${periodo.id}')">Editar</button>
                   <button class="btn-primary" style="padding:3px 8px; font-size:11px;" onclick="abrirModalDisciplina('${periodo.id}')">+ Disciplina</button>
                 </div>
@@ -547,8 +596,14 @@
       document.getElementById('barra-optativas').style.width = Math.min(100, (totalOptativas / metaOpt) * 100) + '%';
       document.getElementById('barra-complementares').style.width = Math.min(100, (totalComplementares / metaComp) * 100) + '%';
 
-      let craGeral = somaHorasGeral > 0 ? (somaPonderadaGeral / somaHorasGeral) : 0;
+      let craGeral = somaHorasCRA > 0 ? (somaPonderadaGeral / somaHorasCRA) : 0;
       document.getElementById('cra-geral').innerText = craGeral.toFixed(2);
+
+      // Resumo das horas totais ao lado do CRA Geral
+      let totalConcluidasGeral = totalObrigatorias + totalOptativas + totalComplementares;
+      let metaTotalGeral = metaObr + metaOpt + metaComp;
+      let percTotalGeral = metaTotalGeral > 0 ? (totalConcluidasGeral / metaTotalGeral) * 100 : 0;
+      document.getElementById('resumo-horas-totais').innerText = `${totalConcluidasGeral}h / ${metaTotalGeral}h (${percTotalGeral.toFixed(2)}%)`;
     }
 
     function classificarPeriodo(p, hoje) {
@@ -662,6 +717,7 @@
         const d = p.disciplinas.find(x => x.id === discId);
         document.getElementById('disc-id').value = d.id;
         document.getElementById('disc-nome').value = d.name;
+        document.getElementById('disc-professor').value = d.professor || '';
         document.getElementById('disc-horas').value = d.horas;
         document.getElementById('disc-tipo').value = d.tipo;
         document.getElementById('disc-status').value = d.status;
@@ -676,6 +732,7 @@
         document.getElementById('disciplina-modal-titulo').innerText = 'Nova Disciplina';
         document.getElementById('disc-id').value = '';
         document.getElementById('disc-nome').value = '';
+        document.getElementById('disc-professor').value = '';
         document.getElementById('disc-horas').value = '60';
         document.getElementById('disc-tipo').value = 'obrigratoria';
         document.getElementById('disc-status').value = 'cursando';
@@ -745,6 +802,7 @@
       const periodoId = document.getElementById('disc-periodo-id').value;
       const discId = document.getElementById('disc-id').value;
       const name = document.getElementById('disc-nome').value;
+      const professor = document.getElementById('disc-professor').value;
       const horas = parseFloat(document.getElementById('disc-horas').value) || 0;
       const tipo = document.getElementById('disc-tipo').value;
       const status = document.getElementById('disc-status').value;
@@ -765,10 +823,10 @@
       const p = dadosCurso.periodos.find(x => x.id === periodoId);
       if (discId) {
         const d = p.disciplinas.find(x => x.id === discId);
-        d.name = name; d.horas = horas; d.tipo = tipo; d.status = status; d.avaliacoes = avaliacoes;
+        d.name = name; d.professor = professor; d.horas = horas; d.tipo = tipo; d.status = status; d.avaliacoes = avaliacoes;
       } else {
         if (!p.disciplinas) p.disciplinas = [];
-        p.disciplinas.push({ id: Date.now().toString(), name, horas, tipo, status, avaliacoes });
+        p.disciplinas.push({ id: Date.now().toString(), name, professor, horas, tipo, status, avaliacoes });
       }
 
       salvarDadosLocalmente();
