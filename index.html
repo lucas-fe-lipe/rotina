@@ -100,8 +100,8 @@
     .btn-tracker { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; font-weight: bold; backdrop-filter: blur(2px); transition: 0.2s; }
     .btn-tracker:hover { background: rgba(0,0,0,0.6); }
 
-    /* ESTILOS DA LISTA DE TAREFAS DIÁRIAS */
-    .tarefa-linha { display: flex; align-items: center; justify-content: space-between; padding: 4px 10px; border-radius: 6px; transition: opacity 0.2s; min-height: 24px; }
+    /* ESTILOS DA LISTA DE TAREFAS DIÁRIAS E BLOCO DE TAREFAS */
+    .tarefa-linha { display: flex; align-items: flex-start; justify-content: space-between; padding: 6px 10px; border-radius: 6px; transition: opacity 0.2s; min-height: 24px; box-sizing: border-box; }
     .tarefa-linha.concluida { opacity: 0.6; }
     .tarefa-linha.concluida .tarefa-texto { text-decoration: line-through; }
     
@@ -111,17 +111,6 @@
     .checkbox-dia:checked::before { transform: scale(1); }
 
     .secao-concluidas-titulo { cursor: pointer; font-size: 12px; color: #888; font-weight: bold; margin-top: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
-
-    /* ESTILOS DA ABA DE TAREFAS (KEEP) */
-    .tarefas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-    .tarefa-card { background: #1a1a1a; border: 1px solid #444; border-radius: 8px; padding: 12px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; gap: 8px; }
-    .tarefa-card:hover { border-color: #666; }
-    .tarefa-titulo { font-weight: bold; font-size: 14px; color: #fff; }
-    .tarefa-desc { font-size: 12px; color: #aaa; white-space: pre-wrap; word-break: break-word; }
-    .tarefa-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-    .tarefa-tag { padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
-    .tarefa-tag.atrasado { background: #dc3545; color: white; }
-    .tarefa-tag.data { background: #333; color: #ccc; border: 1px solid #555; }
   </style>
 </head>
 <body>
@@ -130,7 +119,6 @@
     <div class="abas">
       <button class="aba-btn ativa" id="tab-rotina" onclick="mudarAba('rotina')">📅 Rotina</button>
       <button class="aba-btn" id="tab-curso" onclick="mudarAba('curso')">🎓 Meu Curso</button>
-      <button class="aba-btn" id="tab-tarefas" onclick="mudarAba('tarefas')">✅ Tarefas</button>
     </div>
     
     <div class="header-botoes" id="botoes-rotina">
@@ -139,10 +127,6 @@
     
     <div class="header-botoes" id="botoes-curso" style="display: none;">
       <button class="btn-primary" onclick="abrirModalPeriodo()">   +   </button>
-    </div>
-
-    <div class="header-botoes" id="botoes-tarefas" style="display: none;">
-      <button class="btn-primary" onclick="abrirModalTarefa()">   +   </button>
     </div>
   </div>
 
@@ -175,6 +159,17 @@
         <div id="lista-hoje-concluidas" style="display: none; flex-direction: column; gap: 4px;"></div>
       </div>
     </div>
+
+    <!-- BLOCO DE TAREFAS MINIMIZÁVEL -->
+    <div id="bloco-tarefas" style="margin: 15px 10px; padding: 15px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="alternarMinimizarBlocoTarefas()">
+        <div style="font-size: 15px; font-weight: bold; color: #fff; display: flex; align-items: center; gap: 6px;">
+          <span id="seta-bloco-tarefas">▼</span> ✅ Tarefas
+        </div>
+        <button class="btn-primary" style="padding: 4px 10px; font-size: 12px;" onclick="event.stopPropagation(); abrirModalTarefa();">+ Nova Tarefa</button>
+      </div>
+      <div id="conteudo-bloco-tarefas" style="margin-top: 12px; display: flex; flex-direction: column; gap: 10px;"></div>
+    </div>
   </div>
 
   <div id="aba-curso" class="container-curso">
@@ -196,10 +191,6 @@
       </div>
     </div>
     <div id="lista-periodos"></div>
-  </div>
-
-  <div id="aba-tarefas" style="display:none; padding:15px; max-width:900px; margin:0 auto; box-sizing:border-box;">
-     <div id="lista-tarefas" class="tarefas-grid"></div>
   </div>
 
   <!-- MENU DE OPÇÕES -->
@@ -272,10 +263,17 @@
           <button type="button" class="btn-icon" style="font-size: 11px; padding: 3px 8px;" onclick="copiarCodigoAppsScript()">📋 Copiar Código</button>
         </div>
 
-        <textarea id="codigo-apps-script" readonly style="width:100%; height:110px; background:#000; color:#fff; font-family:monospace; font-size:10px; border:1px solid #444; border-radius:4px; padding:6px; box-sizing: border-box; margin-bottom:10px; white-space: pre; word-wrap: normal;
-          ">function doPost(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();sheet.getRange(1, 1).setValue(e.postData.contents);return ContentService.createTextOutput("Sucesso");}
-          
-function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();var val = sheet.getRange(1, 1).getValue();return ContentService.createTextOutput(val || "").setMimeType(ContentService.MimeType.JSON);}</textarea>
+        <textarea id="codigo-apps-script" readonly style="width:100%; height:110px; background:#000; color:#0f0; font-family:monospace; font-size:10px; border:1px solid #444; border-radius:4px; padding:6px; box-sizing: border-box; margin-bottom:10px; white-space: pre; word-wrap: normal;">function doPost(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  sheet.getRange(1, 1).setValue(e.postData.contents);
+  return ContentService.createTextOutput("Sucesso");
+}
+
+function doGet(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var val = sheet.getRange(1, 1).getValue();
+  return ContentService.createTextOutput(val || "").setMimeType(ContentService.MimeType.JSON);
+}</textarea>
 
         <ol start="4" style="padding-left: 20px; margin-bottom: 0;">
           <li>Clique em <strong>Implantar > Nova implantação</strong>.</li>
@@ -376,10 +374,19 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
     <div class="modal-box">
       <h3 id="tarefa-modal-titulo">Nova Tarefa</h3>
       <input type="hidden" id="tarefa-id">
-      <div class="form-group"><label>Título</label><input type="text" id="tarefa-titulo"></div>
-      <div class="form-group"><label>Data / Hora (Opcional)</label><input type="datetime-local" id="tarefa-datahora"></div>
-      <div class="form-group"><label>Vincular à Atividade da Rotina</label><select id="tarefa-vinculo"></select></div>
-      <div class="form-group"><label>Descrição / Anotações</label><textarea id="tarefa-descricao" rows="3"></textarea></div>
+      <div class="form-group"><label>Título / Texto</label><input type="text" id="tarefa-titulo"></div>
+      <div style="display: flex; gap: 10px;">
+        <div class="form-group" style="flex: 1;"><label>Data</label><input type="date" id="tarefa-data"></div>
+        <div class="form-group" style="flex: 1;"><label>Horário</label><input type="time" id="tarefa-hora"></div>
+      </div>
+      <div class="form-group">
+        <label>Cor</label>
+        <div class="paleta-cores" id="paleta-cores-tarefa">
+          <div class="bola-cor" style="background-color: #073763;" onclick="escolherCorTarefa('#073763')"></div><div class="bola-cor" style="background-color: #3d85c6;" onclick="escolherCorTarefa('#3d85c6')"></div><div class="bola-cor" style="background-color: #1155cc;" onclick="escolherCorTarefa('#1155cc')"></div><div class="bola-cor" style="background-color: #45818e;" onclick="escolherCorTarefa('#45818e')"></div><div class="bola-cor" style="background-color: #134f5c;" onclick="escolherCorTarefa('#134f5c')"></div><div class="bola-cor" style="background-color: #0c343d;" onclick="escolherCorTarefa('#0c343d')"></div><div class="bola-cor" style="background-color: #351c75;" onclick="escolherCorTarefa('#351c75')"></div><div class="bola-cor" style="background-color: #0b5394;" onclick="escolherCorTarefa('#0b5394')"></div><div class="bola-cor" style="background-color: #1c4587;" onclick="escolherCorTarefa('#1c4587')"></div><div class="bola-cor" style="background-color: #666666;" onclick="escolherCorTarefa('#666666')"></div><div class="bola-cor" style="background-color: #000000;" onclick="escolherCorTarefa('#000000')"></div><div class="bola-cor" style="background-color: #b7b7b7;" onclick="escolherCorTarefa('#b7b7b7')"></div><div class="bola-cor" style="background-color: #efefef; border: 1px solid #444;" onclick="escolherCorTarefa('#efefef')"></div>
+          <input type="color" id="tarefa-cor-picker" value="#333333" style="width: 28px; height: 28px; border: none; cursor: pointer; padding: 0; background: none; border-radius: 50%;" onchange="escolherCorTarefa(this.value)">
+        </div>
+        <input type="hidden" id="tarefa-cor" value="#073763">
+      </div>
       <div class="modal-botoes">
         <button id="btn-excluir-tarefa" class="btn-perigo" style="display:none; margin-right:auto;" onclick="excluirTarefa()">Excluir</button>
         <button class="btn-cancelar" onclick="fecharModalTarefa()">Cancelar</button><button class="btn-salvar" onclick="salvarTarefa()">Salvar</button>
@@ -397,32 +404,44 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
     let urlPlanilhaGoogle = "";
     
     let HORA_INICIO = 6, HORA_FIM = 22; const PIXELS_POR_HORA = 20, OFFSET_TOPO = 25; 
-    let atividadeAtualSelecionada = null; let notifInterval = null; let tarefasNotificadasHoje = {}; let concluidasMinimizadas = true;
+    let atividadeAtualSelecionada = null; let notifInterval = null; let tarefasNotificadasHoje = {}; let concluidasMinimizadas = true; let blocoTarefasMinimizado = false;
     const mapaDias = { 'domingo': 0, 'segunda': 1, 'terça': 2, 'quarta': 3, 'quinta': 4, 'sexta': 5, 'sábado': 6 };
     const mapaDiasStr = { 'domingo': 'col-dom', 'segunda': 'col-seg', 'terça': 'col-ter', 'quarta': 'col-qua', 'quinta': 'col-qui', 'sexta': 'col-sex', 'sábado': 'col-sab' };
     const diasSemanaNomes = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 
-    window.onload = function() { carregarDados(); checarResetTrackers(); renderizarTrackers(); renderizarTarefas(); if ("Notification" in window && Notification.permission === "granted") iniciarNotificacoes(); };
+    window.onload = function() { carregarDados(); checarResetTrackers(); renderizarTrackers(); if ("Notification" in window && Notification.permission === "granted") iniciarNotificacoes(); };
 
     function mudarAba(aba) {
       document.getElementById('tab-rotina').classList.toggle('ativa', aba === 'rotina');
       document.getElementById('tab-curso').classList.toggle('ativa', aba === 'curso');
-      document.getElementById('tab-tarefas').classList.toggle('ativa', aba === 'tarefas');
       document.getElementById('aba-rotina').style.display = aba === 'rotina' ? 'block' : 'none';
       document.getElementById('aba-curso').style.display = aba === 'curso' ? 'block' : 'none';
-      document.getElementById('aba-tarefas').style.display = aba === 'tarefas' ? 'block' : 'none';
       document.getElementById('botoes-rotina').style.display = aba === 'rotina' ? 'flex' : 'none';
       document.getElementById('botoes-curso').style.display = aba === 'curso' ? 'flex' : 'none';
-      document.getElementById('botoes-tarefas').style.display = aba === 'tarefas' ? 'flex' : 'none';
     }
 
     function carregarDados() {
       const salvosRotina = localStorage.getItem('appRotinaDados'); const salvosCurso = localStorage.getItem('appCursoDados'); const salvosChecks = localStorage.getItem('appRotinaChecks'); const salvosTrackers = localStorage.getItem('appTrackersDados'); const salvosMinNotif = localStorage.getItem('appRotinaNotifMin'); const salvosTarefas = localStorage.getItem('appTarefasDados'); const salvosUrlPlanilha = localStorage.getItem('appRotinaUrlPlanilha');
-      if (salvosRotina) dadosRotina = JSON.parse(salvosRotina); if (salvosCurso) dadosCurso = JSON.parse(salvosCurso); if (salvosChecks) checksRotina = JSON.parse(salvosChecks); if (salvosTrackers) dadosTrackers = { ...dadosTrackers, ...JSON.parse(salvosTrackers) }; if (salvosTarefas) dadosTarefas = JSON.parse(salvosTarefas); if (salvosMinNotif) document.getElementById('notif-minutos').value = salvosMinNotif;
+      if (salvosRotina) dadosRotina = JSON.parse(salvosRotina); if (salvosCurso) dadosCurso = JSON.parse(salvosCurso); if (salvosChecks) checksRotina = JSON.parse(salvosChecks); if (salvosTrackers) dadosTrackers = { ...dadosTrackers, ...JSON.parse(salvosTrackers) }; 
+      if (salvosTarefas) {
+        dadosTarefas = JSON.parse(salvosTarefas);
+        dadosTarefas.forEach(t => {
+          if (t.dataHora && !t.data) {
+            const d = new Date(t.dataHora);
+            if (!isNaN(d.getTime())) {
+              t.data = d.toISOString().split('T')[0];
+              t.hora = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            }
+          }
+          if (t.concluida === undefined) t.concluida = false;
+          if (!t.cor) t.cor = '#073763';
+        });
+      }
+      if (salvosMinNotif) document.getElementById('notif-minutos').value = salvosMinNotif;
       if (salvosUrlPlanilha) { urlPlanilhaGoogle = salvosUrlPlanilha; document.getElementById('url-google-sheets').value = urlPlanilhaGoogle; }
       if (dadosCurso.metasMinimizado === undefined) dadosCurso.metasMinimizado = true;
       document.getElementById('nome-curso').value = dadosCurso.nome || ""; document.getElementById('meta-obrigatorias').value = dadosCurso.metaObrigatorias || 2400; document.getElementById('meta-optativas').value = dadosCurso.metaOptativas || 300; document.getElementById('meta-complementares').value = dadosCurso.metaComplementares || 200;
-      atualizarVisualMetasMinimizadas(); processarGrade(); renderizarCurso();
+      atualizarVisualMetasMinimizadas(); processarGrade(); renderizarCurso(); renderizarBlocoTarefas();
     }
     
     function salvarDadosLocalmente() { 
@@ -430,7 +449,7 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
         localStorage.setItem('appCursoDados', JSON.stringify(dadosCurso)); 
         localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers)); 
         localStorage.setItem('appTarefasDados', JSON.stringify(dadosTarefas)); 
-        processarGrade(); renderizarCurso();
+        processarGrade(); renderizarCurso(); renderizarBlocoTarefas();
         sincronizarComPlanilhaOculto(); 
     }
 
@@ -458,7 +477,6 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
 
       let icsContent = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//MeuAppRotina//PT\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\n";
 
-      // 1. Exportar Atividades da Rotina
       dadosRotina.forEach((item, idx) => {
         let diaSemanaNum = mapaDias[item.dia];
         if (diaSemanaNum === undefined) return;
@@ -492,10 +510,10 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
         icsContent += "END:VEVENT\r\n";
       });
 
-      // 2. Exportar Tarefas
       dadosTarefas.forEach((t, idx) => {
-        if (!t.dataHora) return;
-        let dInicio = new Date(t.dataHora);
+        if (!t.data) return;
+        let dataHoraStr = t.data + 'T' + (t.hora ? t.hora : '00:00');
+        let dInicio = new Date(dataHoraStr);
         if (isNaN(dInicio.getTime())) return;
         let dFim = new Date(dInicio.getTime() + (60 * 60 * 1000));
 
@@ -506,7 +524,6 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
         icsContent += `UID:tarefa-${t.id || idx}-${dtStartLocal}@approtina.local\r\n`;
         icsContent += `DTSTAMP:${dtStamp}\r\n`;
         icsContent += `SUMMARY:[Tarefa] ${escapeICS(t.titulo)}\r\n`;
-        if (t.descricao) icsContent += `DESCRIPTION:${escapeICS(t.descricao)}\r\n`;
         icsContent += `DTSTART:${dtStartLocal}\r\n`;
         icsContent += `DTEND:${dtEndLocal}\r\n`;
         icsContent += "END:VEVENT\r\n";
@@ -553,6 +570,205 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
         .replace(/;/g, '\\;')
         .replace(/,/g, '\\,')
         .replace(/\n/g, '\\n');
+    }
+
+    function escapeHTML(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      );
+    }
+
+    /* --- GERENCIAMENTO DO BLOCO DE TAREFAS --- */
+    function alternarMinimizarBlocoTarefas() {
+      blocoTarefasMinimizado = !blocoTarefasMinimizado;
+      const cont = document.getElementById('conteudo-bloco-tarefas');
+      const seta = document.getElementById('seta-bloco-tarefas');
+      if (blocoTarefasMinimizado) {
+        cont.style.display = 'none';
+        seta.innerText = '▶';
+      } else {
+        cont.style.display = 'flex';
+        seta.innerText = '▼';
+      }
+    }
+
+    function renderizarBlocoTarefas() {
+      const container = document.getElementById('conteudo-bloco-tarefas');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (!dadosTarefas || dadosTarefas.length === 0) {
+        container.innerHTML = '<div style="color:#888; font-size:12px; font-style:italic; text-align:center;">Nenhuma tarefa cadastrada.</div>';
+        return;
+      }
+
+      const tarefasOrdenadas = [...dadosTarefas].sort((a, b) => {
+        let dtA = (a.data || '9999-99-99') + 'T' + (a.hora || '23:59');
+        let dtB = (b.data || '9999-99-99') + 'T' + (b.hora || '23:59');
+        return dtA.localeCompare(dtB);
+      });
+
+      const grupos = {};
+      tarefasOrdenadas.forEach(t => {
+        const chaveData = t.data || 'sem-data';
+        if (!grupos[chaveData]) grupos[chaveData] = [];
+        grupos[chaveData].push(t);
+      });
+
+      const agora = new Date();
+      const hojeIso = agora.toISOString().split('T')[0];
+      const horaMinutoAtual = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+      Object.keys(grupos).forEach(dataChave => {
+        let tituloGrupo = '';
+        if (dataChave === 'sem-data') {
+          tituloGrupo = 'Sem Data';
+        } else {
+          const partes = dataChave.split('-');
+          const objData = new Date(parseInt(partes[0]), parseInt(partes[1]) - 1, parseInt(partes[2]));
+          const nomeDiaSemana = diasSemanaNomes[objData.getDay()];
+          const dataBR = `${partes[2]}/${partes[1]}/${partes[0].slice(2)}`;
+          
+          if (dataChave === hojeIso) {
+            tituloGrupo = `Hoje - ${nomeDiaSemana} ${dataBR}`;
+          } else {
+            tituloGrupo = `${nomeDiaSemana}, ${dataBR}`;
+          }
+        }
+
+        const divGrupo = document.createElement('div');
+        divGrupo.style.cssText = 'margin-bottom: 6px;';
+        divGrupo.innerHTML = `<div style="font-size: 12px; font-weight: bold; color: #aaa; margin-bottom: 6px; text-transform: capitalize;">${tituloGrupo}</div>`;
+
+        const divLista = document.createElement('div');
+        divLista.style.cssText = 'display: flex; flex-direction: column; gap: 4px;';
+
+        grupos[dataChave].forEach(t => {
+          const isChecked = t.concluida ? true : false;
+          const corFundo = t.cor || '#222222';
+          const corTexto = getContrastColor(corFundo);
+          const corBordaCheck = corTexto === '#000000' ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)';
+
+          let isAtrasado = false;
+          if (t.data && !isChecked) {
+            if (t.data < hojeIso) {
+              isAtrasado = true;
+            } else if (t.data === hojeIso && t.hora && t.hora < horaMinutoAtual) {
+              isAtrasado = true;
+            }
+          }
+
+          const badgeAtrasado = isAtrasado ? `<span style="background: #dc3545; color: #ffffff; font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 4px; margin-left: 6px; display: inline-block; vertical-align: middle;">Atrasado</span>` : '';
+          const textoHorario = t.hora ? `${t.hora} - ` : '';
+
+          const linhaHtml = document.createElement('div');
+          linhaHtml.className = `tarefa-linha ${isChecked ? 'concluida' : ''}`;
+          linhaHtml.style.cssText = `background-color: ${corFundo}; color: ${corTexto}; border: 1px solid rgba(0,0,0,0.3); padding: 6px 10px; border-radius: 6px; display: flex; align-items: flex-start; justify-content: space-between; cursor: pointer;`;
+          linhaHtml.onclick = () => abrirModalTarefa(t.id);
+
+          linhaHtml.innerHTML = `
+            <div style="font-size: 13px; font-weight: bold; color: inherit; word-break: break-word; flex: 1; margin-right: 10px; line-height: 1.2;">
+              ${textoHorario}${escapeHTML(t.titulo)}${badgeAtrasado}
+            </div>
+            <input type="checkbox" class="checkbox-dia" style="border-color: ${corBordaCheck}; margin-top: 2px; flex-shrink: 0;" onchange="alternarCheckTarefaGeral('${t.id}', this.checked)" ${isChecked ? 'checked' : ''} onclick="event.stopPropagation()">
+          `;
+
+          divLista.appendChild(linhaHtml);
+        });
+
+        divGrupo.appendChild(divLista);
+        container.appendChild(divGrupo);
+      });
+    }
+
+    function alternarCheckTarefaGeral(id, status) {
+      const t = dadosTarefas.find(x => x.id === id);
+      if (t) {
+        t.concluida = status;
+        salvarDadosLocalmente();
+      }
+    }
+
+    function escolherCorTarefa(hex) {
+      document.getElementById('tarefa-cor').value = hex;
+      document.getElementById('tarefa-cor-picker').value = hex;
+      document.querySelectorAll('#paleta-cores-tarefa .bola-cor').forEach(b => {
+        let corBola = b.style.backgroundColor;
+        if(corBola.startsWith('rgb')) {
+          let v = corBola.match(/\d+/g);
+          corBola = "#" + ((1 << 24) + (parseInt(v[0]) << 16) + (parseInt(v[1]) << 8) + parseInt(v[2])).toString(16).slice(1);
+        }
+        b.classList.toggle('selecionada', corBola.toLowerCase() === hex.toLowerCase());
+      });
+    }
+
+    function abrirModalTarefa(id = null) {
+      document.getElementById('modal-tarefa').style.display = 'flex';
+      if (id) {
+        document.getElementById('tarefa-modal-titulo').innerText = 'Editar Tarefa';
+        const t = dadosTarefas.find(x => x.id === id);
+        document.getElementById('tarefa-id').value = t.id;
+        document.getElementById('tarefa-titulo').value = t.titulo || '';
+        document.getElementById('tarefa-data').value = t.data || '';
+        document.getElementById('tarefa-hora').value = t.hora || '';
+        escolherCorTarefa(t.cor || '#073763');
+        document.getElementById('btn-excluir-tarefa').style.display = 'block';
+      } else {
+        document.getElementById('tarefa-modal-titulo').innerText = 'Nova Tarefa';
+        document.getElementById('tarefa-id').value = '';
+        document.getElementById('tarefa-titulo').value = '';
+        const hojeIso = new Date().toISOString().split('T')[0];
+        document.getElementById('tarefa-data').value = hojeIso;
+        document.getElementById('tarefa-hora').value = '';
+        escolherCorTarefa('#073763');
+        document.getElementById('btn-excluir-tarefa').style.display = 'none';
+      }
+    }
+
+    function fecharModalTarefa() {
+      document.getElementById('modal-tarefa').style.display = 'none';
+    }
+
+    function salvarTarefa() {
+      const id = document.getElementById('tarefa-id').value;
+      const titulo = document.getElementById('tarefa-titulo').value.trim();
+      const data = document.getElementById('tarefa-data').value;
+      const hora = document.getElementById('tarefa-hora').value;
+      const cor = document.getElementById('tarefa-cor').value;
+
+      if (!titulo) return alert('Dê um título à tarefa.');
+
+      if (id) {
+        const t = dadosTarefas.find(x => x.id === id);
+        if (t) {
+          t.titulo = titulo;
+          t.data = data;
+          t.hora = hora;
+          t.cor = cor;
+        }
+      } else {
+        dadosTarefas.push({
+          id: Date.now().toString(),
+          titulo,
+          data,
+          hora,
+          cor,
+          concluida: false
+        });
+      }
+
+      salvarDadosLocalmente();
+      fecharModalTarefa();
+    }
+
+    function excluirTarefa() {
+      const id = document.getElementById('tarefa-id').value;
+      if (confirm('Excluir esta tarefa?')) {
+        dadosTarefas = dadosTarefas.filter(x => x.id !== id);
+        salvarDadosLocalmente();
+        fecharModalTarefa();
+      }
     }
 
     /* --- GOOGLE SHEETS SYNC & RESTORE LOGIC --- */
@@ -602,7 +818,6 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
                     document.getElementById('meta-optativas').value = dadosCurso.metaOptativas || 300;
                     document.getElementById('meta-complementares').value = dadosCurso.metaComplementares || 200;
                     atualizarVisualMetasMinimizadas();
-                    renderizarTarefas();
                     statusEl.innerText = '✅ Dados restaurados com sucesso!';
                     statusEl.style.color = '#4caf50';
                 } else {
@@ -654,41 +869,20 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
       });
 
       dadosTarefas.forEach(t => {
-        if (!t.dataHora) return;
-        const dataTarefa = new Date(t.dataHora);
+        if (!t.data || !t.hora || t.concluida) return;
+        const partesData = t.data.split('-').map(Number);
+        const partesHora = t.hora.split(':').map(Number);
+        const dataTarefa = new Date(partesData[0], partesData[1] - 1, partesData[2], partesHora[0], partesHora[1]);
         if (dataTarefa.toDateString() === agora.toDateString()) {
-          const minTarefa = (dataTarefa.getHours() * 60) + dataTarefa.getMinutes();
+          const minTarefa = partesHora[0] * 60 + partesHora[1];
           const uniqueKey = 'tarefa_' + t.id;
           if (alvoNotificacao === minTarefa && !tarefasNotificadasHoje[uniqueKey]) {
-            const horaFormatada = dataTarefa.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-            enviarNotificacao('Tarefa Pendente: ' + t.titulo, { body: `Prazo às ${horaFormatada} (${minsAntecedencia} min restantes)` });
+            enviarNotificacao('Tarefa Pendente: ' + t.titulo, { body: `Prazo às ${t.hora} (${minsAntecedencia} min restantes)` });
             tarefasNotificadasHoje[uniqueKey] = true;
           }
         }
       });
     }
-
-    /* ABA DE TAREFAS */
-    function renderizarTarefas() {
-      const container = document.getElementById('lista-tarefas'); container.innerHTML = '';
-      const tarefasOrdenadas = [...dadosTarefas].sort((a,b) => { if(!a.dataHora && !b.dataHora) return 0; if(!a.dataHora) return 1; if(!b.dataHora) return -1; return new Date(a.dataHora) - new Date(b.dataHora); });
-      if(tarefasOrdenadas.length === 0) { container.innerHTML = `<div style="color: #666; font-size: 13px;">Nenhuma tarefa pendente... Clique no + para criar.</div>`; return; }
-      tarefasOrdenadas.forEach(t => {
-        let isAtrasado = false; let strData = '';
-        if(t.dataHora) { const d = new Date(t.dataHora); if(d < new Date()) isAtrasado = true; strData = d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}); }
-        let htmlTags = ''; if (isAtrasado) htmlTags += `<span class="tarefa-tag atrasado">Atrasado</span>`; if (strData) htmlTags += `<span class="tarefa-tag data">${strData}</span>`;
-        if (t.vinculo) { const r = dadosRotina.find(x => x.id === t.vinculo); if(r) htmlTags += `<span class="tarefa-tag" style="background:${r.cor}; color:${getContrastColor(r.cor)}">${r.atividade}</span>`; }
-        container.innerHTML += `<div class="tarefa-card" onclick="abrirModalTarefa('${t.id}')"><div class="tarefa-titulo">${t.titulo}</div>${htmlTags ? `<div class="tarefa-tags">${htmlTags}</div>` : ''}${t.descricao ? `<div class="tarefa-desc">${t.descricao}</div>` : ''}</div>`;
-      });
-    }
-    function popularSelectVinculo() { const s = document.getElementById('tarefa-vinculo'); s.innerHTML = '<option value="">Nenhum / Outro</option>'; const rotinaOrdenada = [...dadosRotina].sort((a,b) => a.atividade.localeCompare(b.atividade)); rotinaOrdenada.forEach(r => { s.innerHTML += `<option value="${r.id}">${r.atividade} (${r.dia})</option>`; }); }
-    function abrirModalTarefa(id = null) {
-      popularSelectVinculo(); document.getElementById('modal-tarefa').style.display = 'flex';
-      if(id) { document.getElementById('tarefa-modal-titulo').innerText = 'Editar Tarefa'; const t = dadosTarefas.find(x => x.id === id); document.getElementById('tarefa-id').value = t.id; document.getElementById('tarefa-titulo').value = t.titulo; document.getElementById('tarefa-datahora').value = t.dataHora || ''; document.getElementById('tarefa-vinculo').value = t.vinculo || ''; document.getElementById('tarefa-descricao').value = t.descricao || ''; document.getElementById('btn-excluir-tarefa').style.display = 'block'; } else { document.getElementById('tarefa-modal-titulo').innerText = 'Nova Tarefa'; document.getElementById('tarefa-id').value = ''; document.getElementById('tarefa-titulo').value = ''; document.getElementById('tarefa-datahora').value = ''; document.getElementById('tarefa-vinculo').value = ''; document.getElementById('tarefa-descricao').value = ''; document.getElementById('btn-excluir-tarefa').style.display = 'none'; }
-    }
-    function fecharModalTarefa() { document.getElementById('modal-tarefa').style.display = 'none'; }
-    function salvarTarefa() { const id = document.getElementById('tarefa-id').value; const titulo = document.getElementById('tarefa-titulo').value; const dataHora = document.getElementById('tarefa-datahora').value; const vinculo = document.getElementById('tarefa-vinculo').value; const descricao = document.getElementById('tarefa-descricao').value; if(!titulo) return alert('Dê um título à tarefa.'); if(id) { const t = dadosTarefas.find(x => x.id === id); t.titulo = titulo; t.dataHora = dataHora; t.vinculo = vinculo; t.descricao = descricao; } else { dadosTarefas.push({ id: Date.now().toString(), titulo, dataHora, vinculo, descricao }); } salvarDadosLocalmente(); renderizarTarefas(); fecharModalTarefa(); }
-    function excluirTarefa() { const id = document.getElementById('tarefa-id').value; if(confirm('Excluir esta tarefa?')) { dadosTarefas = dadosTarefas.filter(x => x.id !== id); salvarDadosLocalmente(); renderizarTarefas(); fecharModalTarefa(); } }
 
     /* FUNÇÕES RESTANTES */
     function getResetTimestamp(dateObj, timeStr) { let [h, m] = timeStr.split(':').map(Number); let d = new Date(dateObj); d.setHours(h, m, 0, 0); return d; }
@@ -711,7 +905,7 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
       if(!checksRotina[chaveHojeId]) checksRotina[chaveHojeId] = {}; let qtdConcluidas = 0;
       tarefasHoje.forEach(t => {
         const isChecked = checksRotina[chaveHojeId][t.id] ? true : false; const detalhesText = t.detalhes ? `<span style="font-weight:normal; opacity:0.8;">(${t.detalhes})</span>` : ''; const corFundo = t.cor || '#222222'; const corTexto = getContrastColor(corFundo); const corBordaCheck = corTexto === '#000000' ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.5)';
-        const htmlLinha = `<div class="tarefa-linha ${isChecked ? 'concluida' : ''}" style="background-color: ${corFundo}; color: ${corTexto}; border: 1px solid rgba(0,0,0,0.3);"><div class="tarefa-texto" style="font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 12px; font-weight: bold; color: inherit;">${t.inicio} - ${t.atividade} ${detalhesText}</div><input type="checkbox" class="checkbox-dia" style="border-color: ${corBordaCheck};" onchange="alternarCheckTarefa('${chaveHojeId}', '${t.id}', this.checked)" ${isChecked ? 'checked' : ''}></div>`;
+        const htmlLinha = `<div class="tarefa-linha ${isChecked ? 'concluida' : ''}" style="background-color: ${corFundo}; color: ${corTexto}; border: 1px solid rgba(0,0,0,0.3);"><div class="tarefa-texto" style="font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 12px; font-weight: bold; color: inherit;">${t.inicio} - ${t.atividade} ${detalhesText}</div><input type="checkbox" class="checkbox-dia" style="border-color: ${corBordaCheck}; margin-top:0px;" onchange="alternarCheckTarefa('${chaveHojeId}', '${t.id}', this.checked)" ${isChecked ? 'checked' : ''}></div>`;
         if(isChecked) { contConcluidas.innerHTML += htmlLinha; qtdConcluidas++; } else { contPendentes.innerHTML += htmlLinha; }
       });
       if (qtdConcluidas > 0) { boxConcluidas.style.display = 'block'; numConcluidas.innerText = qtdConcluidas; } else { boxConcluidas.style.display = 'none'; }
@@ -765,7 +959,7 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
     function irParaEdicaoDoDetalhe() { fecharDetalhes(); abrirModalRotina(atividadeAtualSelecionada); }
     function abrirOpcoes() { document.getElementById('modal-opcoes').style.display = 'flex'; }
     function fecharOpcoes() { document.getElementById('modal-opcoes').style.display = 'none'; }
-    function escolherCor(hex) { document.getElementById('form-cor').value = hex; document.getElementById('form-cor-picker').value = hex; document.querySelectorAll('.bola-cor').forEach(b => { let corBola = b.style.backgroundColor; if(corBola.startsWith('rgb')) { let v = corBola.match(/\d+/g); corBola = "#" + ((1 << 24) + (parseInt(v[0]) << 16) + (parseInt(v[1]) << 8) + parseInt(v[2])).toString(16).slice(1); } b.classList.toggle('selecionada', corBola.toLowerCase() === hex.toLowerCase()); }); }
+    function escolherCor(hex) { document.getElementById('form-cor').value = hex; document.getElementById('form-cor-picker').value = hex; document.querySelectorAll('.paleta-cores .bola-cor').forEach(b => { let corBola = b.style.backgroundColor; if(corBola.startsWith('rgb')) { let v = corBola.match(/\d+/g); corBola = "#" + ((1 << 24) + (parseInt(v[0]) << 16) + (parseInt(v[1]) << 8) + parseInt(v[2])).toString(16).slice(1); } b.classList.toggle('selecionada', corBola.toLowerCase() === hex.toLowerCase()); }); }
     function abrirModal(itemExistente = null) { fecharOpcoes(); abrirModalRotina(itemExistente); }
     function abrirModalRotina(itemExistente = null) { document.getElementById('modal').style.display = 'flex'; if(itemExistente) { document.getElementById('modal-titulo').innerText = 'Editar Atividade'; document.getElementById('form-id').value = itemExistente.id; document.getElementById('form-atividade').value = itemExistente.atividade; document.getElementById('form-dia').value = itemExistente.dia; document.getElementById('form-inicio').value = itemExistente.inicio; document.getElementById('form-fim').value = itemExistente.fim; document.getElementById('form-detalhes').value = itemExistente.detalhes || ''; escolherCor(itemExistente.cor); document.getElementById('btn-excluir').style.display = 'block'; document.getElementById('btn-duplicar').style.display = 'block'; } else { document.getElementById('modal-titulo').innerText = 'Nova Atividade'; document.getElementById('form-id').value = ''; document.getElementById('form-atividade').value = ''; document.getElementById('form-inicio').value = ''; document.getElementById('form-fim').value = ''; document.getElementById('form-detalhes').value = ''; escolherCor('#073763'); document.getElementById('btn-excluir').style.display = 'none'; document.getElementById('btn-duplicar').style.display = 'none'; } }
     function fecharModal() { document.getElementById('modal').style.display = 'none'; }
@@ -773,7 +967,7 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
     function duplicarAtividade() { document.getElementById('form-id').value = ''; document.getElementById('modal-titulo').innerText = 'Nova Atividade (Cópia)'; document.getElementById('btn-excluir').style.display = 'none'; document.getElementById('btn-duplicar').style.display = 'none'; document.getElementById('form-inicio').focus(); }
     function excluirAtividade() { const idStr = document.getElementById('form-id').value; if (confirm("Tem certeza que deseja excluir?")) { dadosRotina = dadosRotina.filter(i => i.id !== idStr); salvarDadosLocalmente(); fecharModal(); } }
     function baixarBackup() { fecharOpcoes(); const backupGeral = { rotina: dadosRotina, curso: dadosCurso, trackers: dadosTrackers, tarefas: dadosTarefas, checks: checksRotina, ultimaAtualizacao: new Date().toLocaleString() }; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupGeral)); const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", "rotina_e_curso_backup.json"); document.body.appendChild(a); a.click(); a.remove(); }
-    function importarBackup(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const importado = JSON.parse(e.target.result); if (importado.rotina) { dadosRotina = importado.rotina; if(importado.curso) dadosCurso = importado.curso; if(importado.trackers) dadosTrackers = { ...dadosTrackers, ...importado.trackers }; if(importado.tarefas) dadosTarefas = importado.tarefas; if(importado.checks) checksRotina = importado.checks; } else if (Array.isArray(importado)) { dadosRotina = importado; } if (dadosCurso.metasMinimizado === undefined) dadosCurso.metasMinimizado = true; salvarDadosLocalmente(); document.getElementById('nome-curso').value = dadosCurso.nome || ""; document.getElementById('meta-obrigatorias').value = dadosCurso.metaObrigatorias || 2400; document.getElementById('meta-optativas').value = dadosCurso.metaOptativas || 300; document.getElementById('meta-complementares').value = dadosCurso.metaComplementares || 200; atualizarVisualMetasMinimizadas(); alert("Progresso importado com sucesso!"); fecharOpcoes(); renderizarTarefas(); } catch (err) { alert("Erro ao ler o arquivo."); } }; reader.readAsText(file); }
+    function importarBackup(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const importado = JSON.parse(e.target.result); if (importado.rotina) { dadosRotina = importado.rotina; if(importado.curso) dadosCurso = importado.curso; if(importado.trackers) dadosTrackers = { ...dadosTrackers, ...importado.trackers }; if(importado.tarefas) dadosTarefas = importado.tarefas; if(importado.checks) checksRotina = importado.checks; } else if (Array.isArray(importado)) { dadosRotina = importado; } if (dadosCurso.metasMinimizado === undefined) dadosCurso.metasMinimizado = true; salvarDadosLocalmente(); document.getElementById('nome-curso').value = dadosCurso.nome || ""; document.getElementById('meta-obrigatorias').value = dadosCurso.metaObrigatorias || 2400; document.getElementById('meta-optativas').value = dadosCurso.metaOptativas || 300; document.getElementById('meta-complementares').value = dadosCurso.metaComplementares || 200; atualizarVisualMetasMinimizadas(); alert("Progresso importado com sucesso!"); fecharOpcoes(); } catch (err) { alert("Erro ao ler o arquivo."); } }; reader.readAsText(file); }
   </script>
 </body>
 </html>
