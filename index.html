@@ -251,7 +251,7 @@
 
       <div class="modal-botoes">
         <button class="btn-cancelar" onclick="fecharModalGCal()">Cancelar</button>
-        <button class="btn-salvar" onclick="gerarExportacaoGoogleAgenda()">Gerar Links (.ics / Web)</button>
+        <button class="btn-salvar" onclick="gerarExportacaoGoogleAgenda()">Gerar Arquivo (.ics)</button>
       </div>
     </div>
   </div>
@@ -436,24 +436,23 @@ function doGet(e) {
         sincronizarComPlanilhaOculto(); 
     }
 
-    /* --- GOOGLE AGENDA EXPORT LOGIC (.ICS) --- */
+    /* --- GOOGLE AGENDA EXPORT LOGIC (.ICS COMPATÍVEL) --- */
     function abrirModalGCal() { fecharOpcoes(); document.getElementById('modal-gcal').style.display = 'flex'; }
     function fecharModalGCal() { document.getElementById('modal-gcal').style.display = 'none'; }
 
     function gerarExportacaoGoogleAgenda() {
       const limiteOpcao = document.getElementById('gcal-limite').value;
       const anoAtual = new Date().getFullYear();
-      // Define a data limite de repetição: 30 de junho ou 31 de dezembro
       const dataLimiteStr = limiteOpcao === 'junho' ? `${anoAtual}0630T235959Z` : `${anoAtual}1231T235959Z`;
 
-      let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//MeuAppRotina//PT\nCALSCALE:GREGORIAN\nMETHOD:PUBLISH\n";
+      // Uso estrito de \r\n exigido pelo padrão iCal do Google Agenda
+      let icsContent = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//MeuAppRotina//PT\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\n";
 
-      // 1. Exportar Atividades da Rotina com RRULE (Repetição semanal)
+      // 1. Exportar Atividades da Rotina
       dadosRotina.forEach(item => {
         let diaSemanaNum = mapaDias[item.dia];
         if (diaSemanaNum === undefined) return;
 
-        // Acha a próxima ocorrência desse dia da semana a partir de hoje
         let d = new Date();
         let diaAtual = d.getDay();
         let diff = diaSemanaNum - diaAtual;
@@ -472,32 +471,31 @@ function doGet(e) {
         let dtEnd = formatarDataICS(dFim);
         let rruleDay = ['SU','MO','TU','WE','TH','FR','SA'][diaSemanaNum];
 
-        icsContent += "BEGIN:VEVENT\n";
-        icsContent += `SUMMARY:${item.atividade}\n`;
-        if (item.detalhes) icsContent += `DESCRIPTION:${item.detalhes}\n`;
-        icsContent += `DTSTART:${dtStart}\n`;
-        icsContent += `DTEND:${dtEnd}\n`;
-        icsContent += `RRULE:FREQ=WEEKLY;BYDAY=${rruleDay};UNTIL=${dataLimiteStr}\n`;
-        icsContent += "END:VEVENT\n";
+        icsContent += "BEGIN:VEVENT\r\n";
+        icsContent += `SUMMARY:${item.atividade}\r\n`;
+        if (item.detalhes) icsContent += `DESCRIPTION:${item.detalhes}\r\n`;
+        icsContent += `DTSTART:${dtStart}\r\n`;
+        icsContent += `DTEND:${dtEnd}\r\n`;
+        icsContent += `RRULE:FREQ=WEEKLY;BYDAY=${rruleDay};UNTIL=${dataLimiteStr}\r\n`;
+        icsContent += "END:VEVENT\r\n";
       });
 
-      // 2. Exportar Tarefas com Data/Hora específica
+      // 2. Exportar Tarefas
       dadosTarefas.forEach(t => {
         if (!t.dataHora) return;
         let dInicio = new Date(t.dataHora);
-        let dFim = new Date(dInicio.getTime() + (60 * 60 * 1000)); // 1 hora de duração padrão
+        let dFim = new Date(dInicio.getTime() + (60 * 60 * 1000));
 
-        icsContent += "BEGIN:VEVENT\n";
-        icsContent += `SUMMARY:[Tarefa] ${t.titulo}\n`;
-        if (t.descricao) icsContent += `DESCRIPTION:${t.descricao}\n`;
-        icsContent += `DTSTART:${formatarDataICS(dInicio)}\n`;
-        icsContent += `DTEND:${formatarDataICS(dFim)}\n`;
-        icsContent += "END:VEVENT\n";
+        icsContent += "BEGIN:VEVENT\r\n";
+        icsContent += `SUMMARY:[Tarefa] ${t.titulo}\r\n`;
+        if (t.descricao) icsContent += `DESCRIPTION:${t.descricao}\r\n`;
+        icsContent += `DTSTART:${formatarDataICS(dInicio)}\r\n`;
+        icsContent += `DTEND:${formatarDataICS(dFim)}\r\n`;
+        icsContent += "END:VEVENT\r\n";
       });
 
       icsContent += "END:VCALENDAR";
 
-      // Baixar arquivo .ics
       const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
       const link = document.createElement('a');
       link.href = window.URL.createObjectURL(blob);
@@ -507,7 +505,7 @@ function doGet(e) {
       link.remove();
 
       fecharModalGCal();
-      alert("Arquivo de agenda (.ics) gerado com sucesso! Abra-o ou importe-o no Google Agenda para sincronizar todos os eventos e repetições.");
+      alert("Arquivo de agenda (.ics) gerado com sucesso!");
     }
 
     function formatarDataICS(date) {
@@ -623,7 +621,6 @@ function doGet(e) {
       dadosTarefas.forEach(t => {
         if (!t.dataHora) return;
         const dataTarefa = new Date(t.dataHora);
-        // Verifica se a tarefa é hoje
         if (dataTarefa.toDateString() === agora.toDateString()) {
           const minTarefa = (dataTarefa.getHours() * 60) + dataTarefa.getMinutes();
           const uniqueKey = 'tarefa_' + t.id;
