@@ -465,7 +465,6 @@
               let statusClass = `status-${disc.status}`;
               let textoNotaFormatado = formatarTextoNotaFinal(disc);
               
-              // Verifica se a nota final está abaixo de 60% para colorir de vermelho
               let corNota = '#fff';
               let dadosCalculadosNota = calcularPercNotaFinal(disc);
               if (dadosCalculadosNota.temNota && dadosCalculadosNota.perc < 60) {
@@ -644,9 +643,9 @@
       const div = document.createElement('div');
       div.style.cssText = "display:flex; gap:6px; align-items:center;";
       
-      // Nome reduzido em ~50% (flex: 1 em vez de flex: 2)
+      // Caixa de nome reduzida em mais 50% (flex: 0.5)
       div.innerHTML = `
-        <input type="text" placeholder="Nome" value="${nome}" style="flex:1; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px;" class="av-nome">
+        <input type="text" placeholder="Nome" value="${nome}" style="flex:0.5; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px;" class="av-nome">
         <input type="number" placeholder="Valor" value="${total}" style="width: 48px; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px; text-align:center;" class="av-total" oninput="atualizarCalculoNotaModal()">
         <input type="number" placeholder="Nota" value="${obtida}" style="width: 48px; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px; text-align:center;" class="av-obtida" oninput="atualizarCalculoNotaModal()">
         <span class="av-perc" style="font-size:11px; color:#aaa; width:48px; text-align:right; font-weight:bold;">0.0%</span>
@@ -670,7 +669,6 @@
         let spanPerc = l.querySelector('.av-perc');
         spanPerc.innerText = percLinha.toFixed(1) + '%';
         
-        // Cor vermelha se o percentual individual for menor que 60%
         if (percLinha < 60) {
           spanPerc.style.color = '#ff4d4d';
         } else {
@@ -682,7 +680,6 @@
       let labelFinal = document.getElementById('disc-nota-final');
       labelFinal.innerText = `${somaObtidas.toFixed(1)} / ${somaTotais.toFixed(1)}  -  ${percGeral.toFixed(2)}%`;
       
-      // Cor vermelha na nota final se for menor que 60%
       if (somaTotais > 0 && percGeral < 60) {
         labelFinal.style.color = '#ff4d4d';
       } else {
