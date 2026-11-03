@@ -11,14 +11,17 @@
     button { background: #1a73e8; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; }
     
     .calendario-container { display: flex; padding: 5px; position: relative; width: 100%; box-sizing: border-box; }
-    .eixo-horas { width: 55px; flex-shrink: 0; position: relative; margin-top: 25px; }
+    
+    /* CORREÇÃO 1: Eixo de horas sem margem para não empurrar os textos para baixo */
+    .eixo-horas { width: 55px; flex-shrink: 0; position: relative; margin-top: 0; }
     .hora-label { position: absolute; right: 8px; font-size: 11px; color: #666; transform: translateY(-50%); font-weight: bold; }
     
     .dias-container { display: flex; flex-grow: 1; width: 100%; border-left: 1px solid #ddd; border-top: 1px solid #ddd; }
-    .coluna-dia { flex: 1; border-right: 1px solid #ddd; position: relative; background: #fff; background-image: linear-gradient(#f0f0f0 1px, transparent 1px); background-size: 100% 40px; } 
+    
+    /* CORREÇÃO 2: background-position alinha a linha cinza exatamente com o horário redondo */
+    .coluna-dia { flex: 1; border-right: 1px solid #ddd; position: relative; background: #fff; background-image: linear-gradient(#f0f0f0 1px, transparent 1px); background-size: 100% 40px; background-position: 0 25px; } 
     .cabecalho-dia { text-align: center; font-weight: bold; padding: 5px 0; background: #000; color: white; border-bottom: 1px solid #ddd; position: absolute; top: 0; width: 100%; height: 25px; box-sizing: border-box; font-size: 11px; overflow: hidden; }
     
-    /* CORREÇÃO DO TAMANHO (box-sizing: border-box) */
     .evento { position: absolute; left: 1px; right: 1px; border-radius: 3px; padding: 2px 4px; color: white; overflow: hidden; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 1px 2px rgba(0,0,0,0.2); display: flex; flex-direction: column; justify-content: flex-start; box-sizing: border-box; }
     .evento-titulo { font-weight: bold; font-size: 11px; line-height: 1.1; word-break: break-word; white-space: normal; }
     .evento-info { font-size: 9px; opacity: 0.9; }
@@ -43,7 +46,7 @@
       body { zoom: 80%; background: white; margin: 0; padding: 0; } 
       .header, button, .modal-overlay { display: none !important; } 
       .calendario-container { padding: 0 !important; width: 100% !important; display: flex !important; }
-      .eixo-horas { width: 70px !important; }
+      .eixo-horas { width: 70px !important; margin-top: 0 !important; }
       .hora-label { font-size: 14px !important; color: #000 !important; right: 10px !important; }
       .dias-container { width: 100% !important; border: 1px solid #000 !important; }
       .cabecalho-dia { font-size: 16px !important; height: 30px !important; line-height: 20px !important; }
