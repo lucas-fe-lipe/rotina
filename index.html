@@ -89,7 +89,7 @@
     .status-reprovado { background: #c62828; color: #ffebee; }
     .status-acursar { background: #424242; color: #f5f5f5; }
 
-    /* ESTILOS DOS TRACKERS (Água, etc) */
+    /* ESTILOS DOS TRACKERS */
     .trackers-container { display: flex; gap: 10px; margin: 15px 10px 0; }
     .tracker-card { flex: 1; border-radius: 8px; border: 1px solid #333; position: relative; overflow: hidden; background: #1a1a1a; display: flex; align-items: center; padding: 10px 12px; box-sizing: border-box; }
     .tracker-bg { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; transition: width 0.4s ease; z-index: 1; }
@@ -101,8 +101,8 @@
     .btn-tracker { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; font-weight: bold; backdrop-filter: blur(2px); transition: 0.2s; }
     .btn-tracker:hover { background: rgba(0,0,0,0.6); }
 
-    /* ESTILOS DA LISTA DE TAREFAS DIÁRIAS (MAIS COMPACTA) */
-    .tarefa-linha { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; border-radius: 6px; transition: opacity 0.2s; min-height: 28px; }
+    /* ESTILOS DA LISTA DE TAREFAS DIÁRIAS (MAIS COMPACTA AINDA) */
+    .tarefa-linha { display: flex; align-items: center; justify-content: space-between; padding: 4px 10px; border-radius: 6px; transition: opacity 0.2s; min-height: 24px; }
     .tarefa-linha.concluida { opacity: 0.6; }
     .tarefa-linha.concluida .tarefa-texto { text-decoration: line-through; }
     
@@ -161,7 +161,7 @@
       </div>
     </div>
     
-    <!-- TRACKERS (Água e Customizado) -->
+    <!-- TRACKERS -->
     <div class="trackers-container" id="trackers-container">
        <!-- Preenchido via JS -->
     </div>
@@ -171,14 +171,14 @@
       <h4 id="titulo-hoje" style="margin-top: 0; margin-bottom: 12px; color: #fff; font-size: 15px; text-align: center;">Hoje - ...</h4>
       
       <!-- Lista de Pendentes -->
-      <div id="lista-hoje-pendentes" style="display: flex; flex-direction: column; gap: 6px;"></div>
+      <div id="lista-hoje-pendentes" style="display: flex; flex-direction: column; gap: 4px;"></div>
       
       <!-- Lista de Concluídas (Minimizável) -->
       <div id="container-concluidas" style="display: none;">
         <div class="secao-concluidas-titulo" onclick="alternarMinimizarConcluidas()">
           <span id="seta-concluidas">▶</span> Concluídas (<span id="contagem-concluidas">0</span>)
         </div>
-        <div id="lista-hoje-concluidas" style="display: none; flex-direction: column; gap: 6px;"></div>
+        <div id="lista-hoje-concluidas" style="display: none; flex-direction: column; gap: 4px;"></div>
       </div>
       
     </div>
@@ -294,6 +294,7 @@
       </div>
 
       <div class="modal-botoes">
+        <button class="btn-perigo" style="margin-right: auto;" onclick="zerarProgressoTracker()">Zerar Progresso</button>
         <button class="btn-cancelar" onclick="fecharModalTracker()">Cancelar</button>
         <button class="btn-salvar" onclick="salvarConfigTracker()">Salvar</button>
       </div>
@@ -301,7 +302,7 @@
   </div>
 
   <div class="modal-overlay" id="modal-detalhes">
-    <!-- Mantido como estava -->
+    <!-- Modal de Visualização da Rotina -->
     <div class="modal-box">
       <h3 id="detalhes-titulo" style="margin-bottom: 10px; color: #fff;">Detalhes da Atividade</h3>
       <div style="font-size: 13px; color: #ccc; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
@@ -519,7 +520,7 @@
 
     function addTracker(id) {
       dadosTrackers[id].atual += parseFloat(dadosTrackers[id].incremento);
-      dadosTrackers[id].lastReset = new Date().toISOString(); // Atualiza a interação
+      dadosTrackers[id].lastReset = new Date().toISOString(); 
       localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers));
       renderizarTrackers();
     }
@@ -550,6 +551,17 @@
       localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers));
       fecharModalTracker();
       renderizarTrackers();
+    }
+
+    function zerarProgressoTracker() {
+      let id = document.getElementById('tracker-id').value;
+      if (confirm(`Tem certeza que deseja zerar o progresso de "${dadosTrackers[id].titulo}"?`)) {
+        dadosTrackers[id].atual = 0;
+        dadosTrackers[id].lastReset = new Date().toISOString();
+        localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers));
+        fecharModalTracker();
+        renderizarTrackers();
+      }
     }
 
     /* --- CORES DE CONTRASTE --- */
@@ -585,7 +597,6 @@
       const hojeDataStr = hoje.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'2-digit'});
       const chaveHojeId = hoje.toISOString().split('T')[0]; 
 
-      // Título formatado e centralizado
       document.getElementById('titulo-hoje').innerText = `Hoje - ${diasSemanaNomes[hoje.getDay()]} ${hojeDataStr}`;
       
       const contPendentes = document.getElementById('lista-hoje-pendentes');
@@ -750,9 +761,11 @@
           if (periodo.minimizado === undefined) periodo.minimizado = false;
           let displayConteudo = periodo.minimizado ? 'none' : 'block';
           let iconeSeta = periodo.minimizado ? '▶' : '▼';
-          let classeData = classificarPeriodo(periodo, hojeStr) === 1 ? 'color: #1155cc;' : 'color: #888;';
+          
+          let classeData = 'color: #888;';
+          let badgeAtual = classificarPeriodo(periodo, hojeStr) === 1 ? `<span style="background-color: #1155cc; color: white; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-size: 10px; font-weight: bold; text-transform: uppercase;">Atual</span>` : '';
 
-          container.innerHTML += `<div class="periodo-box" id="p-box-${periodo.id}"><div class="periodo-titulo" onclick="alternarMinimizarPeriodo('${periodo.id}')"><div><span style="font-size:12px; color:#aaa; margin-right:6px;">${iconeSeta}</span><strong style="font-size:15px; color:#fff;">${periodo.nome}</strong><span style="font-size:11px; ${classeData} font-weight:bold; margin-left:8px;">(${periodo.inicio || ''} até ${periodo.fim || ''})</span></div><div style="display:flex; gap:8px; align-items:center;" onclick="event.stopPropagation()"><span style="font-size:12px; color:#aaa;">CRA: <strong style="color:#fff;">${craPeriodo.toFixed(2)}</strong> | Horas: <strong style="color:#fff;">${totalHorasPeriodo}h</strong></span><button class="btn-icon" style="padding:3px 6px; font-size:10px;" onclick="abrirModalPeriodo('${periodo.id}')">Editar</button><button class="btn-primary" style="padding:3px 8px; font-size:11px;" onclick="abrirModalDisciplina('${periodo.id}')">+ Disciplina</button></div></div><div class="periodo-conteudo" id="p-conteudo-${periodo.id}" style="display: ${displayConteudo};">${disciplinasHTML}</div></div>`;
+          container.innerHTML += `<div class="periodo-box" id="p-box-${periodo.id}"><div class="periodo-titulo" onclick="alternarMinimizarPeriodo('${periodo.id}')"><div><span style="font-size:12px; color:#aaa; margin-right:6px;">${iconeSeta}</span><strong style="font-size:15px; color:#fff;">${periodo.nome}</strong><span style="font-size:11px; ${classeData} font-weight:bold; margin-left:8px;">(${periodo.inicio || ''} até ${periodo.fim || ''})</span>${badgeAtual}</div><div style="display:flex; gap:8px; align-items:center;" onclick="event.stopPropagation()"><span style="font-size:12px; color:#aaa;">CRA: <strong style="color:#fff;">${craPeriodo.toFixed(2)}</strong> | Horas: <strong style="color:#fff;">${totalHorasPeriodo}h</strong></span><button class="btn-icon" style="padding:3px 6px; font-size:10px;" onclick="abrirModalPeriodo('${periodo.id}')">Editar</button><button class="btn-primary" style="padding:3px 8px; font-size:11px;" onclick="abrirModalDisciplina('${periodo.id}')">+ Disciplina</button></div></div><div class="periodo-conteudo" id="p-conteudo-${periodo.id}" style="display: ${displayConteudo};">${disciplinasHTML}</div></div>`;
         });
       }
       document.getElementById('horas-obrigatorias-atual').innerText = totalObrigatorias; document.getElementById('horas-optativas-atual').innerText = totalOptativas; document.getElementById('horas-complementares-atual').innerText = totalComplementares;
