@@ -23,18 +23,19 @@
     
     .header-botoes { display: flex; gap: 6px; align-items: center; }
 
-    /* GRADE DA ROTINA */
+    /* GRADE DA ROTINA (MAIS COMPACTA) */
     .calendario-container { display: flex; padding: 10px 2px; position: relative; width: 100%; box-sizing: border-box; background: #121212; }
     .eixo-horas { width: 42px; flex-shrink: 0; position: relative; margin-top: 0; }
-    .hora-label { position: absolute; right: 4px; font-size: 10px; color: #888; transform: translateY(-50%); font-weight: bold; }
+    .hora-label { position: absolute; right: 4px; font-size: 9px; line-height: 9px; color: #888; transform: translateY(-50%); font-weight: bold; }
     
     .dias-container { display: flex; flex-grow: 1; width: 100%; border-left: 1px solid #ccc; border-top: 1px solid #ccc; border-radius: 4px; overflow: hidden; }
-    .coluna-dia { flex: 1; border-right: 1px solid #ccc; position: relative; background: #fff; background-image: linear-gradient(#f0f0f0 1px, transparent 1px); background-size: 100% 20px; background-position: 0 25px; } 
-    .cabecalho-dia { text-align: center; font-weight: bold; padding: 5px 0; background: #000; color: white; border-bottom: 1px solid #ccc; position: absolute; top: 0; width: 100%; height: 25px; box-sizing: border-box; font-size: 10px; overflow: hidden; }
+    /* Tamanho vertical pela metade: 1 hora = 20px, logo 30 min = 10px de marcação de linha de fundo */
+    .coluna-dia { flex: 1; border-right: 1px solid #ccc; position: relative; background: #fff; background-image: linear-gradient(#f0f0f0 1px, transparent 1px); background-size: 100% 10px; background-position: 0 25px; } 
+    .cabecalho-dia { text-align: center; font-weight: bold; padding: 5px 0; background: #000; color: white; border-bottom: 1px solid #ccc; position: absolute; top: 0; width: 100%; height: 25px; box-sizing: border-box; font-size: 9px; overflow: hidden; }
     
-    .evento { position: absolute; left: 1px; right: 1px; border-radius: 3px; padding: 2px 4px; color: white; overflow: hidden; cursor: pointer; border: 1px solid rgba(0,0,0,0.2); box-shadow: 0 1px 3px rgba(0,0,0,0.3); display: flex; flex-direction: column; justify-content: flex-start; box-sizing: border-box; }
-    .evento-titulo { font-weight: bold; font-size: 10px; line-height: 1.1; word-break: break-word; white-space: normal; }
-    .evento-detalhes { font-size: 9px; opacity: 0.8; font-style: italic; word-break: break-word; margin-top: 2px; }
+    .evento { position: absolute; left: 1px; right: 1px; border-radius: 3px; padding: 1px 2px; color: white; overflow: hidden; cursor: pointer; border: 1px solid rgba(0,0,0,0.2); box-shadow: 0 1px 3px rgba(0,0,0,0.3); display: flex; flex-direction: column; justify-content: flex-start; box-sizing: border-box; }
+    .evento-titulo { font-weight: bold; font-size: 9px; line-height: 1.0; word-break: break-word; white-space: normal; }
+    .evento-detalhes { font-size: 8px; opacity: 0.8; font-style: italic; word-break: break-word; margin-top: 1px; line-height: 1.0; }
     
     /* MODAIS */
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: center; backdrop-filter: blur(3px); overflow-y: auto; padding: 20px 0; box-sizing: border-box; }
@@ -85,14 +86,19 @@
     
     .status-badge { font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
     .status-concluida { background: #2e7d32; color: #e8f5e9; }
-    .status-cursando { background: #e65100; color: #fff3e0; }
+    .status-cursando { background: #2044b4; color: #ffffff; } /* Ajustado para azul */
     .status-reprovado { background: #c62828; color: #ffebee; }
     .status-acursar { background: #424242; color: #f5f5f5; }
+
+    /* Estilo para lista de tarefas diárias */
+    .checkbox-dia { appearance: none; -webkit-appearance: none; background-color: #1e1e1e; margin: 0; width: 18px; height: 18px; border: 1px solid #555; border-radius: 4px; display: grid; place-content: center; cursor: pointer; flex-shrink: 0; }
+    .checkbox-dia::before { content: ""; width: 10px; height: 10px; transform: scale(0); transition: 120ms transform ease-in-out; box-shadow: inset 1em 1em #2044b4; transform-origin: center; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); }
+    .checkbox-dia:checked::before { transform: scale(1); }
 
     @media print {
       @page { margin: 10mm 5mm 5mm 5mm; }
       body { zoom: 80%; background: white !important; margin: 0; padding: 0; } 
-      .header, .modal-overlay, #aba-curso { display: none !important; } 
+      .header, .modal-overlay, #aba-curso, #bloco-hoje { display: none !important; } 
       .calendario-container { padding: 0 !important; width: 100% !important; display: flex !important; background: white !important; }
       .eixo-horas { width: 50px !important; margin-top: 0 !important; }
       .hora-label { font-size: 12px !important; color: #000 !important; right: 6px !important; }
@@ -123,6 +129,7 @@
   </div>
 
   <div id="aba-rotina">
+    <!-- GRADE COMPACTA -->
     <div class="calendario-container" id="area-impressao">
       <div class="eixo-horas" id="eixo-horas"></div>
       <div class="dias-container">
@@ -133,6 +140,14 @@
         <div class="coluna-dia" id="col-qui"><div class="cabecalho-dia">qui</div></div>
         <div class="coluna-dia" id="col-sex"><div class="cabecalho-dia">sex</div></div>
         <div class="coluna-dia" id="col-sab"><div class="cabecalho-dia">sáb</div></div>
+      </div>
+    </div>
+    
+    <!-- BLOCO ATIVIDADES DO DIA -->
+    <div id="bloco-hoje" style="margin: 15px 10px; padding: 15px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px;">
+      <h4 id="titulo-hoje" style="margin-top: 0; margin-bottom: 12px; color: #fff; font-size: 14px;">Hoje:</h4>
+      <div id="lista-hoje-itens" style="display: flex; flex-direction: column; gap: 8px;">
+        <!-- Inserido dinamicamente via JS -->
       </div>
     </div>
   </div>
@@ -189,6 +204,17 @@
     <div class="modal-box">
       <h3>Opções</h3>
       <button class="menu-opcoes-btn" onclick="abrirModal()">✏️ Nova Atividade</button>
+      
+      <div style="margin-bottom: 10px; background: #2c2c2c; border: 1px solid #444; padding: 12px; border-radius: 8px;">
+        <label style="font-size: 12px; font-weight: bold; color: #fff; margin-bottom: 5px; display:block;">🔔 Notificações (Web Push)</label>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+          <span style="font-size: 11px; color:#aaa;">Avisar-me</span>
+          <input type="number" id="notif-minutos" value="15" style="width: 50px; padding: 4px; background: #121212; color: #fff; border: 1px solid #555; border-radius: 4px; text-align: center;" onchange="salvarMinutosNotif()">
+          <span style="font-size: 11px; color:#aaa;">minutos antes</span>
+        </div>
+        <button class="btn-secundario" style="width: 100%; font-size: 12px; padding: 8px;" onclick="solicitarPermissaoNotificacao()">Ativar Notificações</button>
+      </div>
+
       <button class="menu-opcoes-btn" onclick="baixarPDF()">📄 Exportar PDF</button>
       <button class="menu-opcoes-btn" onclick="baixarPNG()">🖼️ Exportar PNG</button>
       <button class="menu-opcoes-btn" onclick="baixarBackup()">💾 Salvar Backup (.json)</button>
@@ -372,6 +398,7 @@
     if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); }); }
 
     let dadosRotina = [];
+    let checksRotina = {};
     let dadosCurso = { 
       nome: "", 
       metaObrigatorias: 2400, 
@@ -382,16 +409,24 @@
     };
     
     let HORA_INICIO = 6, HORA_FIM = 22;   
-    const PIXELS_POR_HORA = 40, OFFSET_TOPO = 25; 
+    const PIXELS_POR_HORA = 20, OFFSET_TOPO = 25; // Altura dividida por 2 (de 40 pra 20)
     let atividadeAtualSelecionada = null;
+    
+    let notifInterval = null;
+    let tarefasNotificadasHoje = {};
 
     const mapaDias = {
       'domingo': 'col-dom', 'segunda': 'col-seg', 'terça': 'col-ter', 
       'quarta': 'col-qua', 'quinta': 'col-qui', 'sexta': 'col-sex', 'sábado': 'col-sab'
     };
+    const diasSemanaNomes = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+    const diasAbrev = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 
     window.onload = function() {
       carregarDados();
+      if ("Notification" in window && Notification.permission === "granted") {
+        iniciarNotificacoes();
+      }
     };
 
     function mudarAba(aba) {
@@ -406,8 +441,13 @@
     function carregarDados() {
       const salvosRotina = localStorage.getItem('appRotinaDados');
       const salvosCurso = localStorage.getItem('appCursoDados');
+      const salvosChecks = localStorage.getItem('appRotinaChecks');
+      const salvosMinNotif = localStorage.getItem('appRotinaNotifMin');
+      
       if (salvosRotina) dadosRotina = JSON.parse(salvosRotina);
       if (salvosCurso) dadosCurso = JSON.parse(salvosCurso);
+      if (salvosChecks) checksRotina = JSON.parse(salvosChecks);
+      if (salvosMinNotif) document.getElementById('notif-minutos').value = salvosMinNotif;
       
       if (dadosCurso.metasMinimizado === undefined) dadosCurso.metasMinimizado = true;
 
@@ -453,6 +493,113 @@
         seta.innerText = '▼';
       }
     }
+
+    // --- SISTEMA DE NOTIFICAÇÕES ---
+    function salvarMinutosNotif() {
+      const val = document.getElementById('notif-minutos').value;
+      localStorage.setItem('appRotinaNotifMin', val);
+    }
+
+    function solicitarPermissaoNotificacao() {
+      if (!("Notification" in window)) {
+        alert("Este navegador não suporta notificações de sistema.");
+        return;
+      }
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          alert("Notificações ativadas com sucesso!");
+          salvarMinutosNotif();
+          iniciarNotificacoes();
+        } else {
+          alert("Permissão para notificações foi negada.");
+        }
+      });
+    }
+
+    function iniciarNotificacoes() {
+      if (notifInterval) clearInterval(notifInterval);
+      verificarNotificacoes(); // Verifica imediatamente
+      notifInterval = setInterval(verificarNotificacoes, 30000); // Verifica a cada 30 segundos
+    }
+
+    function verificarNotificacoes() {
+      if (Notification.permission !== 'granted') return;
+      
+      const agora = new Date();
+      const hojeDataString = agora.toLocaleDateString();
+      
+      // Limpa a memória das notificações do dia anterior
+      if (tarefasNotificadasHoje.data !== hojeDataString) {
+        tarefasNotificadasHoje = { data: hojeDataString };
+      }
+
+      const diaAtualStr = diasSemanaNomes[agora.getDay()];
+      const minutosAtuais = (agora.getHours() * 60) + agora.getMinutes();
+      const minsAntecedencia = parseInt(document.getElementById('notif-minutos').value) || 15;
+      const alvoNotificacao = minutosAtuais + minsAntecedencia;
+
+      const tarefasDeHoje = dadosRotina.filter(t => t.dia === diaAtualStr);
+
+      tarefasDeHoje.forEach(t => {
+        const partes = t.inicio.split(':');
+        const minTarefa = (parseInt(partes[0], 10) * 60) + parseInt(partes[1], 10);
+        const uniqueKey = t.id + '_' + t.inicio;
+
+        if (alvoNotificacao === minTarefa && !tarefasNotificadasHoje[uniqueKey]) {
+          enviarNotificacaoPush(t, minsAntecedencia);
+          tarefasNotificadasHoje[uniqueKey] = true;
+        }
+      });
+    }
+
+    function enviarNotificacaoPush(tarefa, mins) {
+      new Notification('Em ' + mins + ' min: ' + tarefa.atividade, {
+        body: `Início às ${tarefa.inicio}${tarefa.detalhes ? ' - ' + tarefa.detalhes : ''}`
+      });
+    }
+
+    // --- ATIVIDADES DE HOJE (LISTA ABAIXO DA GRADE) ---
+    function renderizarTarefasHoje() {
+      const hoje = new Date();
+      const hojeDiaNome = diasSemanaNomes[hoje.getDay()];
+      const hojeDataStr = hoje.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'2-digit'});
+      const chaveHojeId = hoje.toISOString().split('T')[0]; // ex: 2026-11-03
+
+      document.getElementById('titulo-hoje').innerText = `Hoje (${diasAbrev[hoje.getDay()]}. ${hojeDataStr}):`;
+      
+      const container = document.getElementById('lista-hoje-itens');
+      container.innerHTML = '';
+
+      let tarefasHoje = dadosRotina.filter(t => t.dia === hojeDiaNome).sort((a,b) => a.inicio.localeCompare(b.inicio));
+      
+      if(tarefasHoje.length === 0) {
+        container.innerHTML = '<div style="color:#888; font-size:12px; font-style:italic;">Nenhuma atividade cadastrada para hoje.</div>';
+        return;
+      }
+
+      if(!checksRotina[chaveHojeId]) checksRotina[chaveHojeId] = {};
+
+      tarefasHoje.forEach(t => {
+        const isChecked = checksRotina[chaveHojeId][t.id] ? 'checked' : '';
+        const detalhesText = t.detalhes ? `<span style="color:#888; font-weight:normal;">(${t.detalhes})</span>` : '';
+        
+        container.innerHTML += `
+          <div style="display: flex; align-items: center; justify-content: space-between; background: #222; padding: 10px 12px; border-radius: 6px; border: 1px solid #333;">
+            <div style="font-size: 13px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 12px; font-weight: bold;">
+              ${t.inicio} - ${t.atividade} ${detalhesText}
+            </div>
+            <input type="checkbox" class="checkbox-dia" onchange="alternarCheckTarefa('${chaveHojeId}', '${t.id}', this.checked)" ${isChecked}>
+          </div>
+        `;
+      });
+    }
+
+    function alternarCheckTarefa(dataChave, id, status) {
+      if(!checksRotina[dataChave]) checksRotina[dataChave] = {};
+      checksRotina[dataChave][id] = status;
+      localStorage.setItem('appRotinaChecks', JSON.stringify(checksRotina));
+    }
+
 
     function baixarBackup() {
       const backupGeral = { rotina: dadosRotina, curso: dadosCurso };
@@ -508,9 +655,7 @@
         let periodosOrdenados = [...dadosCurso.periodos].sort((a, b) => {
           let tipoA = classificarPeriodo(a, hojeStr);
           let tipoB = classificarPeriodo(b, hojeStr);
-          
           if (tipoA !== tipoB) return tipoA - tipoB;
-          
           if (tipoA === 1 || tipoA === 2) {
             return (b.fim || '').localeCompare(a.fim || '');
           } else {
@@ -532,9 +677,7 @@
                 if (disc.tipo === 'obrigratoria') totalObrigatorias += h;
                 if (disc.tipo === 'optativa') totalOptativas += h;
                 if (disc.tipo === 'complementar') totalComplementares += h;
-
                 totalHorasPeriodo += h;
-
                 if (disc.tipo !== 'complementar') {
                   somaPonderadaPeriodo += (notaFinalNumerica * h);
                   somaHorasPeriodoCRA += h;
@@ -583,7 +726,7 @@
                 <div>
                   <span style="font-size:12px; color:#aaa; margin-right:6px;">${iconeSeta}</span>
                   <strong style="font-size:15px; color:#fff;">${periodo.nome}</strong>
-                  <span style="font-size:11px; color:#888; margin-left:8px;">(${periodo.inicio || ''} até ${periodo.fim || ''})</span>
+                  <span style="font-size:11px; color:#2044b4; font-weight:bold; margin-left:8px;">(${periodo.inicio || ''} até ${periodo.fim || ''})</span>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;" onclick="event.stopPropagation()">
                   <span style="font-size:12px; color:#aaa;">CRA: <strong style="color:#fff;">${craPeriodo.toFixed(2)}</strong> | Horas: <strong style="color:#fff;">${totalHorasPeriodo}h</strong></span>
@@ -629,20 +772,13 @@
 
     function alternarMinimizarPeriodo(periodoId) {
       const p = dadosCurso.periodos.find(x => x.id === periodoId);
-      if (p) {
-        p.minimizado = !p.minimizado;
-        salvarDadosLocalmente();
-      }
+      if (p) { p.minimizado = !p.minimizado; salvarDadosLocalmente(); }
     }
 
     function calcularNotaFinalDisciplina(disc) {
       if (!disc.avaliacoes || disc.avaliacoes.length === 0) return 0;
       let somaObtidas = 0;
-      disc.avaliacoes.forEach(a => { 
-        if (a.obtida !== undefined && a.obtida !== null && a.obtida !== '') {
-          somaObtidas += (parseFloat(a.obtida) || 0); 
-        }
-      });
+      disc.avaliacoes.forEach(a => { if (a.obtida !== undefined && a.obtida !== null && a.obtida !== '') somaObtidas += (parseFloat(a.obtida) || 0); });
       return somaObtidas;
     }
 
@@ -699,7 +835,6 @@
       const inicio = document.getElementById('periodo-inicio').value;
       const fim = document.getElementById('periodo-fim').value;
       if (!nome) return alert("Insira o nome do período.");
-
       if (id) {
         const p = dadosCurso.periodos.find(x => x.id === id);
         p.nome = nome; p.inicio = inicio; p.fim = fim;
@@ -761,7 +896,6 @@
       const container = document.getElementById('lista-avaliacoes-container');
       const div = document.createElement('div');
       div.style.cssText = "display:flex; gap:6px; align-items:center; width:100%; box-sizing:border-box;";
-      
       div.innerHTML = `
         <input type="text" placeholder="Nome" value="${nome}" style="width: 42%; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px; box-sizing:border-box;" class="av-nome">
         <input type="number" placeholder="Valor" value="${total}" style="width: 48px; padding:6px; background:#121212; border:1px solid #444; color:#fff; border-radius:4px; text-align:center; box-sizing:border-box;" class="av-total" oninput="atualizarCalculoNotaModal()">
@@ -776,7 +910,6 @@
     function atualizarCalculoNotaModal() {
       const linhas = document.querySelectorAll('#lista-avaliacoes-container > div');
       let somaObtidas = 0, somaTotais = 0;
-      
       linhas.forEach(l => {
         let tot = parseFloat(l.querySelector('.av-total').value) || 0;
         let obtInput = l.querySelector('.av-obtida').value.trim();
@@ -789,27 +922,16 @@
 
           let percLinha = tot > 0 ? (obt / tot) * 100 : 0;
           spanPerc.innerText = percLinha.toFixed(1) + '%';
-          
-          if (percLinha < 60) {
-            spanPerc.style.color = '#ff4d4d';
-          } else {
-            spanPerc.style.color = '#aaa';
-          }
+          if (percLinha < 60) { spanPerc.style.color = '#ff4d4d'; } else { spanPerc.style.color = '#aaa'; }
         } else {
-          spanPerc.innerText = '-';
-          spanPerc.style.color = '#aaa';
+          spanPerc.innerText = '-'; spanPerc.style.color = '#aaa';
         }
       });
 
       let percGeral = somaTotais > 0 ? (somaObtidas / somaTotais) * 100 : 0;
       let labelFinal = document.getElementById('disc-nota-final');
       labelFinal.innerText = `${somaObtidas.toFixed(1)} / ${somaTotais.toFixed(1)}  -  ${percGeral.toFixed(2)}%`;
-      
-      if (somaTotais > 0 && percGeral < 60) {
-        labelFinal.style.color = '#ff4d4d';
-      } else {
-        labelFinal.style.color = '#fff';
-      }
+      if (somaTotais > 0 && percGeral < 60) { labelFinal.style.color = '#ff4d4d'; } else { labelFinal.style.color = '#fff'; }
     }
 
     function salvarDisciplina() {
@@ -894,30 +1016,31 @@
         bloco.style.backgroundColor = item.cor || '#073763';
         bloco.style.color = (item.cor === '#efefef' || item.cor === '#b7b7b7') ? '#000' : '#fff';
         bloco.style.top = topPixels + 'px';
-        bloco.style.height = Math.max(heightPixels, 15) + 'px'; 
+        bloco.style.height = Math.max(heightPixels, 12) + 'px'; 
         bloco.innerHTML = `
           <div class="evento-titulo">${item.atividade}</div>
-          ${heightPixels > 40 && item.detalhes ? `<div class="evento-detalhes">${item.detalhes}</div>` : ''}
+          ${heightPixels > 25 && item.detalhes ? `<div class="evento-detalhes">${item.detalhes}</div>` : ''}
         `;
         bloco.onclick = () => abrirDetalhesAtividade(item);
         coluna.appendChild(bloco);
       });
+      
+      renderizarTarefasHoje(); // Atualiza a lista diária sempre que a grade é reprocessada
     }
 
     function desenharGrade() {
-      // Como cada hora possui 2 blocos de 30min (20px cada), o total por hora é 40px
+      // Metade do tamanho de antes: 1 hora = 20px (2 blocos de 30min de 10px cada)
       const totalHoras = HORA_FIM - HORA_INICIO;
-      const alturaTotal = (totalHoras * 40) + OFFSET_TOPO;
+      const alturaTotal = (totalHoras * PIXELS_POR_HORA) + OFFSET_TOPO;
       
       document.querySelectorAll('.coluna-dia').forEach(col => col.style.height = alturaTotal + 'px');
       const eixo = document.getElementById('eixo-horas');
       eixo.innerHTML = ''; 
 
-      // Desenha as marcações de hora em hora
       for(let i = HORA_INICIO; i <= HORA_FIM; i++) {
         let label = document.createElement('div');
         label.className = 'hora-label';
-        label.style.top = (OFFSET_TOPO + ((i - HORA_INICIO) * 40)) + 'px';
+        label.style.top = (OFFSET_TOPO + ((i - HORA_INICIO) * PIXELS_POR_HORA)) + 'px';
         label.innerText = (i < 10 ? '0'+i : i) + ':00';
         eixo.appendChild(label);
       }
@@ -928,8 +1051,7 @@
       const partes = horaString.split(':');
       let horas = parseInt(partes[0], 10);
       let minutos = parseInt(partes[1], 10);
-      // Como cada hora tem 40px, cada minuto equivale a 40/60 px (ou seja, cada intervalo de 30min tem 20px)
-      return ((horas - HORA_INICIO) * 40) + (minutos * (40 / 60));
+      return ((horas - HORA_INICIO) * PIXELS_POR_HORA) + (minutos * (PIXELS_POR_HORA / 60));
     }
 
     function abrirDetalhesAtividade(item) {
@@ -941,9 +1063,7 @@
       document.getElementById('modal-detalhes').style.display = 'flex';
     }
 
-    function fecharDetalhes() {
-      document.getElementById('modal-detalhes').style.display = 'none';
-    }
+    function fecharDetalhes() { document.getElementById('modal-detalhes').style.display = 'none'; }
 
     function irParaEdicaoDoDetalhe() {
       fecharDetalhes();
@@ -966,10 +1086,8 @@
       });
     }
 
-    function abrirModal(itemExistente = null) {
-      fecharOpcoes();
-      abrirModalRotina(itemExistente);
-    }
+    function abrirModal(itemExistente = null) { fecharOpcoes(); abrirModalRotina(itemExistente); }
+    
     function abrirModalRotina(itemExistente = null) {
       document.getElementById('modal').style.display = 'flex';
       if(itemExistente) {
@@ -995,6 +1113,7 @@
         document.getElementById('btn-duplicar').style.display = 'none';
       }
     }
+    
     function fecharModal() { document.getElementById('modal').style.display = 'none'; }
 
     function salvarFormulario() {
