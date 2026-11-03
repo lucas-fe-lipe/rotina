@@ -52,12 +52,14 @@
     .bola-cor:hover { transform: scale(1.1); }
     .bola-cor.selecionada { border-color: #fff; transform: scale(1.15); box-shadow: 0 0 6px rgba(0,0,0,0.8); }
 
-    .modal-botoes { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }
+    .modal-botoes { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; flex-wrap: wrap; }
     .btn-cancelar { background: #333; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
     .btn-cancelar:hover { background: #444; }
     .btn-salvar { background: #444; color: white; border: 1px solid #666; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
     .btn-salvar:hover { background: #555; }
     .btn-perigo { background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .btn-secundario { background: #2b5797; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .btn-secundario:hover { background: #1d3b6f; }
 
     .menu-opcoes-btn { display: flex; align-items: center; gap: 8px; width: 100%; margin-bottom: 10px; background: #2c2c2c; color: white; border: 1px solid #444; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; justify-content: center; box-sizing: border-box; text-align: center; font-size: 13px; font-family: inherit; }
     .menu-opcoes-btn:hover { background: #3c3c3c; }
@@ -347,6 +349,7 @@
 
       <div class="modal-botoes">
         <button id="btn-excluir" class="btn-perigo" style="display: none; margin-right: auto;" onclick="excluirAtividade()">Excluir</button>
+        <button id="btn-duplicar" class="btn-secundario" style="display: none;" onclick="duplicarAtividade()">Duplicar</button>
         <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
         <button class="btn-salvar" onclick="salvarFormulario()">Salvar</button>
       </div>
@@ -519,7 +522,6 @@
 
                 totalHorasPeriodo += h;
 
-                // Disciplinas complementares NÃO entram no CRA
                 if (disc.tipo !== 'complementar') {
                   somaPonderadaPeriodo += (notaFinalNumerica * h);
                   somaHorasPeriodoCRA += h;
@@ -599,7 +601,6 @@
       let craGeral = somaHorasCRA > 0 ? (somaPonderadaGeral / somaHorasCRA) : 0;
       document.getElementById('cra-geral').innerText = craGeral.toFixed(2);
 
-      // Resumo das horas totais ao lado do CRA Geral
       let totalConcluidasGeral = totalObrigatorias + totalOptativas + totalComplementares;
       let metaTotalGeral = metaObr + metaOpt + metaComp;
       let percTotalGeral = metaTotalGeral > 0 ? (totalConcluidasGeral / metaTotalGeral) * 100 : 0;
@@ -930,6 +931,7 @@
         document.getElementById('form-detalhes').value = itemExistente.detalhes || '';
         escolherCor(itemExistente.cor);
         document.getElementById('btn-excluir').style.display = 'block';
+        document.getElementById('btn-duplicar').style.display = 'block';
       } else {
         document.getElementById('modal-titulo').innerText = 'Nova Atividade';
         document.getElementById('form-id').value = '';
@@ -939,6 +941,7 @@
         document.getElementById('form-detalhes').value = '';
         escolherCor('#073763');
         document.getElementById('btn-excluir').style.display = 'none';
+        document.getElementById('btn-duplicar').style.display = 'none';
       }
     }
     function fecharModal() { document.getElementById('modal').style.display = 'none'; }
@@ -961,6 +964,23 @@
       } else { 
         dadosRotina.push({ id: Date.now().toString(), atividade, dia, inicio, fim, cor, detalhes });
       }
+
+      salvarDadosLocalmente();
+      fecharModal();
+    }
+
+    function duplicarAtividade() {
+      const atividade = document.getElementById('form-atividade').value;
+      const dia = document.getElementById('form-dia').value;
+      const inicio = document.getElementById('form-inicio').value;
+      const fim = document.getElementById('form-fim').value;
+      const cor = document.getElementById('form-cor').value;
+      const detalhes = document.getElementById('form-detalhes').value;
+
+      if (!atividade || !inicio || !fim) return alert("Preencha a atividade e os horários.");
+
+      // Cria uma nova atividade com ID único baseado no timestamp atual
+      dadosRotina.push({ id: Date.now().toString(), atividade, dia, inicio, fim, cor, detalhes });
 
       salvarDadosLocalmente();
       fecharModal();
