@@ -199,20 +199,53 @@
       <h3>Opções</h3>
       <button class="menu-opcoes-btn" onclick="abrirModal()">✏️ Nova Atividade (Rotina)</button>
       <button class="menu-opcoes-btn" onclick="abrirModalGCal()">📅 Exportar para o Google Agenda</button>
+      <button class="menu-opcoes-btn" onclick="abrirModalNotificacoes()">🔔 Configurar Notificações por E-mail</button>
       <button class="menu-opcoes-btn" onclick="abrirModalBackup()">💾 Backup</button>
-      
-      <div style="margin-top: 15px; margin-bottom: 10px; background: #2c2c2c; border: 1px solid #444; padding: 12px; border-radius: 8px;">
-        <label style="font-size: 12px; font-weight: bold; color: #fff; margin-bottom: 5px; display:block;">🔔 Notificações (Web Push)</label>
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-          <span style="font-size: 11px; color:#aaa;">Avisar-me</span>
-          <input type="number" id="notif-minutos" value="15" style="width: 50px; padding: 4px; background: #121212; color: #fff; border: 1px solid #555; border-radius: 4px; text-align: center;" onchange="salvarMinutosNotif()">
-          <span style="font-size: 11px; color:#aaa;">minutos antes</span>
-        </div>
-        <button class="btn-secundario" style="width: 100%; font-size: 12px; padding: 8px;" onclick="solicitarPermissaoNotificacao()">Ativar Notificações</button>
-      </div>
       
       <div class="modal-botoes">
         <button class="btn-cancelar" onclick="fecharOpcoes()">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CONFIGURAR NOTIFICAÇÕES (APPS SCRIPT E-MAIL) -->
+  <div class="modal-overlay" id="modal-notificacoes">
+    <div class="modal-box">
+      <h3>🔔 Notificações por E-mail (Apps Script)</h3>
+      <div style="font-size: 12px; color: #ccc; line-height: 1.5; margin-bottom: 15px; max-height: 280px; overflow-y: auto; background: #121212; padding: 10px; border-radius: 6px; border: 1px solid #333;">
+        <p style="margin-top: 0;"><strong>Como receber lembretes no seu e-mail (mesmo com o app fechado):</strong></p>
+        <ol style="padding-left: 20px; margin-bottom: 10px;">
+          <li>Acesse a sua planilha conectada e vá em <strong>Extensões > Apps Script</strong>.</li>
+          <li>Cole a função abaixo no final do seu código:</li>
+        </ol>
+
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 4px;">
+          <button type="button" class="btn-icon" style="font-size: 11px; padding: 3px 8px;" onclick="copiarCodigoNotificacoes()">📋 Copiar Código</button>
+        </div>
+
+        <textarea id="codigo-apps-script-notif" readonly style="width:100%; height:110px; background:#000; color:#0f0; font-family:monospace; font-size:10px; border:1px solid #444; border-radius:4px; padding:6px; box-sizing: border-box; margin-bottom:10px; white-space: pre; word-wrap: normal;">function verificarENotificarEmail(){var sheet=SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();var raw=sheet.getRange(1,1).getValue();if(!raw)return;var data=JSON.parse(raw);var email=Session.getActiveUser().getEmail();if(!email)return;var props=PropertiesService.getScriptProperties();var sent=JSON.parse(props.getProperty("sentNotifs")||"{}");var agora=new Date();var diasNomes=["domingo","segunda","terça","quarta","quinta","sexta","sábado"];var diaHoje=diasNomes[agora.getDay()];var horaAtualMin=agora.getHours()*60+agora.getMinutes();var antecedencia=parseInt(data.notifMinutos,10)||15;if(data.rotina){data.rotina.forEach(function(item){if(item.dia===diaHoje&&item.inicio){var p=item.inicio.split(":");var minItem=parseInt(p[0],10)*60+parseInt(p[1],10);var diff=minItem-horaAtualMin;var key="rotina_"+item.id+"_"+agora.toDateString();if(diff>=0&&diff<=antecedencia&&!sent[key]){GmailApp.sendEmail(email,"Lembrete: "+item.atividade,"Sua atividade \""+item.atividade+"\" começa em "+diff+" min (às "+item.inicio+").\n"+(item.detalhes||""));sent[key]=true;}}});}if(data.tarefas){var hojeIso=agora.getFullYear()+"-"+("0"+(agora.getMonth()+1)).slice(-2)+"-"+("0"+agora.getDate()).slice(-2);data.tarefas.forEach(function(t){if(t.data===hojeIso&&t.hora&&!t.concluida){var p=t.hora.split(":");var minTask=parseInt(p[0],10)*60+parseInt(p[1],10);var diff=minTask-horaAtualMin;var key="tarefa_"+t.id+"_"+hojeIso;if(diff>=0&&diff<=antecedencia&&!sent[key]){GmailApp.sendEmail(email,"Lembrete: "+t.titulo,"Sua tarefa \""+t.titulo+"\" vence em "+diff+" min (às "+t.hora+").");sent[key]=true;}}});}props.setProperty("sentNotifs",JSON.stringify(sent));}</textarea>
+
+        <ol start="3" style="padding-left: 20px; margin-bottom: 0;">
+          <li>No menu à esquerda do Apps Script, clique no ícone de relógio <strong>(Gatilhos / Triggers)</strong>.</li>
+          <li>Clique em <strong>+ Adicionar Gatilho</strong> (canto inferior direito).</li>
+          <li>Em função, selecione <strong>verificarENotificarEmail</strong>.</li>
+          <li>Em fonte do evento, escolha <strong>Baseado no tempo</strong>.</li>
+          <li>Defina o temporizador para <strong>A cada 1 minuto</strong> ou <strong>A cada 5 minutos</strong> (isso roda no servidor do Google e não pesa no celular).</li>
+          <li>Clique em <strong>Salvar</strong> e autorize o envio de e-mails.</li>
+        </ol>
+      </div>
+
+      <div class="form-group">
+        <label>Tempo de antecedência dos lembretes</label>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 11px; color:#aaa;">Avisar-me</span>
+          <input type="number" id="notif-minutos" value="15" style="width: 60px; padding: 6px; background: #121212; color: #fff; border: 1px solid #555; border-radius: 4px; text-align: center;" onchange="salvarMinutosNotif()">
+          <span style="font-size: 11px; color:#aaa;">minutos antes</span>
+        </div>
+      </div>
+
+      <div class="modal-botoes">
+        <button class="btn-cancelar" onclick="fecharModalNotificacoes()">Fechar</button>
       </div>
     </div>
   </div>
@@ -412,7 +445,7 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
     let urlPlanilhaGoogle = "";
     
     let HORA_INICIO = 6, HORA_FIM = 22; const PIXELS_POR_HORA = 20, OFFSET_TOPO = 25; 
-    let atividadeAtualSelecionada = null; let notifInterval = null; let tarefasNotificadasHoje = {}; let concluidasMinimizadas = true; let blocoTarefasMinimizado = false;
+    let atividadeAtualSelecionada = null; let concluidasMinimizadas = true; let blocoTarefasMinimizado = false;
     const mapaDias = { 'domingo': 0, 'segunda': 1, 'terça': 2, 'quarta': 3, 'quinta': 4, 'sexta': 5, 'sábado': 6 };
     const mapaDiasStr = { 'domingo': 'col-dom', 'segunda': 'col-seg', 'terça': 'col-ter', 'quarta': 'col-qua', 'quinta': 'col-qui', 'sexta': 'col-sex', 'sábado': 'col-sab' };
     const diasSemanaNomes = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
@@ -422,7 +455,6 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
       checarResetTrackers(); 
       renderizarTrackers(); 
       if (urlPlanilhaGoogle) { baixarDaPlanilhaSilencioso(); }
-      if ("Notification" in window && Notification.permission === "granted") iniciarNotificacoes(); 
     };
 
     function mudarAba(aba) {
@@ -451,7 +483,9 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
           if (!t.cor) t.cor = '#073763';
         });
       }
-      if (salvosMinNotif) document.getElementById('notif-minutos').value = salvosMinNotif;
+      if (salvosMinNotif && document.getElementById('notif-minutos')) {
+        document.getElementById('notif-minutos').value = salvosMinNotif;
+      }
       if (salvosUrlPlanilha) { urlPlanilhaGoogle = salvosUrlPlanilha; document.getElementById('url-google-sheets').value = urlPlanilhaGoogle; }
       if (dadosCurso.metasMinimizado === undefined) dadosCurso.metasMinimizado = true;
       document.getElementById('nome-curso').value = dadosCurso.nome || ""; document.getElementById('meta-obrigatorias').value = dadosCurso.metaObrigatorias || 2400; document.getElementById('meta-optativas').value = dadosCurso.metaOptativas || 300; document.getElementById('meta-complementares').value = dadosCurso.metaComplementares || 200;
@@ -470,6 +504,20 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
     /* --- MENU DE BACKUP --- */
     function abrirModalBackup() { fecharOpcoes(); document.getElementById('modal-backup').style.display = 'flex'; }
     function fecharModalBackup() { document.getElementById('modal-backup').style.display = 'none'; }
+
+    /* --- MENU DE NOTIFICAÇÕES --- */
+    function abrirModalNotificacoes() { fecharOpcoes(); document.getElementById('modal-notificacoes').style.display = 'flex'; }
+    function fecharModalNotificacoes() { document.getElementById('modal-notificacoes').style.display = 'none'; }
+    function copiarCodigoNotificacoes() {
+      const textarea = document.getElementById('codigo-apps-script-notif');
+      textarea.select();
+      textarea.setSelectionRange(0, 99999);
+      navigator.clipboard.writeText(textarea.value).then(() => {
+        alert("Código de notificações copiado!");
+      }).catch(err => {
+        alert("Erro ao copiar o código.");
+      });
+    }
 
     /* --- COPIAR CÓDIGO DO APPS SCRIPT --- */
     function copiarCodigoAppsScript() {
@@ -816,7 +864,8 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
         const statusEl = document.getElementById('status-sincronizacao');
         statusEl.innerText = 'Enviando dados...'; statusEl.style.color = '#fff';
         
-        const backupGeral = { rotina: dadosRotina, curso: dadosCurso, trackers: dadosTrackers, tarefas: dadosTarefas, checks: checksRotina, ultimaAtualizacao: new Date().toLocaleString() };
+        const minsNotif = parseInt(document.getElementById('notif-minutos')?.value, 10) || 15;
+        const backupGeral = { rotina: dadosRotina, curso: dadosCurso, trackers: dadosTrackers, tarefas: dadosTarefas, checks: checksRotina, notifMinutos: minsNotif, ultimaAtualizacao: new Date().toLocaleString() };
         fetch(urlPlanilhaGoogle, { method: 'POST', body: JSON.stringify(backupGeral) })
             .then(res => res.text())
             .then(text => { statusEl.innerText = '✅ Sucesso! Planilha atualizada.'; statusEl.style.color = '#4caf50'; })
@@ -844,6 +893,10 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
                     if(importado.trackers) dadosTrackers = { ...dadosTrackers, ...importado.trackers };
                     if(importado.tarefas) dadosTarefas = importado.tarefas || [];
                     if(importado.checks) checksRotina = importado.checks || {};
+                    if(importado.notifMinutos !== undefined) {
+                      localStorage.setItem('appRotinaNotifMin', importado.notifMinutos);
+                      if (document.getElementById('notif-minutos')) document.getElementById('notif-minutos').value = importado.notifMinutos;
+                    }
                     
                     if (dadosCurso.metasMinimizado === undefined) dadosCurso.metasMinimizado = true;
                     
@@ -892,6 +945,10 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
                         if (importado.trackers) dadosTrackers = { ...dadosTrackers, ...importado.trackers };
                         if (importado.tarefas) dadosTarefas = importado.tarefas || [];
                         if (importado.checks) checksRotina = importado.checks || {};
+                        if (importado.notifMinutos !== undefined) {
+                          localStorage.setItem('appRotinaNotifMin', importado.notifMinutos);
+                          if (document.getElementById('notif-minutos')) document.getElementById('notif-minutos').value = importado.notifMinutos;
+                        }
                         
                         if (dadosCurso.metasMinimizado === undefined) dadosCurso.metasMinimizado = true;
 
@@ -921,54 +978,16 @@ function doGet(e) {var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSh
 
     function sincronizarComPlanilhaOculto() {
         if (!urlPlanilhaGoogle) return;
-        const backupGeral = { rotina: dadosRotina, curso: dadosCurso, trackers: dadosTrackers, tarefas: dadosTarefas, checks: checksRotina, ultimaAtualizacao: new Date().toLocaleString() };
+        const minsNotif = parseInt(document.getElementById('notif-minutos')?.value, 10) || 15;
+        const backupGeral = { rotina: dadosRotina, curso: dadosCurso, trackers: dadosTrackers, tarefas: dadosTarefas, checks: checksRotina, notifMinutos: minsNotif, ultimaAtualizacao: new Date().toLocaleString() };
         fetch(urlPlanilhaGoogle, { method: 'POST', body: JSON.stringify(backupGeral) }).catch(() => {});
     }
 
-    /* --- NOTIFICAÇÕES (ROTINA E TAREFAS) --- */
-    function salvarMinutosNotif() { localStorage.setItem('appRotinaNotifMin', document.getElementById('notif-minutos').value); }
-    function solicitarPermissaoNotificacao() {
-      if (!("Notification" in window)) return alert("Navegador não suporta notificações.");
-      Notification.requestPermission().then(permission => { if (permission === "granted") { alert("Notificações ativadas com sucesso!"); salvarMinutosNotif(); iniciarNotificacoes(); } else alert("Permissão negada."); });
-    }
-    function enviarNotificacao(titulo, opcoes) { if (navigator.serviceWorker) { navigator.serviceWorker.ready.then(function(reg) { reg.showNotification(titulo, opcoes); }).catch(function() { new Notification(titulo, opcoes); }); } else { new Notification(titulo, opcoes); } }
-    function iniciarNotificacoes() { if (notifInterval) clearInterval(notifInterval); verificarNotificacoes(); notifInterval = setInterval(verificarNotificacoes, 30000); }
-    
-    function verificarNotificacoes() {
-      if (Notification.permission !== 'granted') return; 
-      const agora = new Date(); 
-      const hojeDataString = agora.toLocaleDateString();
-      if (tarefasNotificadasHoje.data !== hojeDataString) tarefasNotificadasHoje = { data: hojeDataString };
-
-      const minsAntecedencia = parseInt(document.getElementById('notif-minutos').value) || 15; 
-      const minutosAtuais = (agora.getHours() * 60) + agora.getMinutes(); 
-      const alvoNotificacao = minutosAtuais + minsAntecedencia;
-
-      const diaAtualStr = diasSemanaNomes[agora.getDay()];
-      dadosRotina.filter(t => t.dia === diaAtualStr).forEach(t => {
-        const partes = t.inicio.split(':'); 
-        const minTarefa = (parseInt(partes[0], 10) * 60) + parseInt(partes[1], 10); 
-        const uniqueKey = 'rotina_' + t.id + '_' + t.inicio;
-        if (alvoNotificacao === minTarefa && !tarefasNotificadasHoje[uniqueKey]) { 
-          enviarNotificacao('Rotina: ' + t.atividade, { body: `Começa em ${minsAntecedencia} min (às ${t.inicio})` }); 
-          tarefasNotificadasHoje[uniqueKey] = true; 
-        }
-      });
-
-      dadosTarefas.forEach(t => {
-        if (!t.data || !t.hora || t.concluida) return;
-        const partesData = t.data.split('-').map(Number);
-        const partesHora = t.hora.split(':').map(Number);
-        const dataTarefa = new Date(partesData[0], partesData[1] - 1, partesData[2], partesHora[0], partesHora[1]);
-        if (dataTarefa.toDateString() === agora.toDateString()) {
-          const minTarefa = partesHora[0] * 60 + partesHora[1];
-          const uniqueKey = 'tarefa_' + t.id;
-          if (alvoNotificacao === minTarefa && !tarefasNotificadasHoje[uniqueKey]) {
-            enviarNotificacao('Tarefa Pendente: ' + t.titulo, { body: `Prazo às ${t.hora} (${minsAntecedencia} min restantes)` });
-            tarefasNotificadasHoje[uniqueKey] = true;
-          }
-        }
-      });
+    /* --- CONFIGURAÇÃO DE TEMPO DE NOTIFICAÇÃO --- */
+    function salvarMinutosNotif() {
+      const val = document.getElementById('notif-minutos').value;
+      localStorage.setItem('appRotinaNotifMin', val);
+      sincronizarComPlanilhaOculto();
     }
 
     /* FUNÇÕES RESTANTES */
