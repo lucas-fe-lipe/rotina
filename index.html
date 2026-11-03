@@ -202,7 +202,7 @@
      <div id="lista-tarefas" class="tarefas-grid"></div>
   </div>
 
-  <!-- MENU DE OPÇÕES (ATUALIZADO) -->
+  <!-- MENU DE OPÇÕES -->
   <div class="modal-overlay" id="modal-opcoes">
     <div class="modal-box">
       <h3>Opções</h3>
@@ -268,12 +268,11 @@
           <li>Apague tudo o que estiver no editor e cole o código abaixo:</li>
         </ol>
 
-        <!-- Botão de Copiar Código -->
         <div style="display: flex; justify-content: flex-end; margin-bottom: 4px;">
           <button type="button" class="btn-icon" style="font-size: 11px; padding: 3px 8px;" onclick="copiarCodigoAppsScript()">📋 Copiar Código</button>
         </div>
 
-        <textarea id="codigo-apps-script" readonly style="width:100%; height:95px; background:#000; color:#0f0; font-family:monospace; font-size:9px; border:1px solid #444; border-radius:4px; padding:6px; box-sizing: border-box; margin-bottom:10px;">function doPost(e) {
+        <textarea id="codigo-apps-script" readonly style="width:100%; height:110px; background:#000; color:#0f0; font-family:monospace; font-size:10px; border:1px solid #444; border-radius:4px; padding:6px; box-sizing: border-box; margin-bottom:10px; white-space: pre; word-wrap: normal;">function doPost(e) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   sheet.getRange(1, 1).setValue(e.postData.contents);
   return ContentService.createTextOutput("Sucesso");
@@ -446,7 +445,7 @@ function doGet(e) {
     function copiarCodigoAppsScript() {
       const textarea = document.getElementById('codigo-apps-script');
       textarea.select();
-      textarea.setSelectionRange(0, 99999); // Para dispositivos móveis
+      textarea.setSelectionRange(0, 99999);
       navigator.clipboard.writeText(textarea.value).then(() => {
         alert("Código copiado para a área de transferência!");
       }).catch(err => {
@@ -454,58 +453,69 @@ function doGet(e) {
       });
     }
 
-    /* --- GOOGLE AGENDA EXPORT LOGIC (.ICS COMPATÍVEL) --- */
+    /* --- EXPORTAÇÃO COMPATÍVEL DE ARQUIVO ICS (GOOGLE AGENDA) --- */
     function abrirModalGCal() { fecharOpcoes(); document.getElementById('modal-gcal').style.display = 'flex'; }
     function fecharModalGCal() { document.getElementById('modal-gcal').style.display = 'none'; }
 
     function gerarExportacaoGoogleAgenda() {
       const limiteOpcao = document.getElementById('gcal-limite').value;
       const anoAtual = new Date().getFullYear();
-      const dataLimiteStr = limiteOpcao === 'junho' ? `${anoAtual}0630T235959Z` : `${anoAtual}1231T235959Z`;
+      const dataLimiteLocalStr = limiteOpcao === 'junho' ? `${anoAtual}0630T235959` : `${anoAtual}1231T235959`;
+      const dtStamp = formatarDataICSUTC(new Date());
 
       let icsContent = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//MeuAppRotina//PT\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\n";
 
-      dadosRotina.forEach(item => {
+      // 1. Exportar Atividades da Rotina
+      dadosRotina.forEach((item, idx) => {
         let diaSemanaNum = mapaDias[item.dia];
         if (diaSemanaNum === undefined) return;
 
         let d = new Date();
         let diaAtual = d.getDay();
         let diff = diaSemanaNum - diaAtual;
-        if (diff <= 0) diff += 7;
+        if (diff < 0) diff += 7;
         d.setDate(d.getDate() + diff);
 
-        let [hIni, mIni] = item.inicio.split(':');
-        let [hFim, mFim] = item.fim.split(':');
+        let [hIni, mIni] = (item.inicio || "00:00").split(':');
+        let [hFim, mFim] = (item.fim || "01:00").split(':');
 
         let dInicio = new Date(d);
-        dInicio.setHours(parseInt(hIni), parseInt(mIni), 0);
+        dInicio.setHours(parseInt(hIni, 10), parseInt(mIni, 10), 0, 0);
         let dFim = new Date(d);
-        dFim.setHours(parseInt(hFim), parseInt(mFim), 0);
+        dFim.setHours(parseInt(hFim, 10), parseInt(mFim, 10), 0, 0);
 
-        let dtStart = formatarDataICS(dInicio);
-        let dtEnd = formatarDataICS(dFim);
+        let dtStartLocal = formatarDataICSLocal(dInicio);
+        let dtEndLocal = formatarDataICSLocal(dFim);
         let rruleDay = ['SU','MO','TU','WE','TH','FR','SA'][diaSemanaNum];
 
         icsContent += "BEGIN:VEVENT\r\n";
-        icsContent += `SUMMARY:${item.atividade}\r\n`;
-        if (item.detalhes) icsContent += `DESCRIPTION:${item.detalhes}\r\n`;
-        icsContent += `DTSTART:${dtStart}\r\n`;
-        icsContent += `DTEND:${dtEnd}\r\n`;
-        icsContent += `RRULE:FREQ=WEEKLY;BYDAY=${rruleDay};UNTIL=${dataLimiteStr}\r\n`;
+        icsContent += `UID:rotina-${item.id || idx}-${dtStartLocal}@approtina.local\r\n`;
+        icsContent += `DTSTAMP:${dtStamp}\r\n`;
+        icsContent += `SUMMARY:${escapeICS(item.atividade)}\r\n`;
+        if (item.detalhes) icsContent += `DESCRIPTION:${escapeICS(item.detalhes)}\r\n`;
+        icsContent += `DTSTART:${dtStartLocal}\r\n`;
+        icsContent += `DTEND:${dtEndLocal}\r\n`;
+        icsContent += `RRULE:FREQ=WEEKLY;BYDAY=${rruleDay};UNTIL=${dataLimiteLocalStr}\r\n`;
         icsContent += "END:VEVENT\r\n";
       });
 
-      dadosTarefas.forEach(t => {
+      // 2. Exportar Tarefas
+      dadosTarefas.forEach((t, idx) => {
         if (!t.dataHora) return;
         let dInicio = new Date(t.dataHora);
+        if (isNaN(dInicio.getTime())) return;
         let dFim = new Date(dInicio.getTime() + (60 * 60 * 1000));
 
+        let dtStartLocal = formatarDataICSLocal(dInicio);
+        let dtEndLocal = formatarDataICSLocal(dFim);
+
         icsContent += "BEGIN:VEVENT\r\n";
-        icsContent += `SUMMARY:[Tarefa] ${t.titulo}\r\n`;
-        if (t.descricao) icsContent += `DESCRIPTION:${t.descricao}\r\n`;
-        icsContent += `DTSTART:${formatarDataICS(dInicio)}\r\n`;
-        icsContent += `DTEND:${formatarDataICS(dFim)}\r\n`;
+        icsContent += `UID:tarefa-${t.id || idx}-${dtStartLocal}@approtina.local\r\n`;
+        icsContent += `DTSTAMP:${dtStamp}\r\n`;
+        icsContent += `SUMMARY:[Tarefa] ${escapeICS(t.titulo)}\r\n`;
+        if (t.descricao) icsContent += `DESCRIPTION:${escapeICS(t.descricao)}\r\n`;
+        icsContent += `DTSTART:${dtStartLocal}\r\n`;
+        icsContent += `DTEND:${dtEndLocal}\r\n`;
         icsContent += "END:VEVENT\r\n";
       });
 
@@ -523,14 +533,33 @@ function doGet(e) {
       alert("Arquivo de agenda (.ics) gerado com sucesso!");
     }
 
-    function formatarDataICS(date) {
+    function formatarDataICSLocal(date) {
       const pad = n => n < 10 ? '0' + n : n;
-      return date.getUTCFullYear() +
+      return date.getFullYear().toString() +
+        pad(date.getMonth() + 1) +
+        pad(date.getDate()) + 'T' +
+        pad(date.getHours()) +
+        pad(date.getMinutes()) +
+        pad(date.getSeconds());
+    }
+
+    function formatarDataICSUTC(date) {
+      const pad = n => n < 10 ? '0' + n : n;
+      return date.getUTCFullYear().toString() +
         pad(date.getUTCMonth() + 1) +
         pad(date.getUTCDate()) + 'T' +
         pad(date.getUTCHours()) +
         pad(date.getUTCMinutes()) +
         pad(date.getUTCSeconds()) + 'Z';
+    }
+
+    function escapeICS(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/\\/g, '\\\\')
+        .replace(/;/g, '\\;')
+        .replace(/,/g, '\\,')
+        .replace(/\n/g, '\\n');
     }
 
     /* --- GOOGLE SHEETS SYNC & RESTORE LOGIC --- */
