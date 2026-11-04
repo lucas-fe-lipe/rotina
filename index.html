@@ -363,73 +363,104 @@
     </div>
   </div>
 
-  <!-- Importação dos SDKs do Firebase via CDN -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+ <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyA6RoXhGAi8abS6pxD6xsoKJYqFj9WIrx4",
-      authDomain: "rotina-github.firebaseapp.com",
-      projectId: "rotina-github",
-      storageBucket: "rotina-github.firebasestorage.app",
-      messagingSenderId: "358250993909",
-      appId: "1:358250993909:web:fd55641425ac619e248dbc"
-    };
+  const firebaseConfig = {
+    apiKey: "SUA_NOVA_CHAVE_AQUI",
+    authDomain: "seu-projeto.firebaseapp.com",
+    projectId: "seu-projeto",
+    storageBucket: "seu-projeto.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "1:123456789:web:abcde"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
 
-    // ID do documento onde todos os seus dados serão salvos
-    const DOC_ID = "meu_usuario_dados";
+  let usuarioAtualId = null;
 
-    // Envia todos os dados salvos para o Firebase
-    window.salvarNoFirebase = async function() {
-      try {
-        await setDoc(doc(db, "app_data", DOC_ID), {
-          rotina: dadosRotina,
-          curso: dadosCurso,
-          trackers: dadosTrackers,
-          tarefas: dadosTarefas,
-          checks: checksRotina,
-          ultimaAtualizacao: new Date().toISOString()
-        });
-      } catch (e) {
-        console.error("Erro ao salvar no Firebase:", e);
+  // Monitoriza se o utilizador está logado
+  onAuthStateChanged(auth, (user) => {
+    const modalLogin = document.getElementById('modal-login');
+    if (user) {
+      usuarioAtualId = user.uid;
+      modalLogin.style.display = 'none';
+      window.carregarDoFirebase();
+    } else {
+      usuarioAtualId = null;
+      modalLogin.style.display = 'flex';
+    }
+  });
+
+  window.fazerLogin = async function() {
+    const email = document.getElementById('login-email').value;
+    const senha = document.getElementById('login-senha').value;
+    try {
+      await signInWithEmailAndPassword(auth, email, senha);
+    } catch (e) {
+      alert("Erro ao entrar: " + e.message);
+    }
+  };
+
+  window.criarConta = async function() {
+    const email = document.getElementById('login-email').value;
+    const senha = document.getElementById('login-senha').value;
+    try {
+      await createUserWithEmailAndPassword(auth, email, senha);
+      alert("Conta criada com sucesso!");
+    } catch (e) {
+      alert("Erro ao criar conta: " + e.message);
+    }
+  };
+
+  window.salvarNoFirebase = async function() {
+    if (!usuarioAtualId) return;
+    try {
+      await setDoc(doc(db, "usuarios_dados", usuarioAtualId), {
+        rotina: dadosRotina,
+        curso: dadosCurso,
+        trackers: dadosTrackers,
+        tarefas: dadosTarefas,
+        checks: checksRotina,
+        ultimaAtualizacao: new Date().toISOString()
+      });
+    } catch (e) {
+      console.error("Erro ao salvar:", e);
+    }
+  };
+
+  window.carregarDoFirebase = async function() {
+    if (!usuarioAtualId) return;
+    try {
+      const docSnap = await getDoc(doc(db, "usuarios_dados", usuarioAtualId));
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.rotina) dadosRotina = data.rotina;
+        if (data.curso) dadosCurso = data.curso;
+        if (data.trackers) dadosTrackers = { ...dadosTrackers, ...data.trackers };
+        if (data.tarefas) dadosTarefas = data.tarefas;
+        if (data.checks) checksRotina = data.checks;
+
+        localStorage.setItem('appRotinaDados', JSON.stringify(dadosRotina));
+        localStorage.setItem('appCursoDados', JSON.stringify(dadosCurso));
+        localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers));
+        localStorage.setItem('appTarefasDados', JSON.stringify(dadosTarefas));
+        localStorage.setItem('appRotinaChecks', JSON.stringify(checksRotina));
+
+        processarGrade();
+        renderizarCurso();
+        renderizarBlocoTarefas();
+        renderizarTrackers();
       }
-    };
-
-    // Carrega os dados do Firebase ao abrir a aplicação
-    window.carregarDoFirebase = async function() {
-      try {
-        const docSnap = await getDoc(doc(db, "app_data", DOC_ID));
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          if (data.rotina) dadosRotina = data.rotina;
-          if (data.curso) dadosCurso = data.curso;
-          if (data.trackers) dadosTrackers = { ...dadosTrackers, ...data.trackers };
-          if (data.tarefas) dadosTarefas = data.tarefas;
-          if (data.checks) checksRotina = data.checks;
-
-          // Atualiza a memória local e a interface
-          localStorage.setItem('appRotinaDados', JSON.stringify(dadosRotina));
-          localStorage.setItem('appCursoDados', JSON.stringify(dadosCurso));
-          localStorage.setItem('appTrackersDados', JSON.stringify(dadosTrackers));
-          localStorage.setItem('appTarefasDados', JSON.stringify(dadosTarefas));
-          localStorage.setItem('appRotinaChecks', JSON.stringify(checksRotina));
-
-          processarGrade();
-          renderizarCurso();
-          renderizarBlocoTarefas();
-          renderizarTrackers();
-        }
-      } catch (e) {
-        console.error("Erro ao carregar do Firebase:", e);
-      }
-    };
-  </script>
-
-  <script>
+    } catch (e) {
+      console.error("Erro ao carregar:", e);
+    }
+  };
+</script>
     if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(()=>{}); }
 
     let dadosRotina = []; let checksRotina = {};
