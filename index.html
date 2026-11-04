@@ -373,9 +373,9 @@
 
   const firebaseConfig = {
     apiKey: "AIzaSyA6RoXhGAi8abS6pxD6xsoKJYqFj9WIrx4",
-    authDomain: "seu-projeto.firebaseapp.com",
-    projectId: "seu-projeto",
-    storageBucket: "seu-projeto.appspot.com",
+    authDomain: "rotina-github.firebaseapp.com",
+    projectId: "rotina-github",
+    storageBucket: "rotina-github.appspot.com",
     messagingSenderId: "123456789",
     appId: "1:123456789:web:abcde"
   };
@@ -386,7 +386,6 @@
 
   let usuarioAtualId = null;
 
-  // Monitoriza se o utilizador está logado
   onAuthStateChanged(auth, (user) => {
     const modalLogin = document.getElementById('modal-login');
     if (user) {
@@ -420,7 +419,6 @@
     }
   };
   
-  // Função para fazer logout e limpar todos os dados locais
   window.fazerLogout = async function() {
     try {
       await signOut(auth);
@@ -431,6 +429,7 @@
     }
   };
 
+  // Função robusta de salvamento automático no Firestore
   window.salvarNoFirebase = async function() {
     if (!usuarioAtualId) return;
     try {
@@ -441,9 +440,10 @@
         tarefas: dadosTarefas,
         checks: checksRotina,
         ultimaAtualizacao: new Date().toISOString()
-      });
+      }, { merge: true });
+      console.log("Dados sincronizados com sucesso na nuvem!");
     } catch (e) {
-      console.error("Erro ao salvar:", e);
+      console.error("Erro ao salvar no Firebase:", e);
     }
   };
 
@@ -471,10 +471,10 @@
         renderizarTrackers();
       }
     } catch (e) {
-      console.error("Erro ao carregar:", e);
+      console.error("Erro ao carregar do Firebase:", e);
     }
   };
- </script>
+</script>
  <script>
     if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(()=>{}); }
 
