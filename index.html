@@ -180,11 +180,11 @@
     <div id="bloco-tarefas" style="margin: 15px 10px; padding: 15px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px;">
       <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="alternarMinimizarBlocoTarefas()">
         <div style="font-size: 15px; font-weight: bold; color: #fff; display: flex; align-items: center; gap: 6px;">
-          <span id="seta-bloco-tarefas">▼</span> Tarefas
+          <span id="seta-bloco-tarefas">▶</span> Tarefas
         </div>
         <button class="btn-primary" style="padding: 4px 10px; font-size: 12px;" onclick="event.stopPropagation(); abrirModalTarefa();">+ Nova Tarefa</button>
       </div>
-      <div id="conteudo-bloco-tarefas" style="margin-top: 12px; display: flex; flex-direction: column; gap: 10px;"></div>
+      <div id="conteudo-bloco-tarefas" style="margin-top: 12px; display: none; flex-direction: column; gap: 10px;"></div>
     </div>
   </div>
 
@@ -216,6 +216,9 @@
       <button class="menu-opcoes-btn" onclick="abrirModal()">✏️ Nova Atividade (Rotina)</button>
       <button class="menu-opcoes-btn" onclick="abrirModalGCal()">📅 Exportar para o Google Agenda</button>
       <button class="menu-opcoes-btn" onclick="abrirModalBackup()">💾 Backup & Restauração</button>
+      
+      <!-- BOTÃO DE LOGOUT ADICIONADO -->
+      <button class="menu-opcoes-btn" onclick="fazerLogout()" style="color: #ff6b6b; border-color: #552222; background: #331111;">🚪 Sair da Conta</button>
       
       <div class="modal-botoes">
         <button class="btn-cancelar" onclick="fecharOpcoes()">Fechar</button>
@@ -416,6 +419,17 @@
       alert("Erro ao criar conta: " + e.message);
     }
   };
+  
+  // Função para fazer logout e limpar todos os dados locais
+  window.fazerLogout = async function() {
+    try {
+      await signOut(auth);
+      localStorage.clear();
+      location.reload();
+    } catch (e) {
+      alert("Erro ao sair da conta: " + e.message);
+    }
+  };
 
   window.salvarNoFirebase = async function() {
     if (!usuarioAtualId) return;
@@ -470,17 +484,24 @@
     let dadosTarefas = [];
     
     let HORA_INICIO = 6, HORA_FIM = 22; const PIXELS_POR_HORA = 20, OFFSET_TOPO = 25; 
-    let atividadeAtualSelecionada = null; let concluidasMinimizadas = true; let blocoTarefasMinimizado = false;
+    let atividadeAtualSelecionada = null; let concluidasMinimizadas = true; 
+    let blocoTarefasMinimizado = true; // Alterado para iniciar minimizado
+    
     const mapaDias = { 'domingo': 0, 'segunda': 1, 'terça': 2, 'quarta': 3, 'quinta': 4, 'sexta': 5, 'sábado': 6 };
     const mapaDiasStr = { 'domingo': 'col-dom', 'segunda': 'col-seg', 'terça': 'col-ter', 'quarta': 'col-qua', 'quinta': 'col-qui', 'sexta': 'col-sex', 'sábado': 'col-sab' };
     const diasSemanaNomes = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
     const diasSemanaCap = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
+    // Função auxiliar para evitar bugs de fuso horário UTC (pega a data local exata do aparelho)
+    function getHojeLocalIso() {
+      const d = new Date();
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
     window.onload = function() { 
       carregarDados(); 
       checarResetTrackers(); 
       renderizarTrackers(); 
-      // Chamada do Firebase adicionada aqui
       if (window.carregarDoFirebase) {
         window.carregarDoFirebase();
       }
@@ -524,7 +545,6 @@
         localStorage.setItem('appTarefasDados', JSON.stringify(dadosTarefas)); 
         processarGrade(); renderizarCurso(); renderizarBlocoTarefas();
         
-        // Chama o salvamento na nuvem se a função estiver disponível
         if (window.salvarNoFirebase) {
           window.salvarNoFirebase();
         }
@@ -539,7 +559,7 @@
       fecharOpcoes(); 
       const hoje = new Date();
       const anoAtual = hoje.getFullYear();
-      const hojeIso = hoje.toISOString().split('T')[0];
+      const hojeIso = getHojeLocalIso();
       document.getElementById('gcal-inicio').value = hojeIso;
       document.getElementById('gcal-fim').value = `${anoAtual}-12-31`;
       document.getElementById('modal-gcal').style.display = 'flex'; 
@@ -704,7 +724,7 @@
       });
 
       const agora = new Date();
-      const hojeIso = agora.toISOString().split('T')[0];
+      const hojeIso = getHojeLocalIso();
       const horaMinutoAtual = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
       Object.keys(grupos).forEach(dataChave => {
@@ -803,7 +823,7 @@
         document.getElementById('tarefa-modal-titulo').innerText = 'Nova Tarefa';
         document.getElementById('tarefa-id').value = '';
         document.getElementById('tarefa-titulo').value = '';
-        const hojeIso = new Date().toISOString().split('T')[0];
+        const hojeIso = getHojeLocalIso();
         document.getElementById('tarefa-data').value = hojeIso;
         document.getElementById('tarefa-hora').value = '';
         escolherCorTarefa('#073763');
@@ -877,7 +897,8 @@
       const mesStr = String(hoje.getMonth() + 1).padStart(2, '0');
       const anoStr = String(hoje.getFullYear()).slice(-2);
       const hojeDataFormatada = `${diaStr}/${mesStr}/${anoStr}`;
-      const chaveHojeId = hoje.toISOString().split('T')[0]; 
+      
+      const chaveHojeId = getHojeLocalIso();
       const horaMinutoAtual = hoje.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
       document.getElementById('titulo-hoje').innerText = `Hoje - ${diaCap}, ${hojeDataFormatada}`;
@@ -979,7 +1000,7 @@
     function renderizarCurso() {
       let totalObrigatorias = 0, totalOptativas = 0, totalComplementares = 0, somaPonderadaGeral = 0, somaHorasCRA = 0; const container = document.getElementById('lista-periodos');
       if (!dadosCurso.periodos || dadosCurso.periodos.length === 0) { container.innerHTML = `<div style="color: #666; text-align: center; margin-top: 40px;">Nenhum período cadastrado ainda.</div>`; } else {
-        container.innerHTML = ''; const hojeStr = new Date().toISOString().split('T')[0];
+        container.innerHTML = ''; const hojeStr = getHojeLocalIso();
         let periodosOrdenados = [...dadosCurso.periodos].sort((a, b) => { let tipoA = classificarPeriodo(a, hojeStr), tipoB = classificarPeriodo(b, hojeStr); if (tipoA !== tipoB) return tipoA - tipoB; if (tipoA === 1 || tipoA === 2) return (b.fim || '').localeCompare(a.fim || ''); return (a.inicio || '').localeCompare(b.inicio || ''); });
         periodosOrdenados.forEach(periodo => {
           let somaPonderadaPeriodo = 0, somaHorasPeriodoCRA = 0, totalHorasPeriodo = 0, disciplinasHTML = '';
