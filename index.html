@@ -460,7 +460,8 @@
       console.error("Erro ao carregar:", e);
     }
   };
-</script>
+ </script>
+ <script>
     if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(()=>{}); }
 
     let dadosRotina = []; let checksRotina = {};
@@ -1028,6 +1029,6 @@
     function excluirAtividade() { const idStr = document.getElementById('form-id').value; if (confirm("Tem certeza que deseja excluir?")) { dadosRotina = dadosRotina.filter(i => i.id !== idStr); salvarDadosLocalmente(); fecharModal(); } }
     function baixarBackup() { fecharModalBackup(); fecharOpcoes(); const backupGeral = { rotina: dadosRotina, curso: dadosCurso, trackers: dadosTrackers, tarefas: dadosTarefas, checks: checksRotina, ultimaAtualizacao: new Date().toLocaleString() }; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupGeral)); const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", "rotina_e_curso_backup.json"); document.body.appendChild(a); a.click(); a.remove(); }
     function importarBackup(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const importado = JSON.parse(e.target.result); if (importado.rotina) { dadosRotina = importado.rotina; if(importado.curso) dadosCurso = importado.curso; if(importado.trackers) dadosTrackers = { ...dadosTrackers, ...importado.trackers }; if(importado.tarefas) dadosTarefas = importado.tarefas; if(importado.checks) checksRotina = importado.checks; } else if (Array.isArray(importado)) { dadosRotina = importado; } if (dadosCurso.metasMinimizado === undefined) dadosCurso.metasMinimizado = true; salvarDadosLocalmente(); document.getElementById('nome-curso').value = dadosCurso.nome || ""; document.getElementById('meta-obrigatorias').value = dadosCurso.metaObrigatorias || 2400; document.getElementById('meta-optativas').value = dadosCurso.metaOptativas || 300; document.getElementById('meta-complementares').value = dadosCurso.metaComplementares || 200; atualizarVisualMetasMinimizadas(); alert("Progresso importado com sucesso!"); fecharModalBackup(); fecharOpcoes(); } catch (err) { alert("Erro ao ler o arquivo."); } }; reader.readAsText(file); }
-  </script>
+ </script>
 </body>
 </html>
